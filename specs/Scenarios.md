@@ -3,7 +3,7 @@
 #### Production
 
 I'm a developer with a WPF application. I have *zero* way to distribute my
-application. I go to NuGet and install the NSync client library.
+application at the moment. I go to NuGet and install the NSync client library.
 
 Now, I want to publish a release. To do so, I pop into the PowerShell Console
 and type `Create-Release`. What does this do? It:
