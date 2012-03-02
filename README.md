@@ -39,3 +39,4 @@ without having to jump through insane hoops
   my installer and update feed via S3)
 * Creating an update for my app should be a very simple process that is easily
   automated
+* Support for multiple "channels" (a-la Chrome Dev/Beta/Release)
