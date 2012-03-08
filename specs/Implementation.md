@@ -72,8 +72,9 @@ package, we will render this Markdown as HTML.
 One of the last things we do before finishing `Create-Release` is that we
 write out a simple "Releases" file alongside the flattened and Delta NuGet
 packages. This is a text file that has the name of all of the release package
-filenames in the folder, along with the SHA1 hashes of their contents and
-their file sizes. So, something like:
+filenames in the folder in release order (i.e. oldest at top, newest at
+bottom), along with the SHA1 hashes of their contents and their file sizes.
+So, something like:
 
 ```
   94689fede03fed7ab59c24337673a27837f0c3ec  MyCoolApp-1.0.nupkg  1004502
