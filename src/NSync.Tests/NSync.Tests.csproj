@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}</ProjectGuid>
+    <ProjectGuid>{EA09F209-2552-4320-9195-ED661C33D975}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NSync.Core</RootNamespace>
-    <AssemblyName>NSync.Core</AssemblyName>
+    <RootNamespace>NSync.Tests</RootNamespace>
+    <AssemblyName>NSync.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
