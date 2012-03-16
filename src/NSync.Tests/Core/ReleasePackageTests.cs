@@ -28,6 +28,8 @@ namespace NSync.Tests.Core
                 int refs = pkg.References.Count();
                 this.Log().Info("Found {0} refs", refs);
                 refs.ShouldEqual(0);
+
+                pkg.GetFiles().Any(x => x.Path.ToLowerInvariant().Contains(@"lib\sl")).ShouldBeFalse();
             } finally {
                 File.Delete(outputPackage);
             }

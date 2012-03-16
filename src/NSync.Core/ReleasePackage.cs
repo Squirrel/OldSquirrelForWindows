@@ -47,6 +47,16 @@ namespace NSync.Core
                 });
 
                 removeDependenciesFromPackageSpec(tempPath.GetFiles("*.nuspec").First().FullName);
+
+                // NB: Nuke Silverlight. We can't tell as easily if other
+                // profiles can be removed because you can load net20 DLLs
+                // inside .NET 4.0 apps
+                var libPath = tempPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
+                this.Log().Debug(libPath.FullName);
+                libPath.GetDirectories()
+                    .Where(x => x.Name.ToLowerInvariant().StartsWith("sl"))
+                    .Do(x => this.Log().Info("Deleting {0}", x.Name))
+                    .ForEach(x => x.Delete(true));
     
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
