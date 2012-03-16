@@ -30,14 +30,5 @@ namespace NSync.Tests.TestHelpers
             int osVersion = Environment.OSVersion.Version.Major*100 + Environment.OSVersion.Version.Minor;
             return (osVersion < 601);
         }
-
-        public static IEnumerable<FileInfo> GetAllFilesRecursively(string rootPath)
-        {
-            var di = new DirectoryInfo(rootPath);
-
-            return di.GetDirectories()
-                .SelectMany(x => GetAllFilesRecursively(x.FullName))
-                .Concat(di.GetFiles());
-        }
     }
 }
