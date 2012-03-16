@@ -25,9 +25,8 @@ namespace NSync.Tests.Core
                 this.Log().Info("Resulting package is at {0}", outputPackage);
                 var pkg = new ZipPackage(outputPackage);
 
-                int refs = pkg.References.Count() + pkg.AssemblyReferences.Count();
+                int refs = pkg.References.Count();
                 this.Log().Info("Found {0} refs", refs);
-                pkg.AssemblyReferences.ForEach(x => this.Log().Info(x.Name));
                 refs.ShouldEqual(0);
             } finally {
                 File.Delete(outputPackage);

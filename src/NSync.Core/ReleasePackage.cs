@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using Ionic.Zip;
 using NuGet;
 
@@ -44,6 +45,8 @@ namespace NSync.Core
                             }
                         });
                 });
+
+                removeDependenciesFromPackageSpec(tempPath.GetFiles("*.nuspec").First().FullName);
     
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
@@ -51,6 +54,18 @@ namespace NSync.Core
             } finally {
                 tempPath.Delete(true);
             }
+        }
+
+        void removeDependenciesFromPackageSpec(string specPath)
+        {
+            var xdoc = new XmlDocument();
+            xdoc.Load(specPath);
+
+            var metadata = xdoc.DocumentElement.FirstChild;
+            metadata.RemoveChild(
+                metadata.ChildNodes.OfType<XmlElement>().First(x => x.Name.ToLowerInvariant() == "dependencies"));
+
+            xdoc.Save(specPath);
         }
 
         IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null)
