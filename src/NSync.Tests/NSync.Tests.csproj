@@ -83,6 +83,9 @@
     <Compile Include="Core\ReleasePackageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestHelpers\AssertExtensions.cs" />
+    <Compile Include="TestHelpers\ExposedClass.cs" />
+    <Compile Include="TestHelpers\ExposedObject.cs" />
+    <Compile Include="TestHelpers\ExposedObjectHelper.cs" />
     <Compile Include="TestHelpers\IntegrationTestHelper.cs" />
     <Compile Include="TestHelpers\MoqExtensions.cs" />
   </ItemGroup>
