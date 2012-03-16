@@ -16,11 +16,22 @@ namespace NSync.Tests.Core
             var inputPackage = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.0.0.0.nupkg");
             var outputPackage = Path.GetTempFileName() + ".nupkg";
             var fixture = new ReleasePackage(inputPackage);
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
-            fixture.CreateReleasePackage(outputPackage);
+            try {
+                fixture.CreateReleasePackage(outputPackage, sourceDir);
 
-            var pkg = new ZipPackage(outputPackage);
-            pkg.References.Count().ShouldEqual(0);
+                this.Log().Info("Resulting package is at {0}", outputPackage);
+                var pkg = new ZipPackage(outputPackage);
+
+                int refs = pkg.References.Count() + pkg.AssemblyReferences.Count();
+                this.Log().Info("Found {0} refs", refs);
+                pkg.AssemblyReferences.ForEach(x => this.Log().Info(x.Name));
+                refs.ShouldEqual(0);
+            } finally {
+                File.Delete(outputPackage);
+            }
         }
 
         [Fact]

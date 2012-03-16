@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using Ionic.Zip;
 using NuGet;
 
 namespace NSync.Core
@@ -13,9 +16,41 @@ namespace NSync.Core
             packageFile = inputPackageFile;
         }
 
-        public void CreateReleasePackage(string outputFile)
+        public void CreateReleasePackage(string outputFile, string packagesRootDir = null)
         {
-            throw new NotImplementedException();
+            var package = new ZipPackage(packageFile);
+            var dependencies = findAllDependentPackages(package, packagesRootDir);
+
+            var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            tempPath.Create();
+
+            try {
+                var zf = new ZipFile(packageFile);
+                zf.ExtractAll(tempPath.FullName);
+    
+                dependencies.ForEach(pkg => {
+                    this.Log().Info("Scanning {0}", pkg.Id);
+
+                    pkg.GetFiles()
+                        .Where(x => x.Path.StartsWith("lib", true, CultureInfo.InvariantCulture))
+                        .ForEach(file => {
+                            var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
+
+                            outPath.Directory.CreateRecursive();
+
+                            using (var of = File.Create(outPath.FullName)) {
+                                this.Log().Info("Writing {0} to {1}", file.Path, outPath);
+                                file.GetStream().CopyTo(of);
+                            }
+                        });
+                });
+    
+                zf = new ZipFile(outputFile);
+                zf.AddDirectory(tempPath.FullName);
+                zf.Save();
+            } finally {
+                tempPath.Delete(true);
+            }
         }
 
         IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null)
@@ -38,7 +73,7 @@ namespace NSync.Core
             machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
 
             if (packagesRootDir != null) {
-                localPackages = Utility.GetAllFilesRecursively(packagesRootDir)
+                localPackages = new DirectoryInfo(packagesRootDir).GetAllFilesRecursively()
                     .Where(x => x.Name.ToLowerInvariant().EndsWith("nupkg"))
                     .Select(x => new ZipPackage(x.FullName))
                     .ToArray().AsQueryable();
