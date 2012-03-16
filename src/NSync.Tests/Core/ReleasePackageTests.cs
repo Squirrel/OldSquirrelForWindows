@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NSync.Core;
 using NSync.Tests.TestHelpers;
@@ -20,6 +21,33 @@ namespace NSync.Tests.Core
 
             var pkg = new ZipPackage(outputPackage);
             pkg.References.Count().ShouldEqual(0);
+        }
+
+        [Fact]
+        public void FindPackageInOurLocalPackageList()
+        {
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.0.0.0.nupkg");
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            var fixture = ExposedObject.From(new ReleasePackage(inputPackage));
+            IPackage result = fixture.findPackageFromName("xunit", VersionUtility.ParseVersionSpec("[1.0,2.0]"), sourceDir, null);
+
+            result.Id.ShouldEqual("xunit");
+            result.Version.Major.ShouldEqual(1);
+            result.Version.Minor.ShouldEqual(9);
+        }
+
+        [Fact]
+        public void FindDependentPackagesForDummyPackage()
+        {
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.0.0.0.nupkg");
+            var fixture = ExposedObject.From(new ReleasePackage(inputPackage));
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir);
+            results.Count().ShouldBeGreaterThan(0);
         }
     }
 }
