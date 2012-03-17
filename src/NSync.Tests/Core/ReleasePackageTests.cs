@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using NSync.Core;
 using NSync.Tests.TestHelpers;
 using NuGet;
@@ -65,6 +66,29 @@ namespace NSync.Tests.Core
 
             IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir);
             results.Count().ShouldBeGreaterThan(0);
+        }
+
+        [Fact]
+        public void SpecFileMarkdownRenderingTest()
+        {
+            var dontcare = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nupkg");
+            var inputSpec = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nuspec");
+            var targetFile = Path.GetTempFileName();
+            File.Copy(inputSpec, targetFile, true);
+
+            try {
+                var fixture = ExposedObject.From(new ReleasePackage(dontcare));
+                fixture.renderReleaseNotesMarkdown(inputSpec);
+
+                var doc = XDocument.Load(targetFile);
+                XNamespace ns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd";
+                var relNotesElement = doc.Descendants(ns + "releaseNotes").First();
+                var htmlText = relNotesElement.Value;
+
+                htmlText.Contains("## Release Notes").ShouldBeFalse();
+            } finally {
+                File.Delete(targetFile);
+            }
         }
     }
 

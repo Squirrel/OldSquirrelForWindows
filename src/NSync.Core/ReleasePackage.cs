@@ -52,9 +52,11 @@ namespace NSync.Core
                         });
                 });
 
-                removeDependenciesFromPackageSpec(tempPath.GetFiles("*.nuspec").First().FullName);
+                var specPath = tempPath.GetFiles("*.nuspec").First().FullName;
+                removeDependenciesFromPackageSpec(specPath);
                 removeSilverlightAssemblies(tempPath);
                 removeDeveloperDocumentation(tempPath);
+                renderReleaseNotesMarkdown(specPath);
 
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
@@ -141,22 +143,8 @@ namespace NSync.Core
                 x => this.Log().Info("Deleting {0}", x.Name)).ForEach(x => x.Delete(true));
         }
 
-        bool bytesAreIdentical(byte[] oldData, byte[] newData)
+        void renderReleaseNotesMarkdown(string specPath)
         {
-            if (oldData == null || newData == null) {
-                return oldData == newData;
-            }
-            if (oldData.LongLength != newData.LongLength) {
-                return false;
-            }
-
-            for(long i = 0; i < newData.LongLength; i++) {
-                if (oldData[i] != newData[i]) {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         void removeDependenciesFromPackageSpec(string specPath)
@@ -217,6 +205,22 @@ namespace NSync.Core
             });
         }
 
+        bool bytesAreIdentical(byte[] oldData, byte[] newData)
+        {
+            if (oldData == null || newData == null) {
+                return oldData == newData;
+            }
+            if (oldData.LongLength != newData.LongLength) {
+                return false;
+            }
 
+            for(long i = 0; i < newData.LongLength; i++) {
+                if (oldData[i] != newData[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
