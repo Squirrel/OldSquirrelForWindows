@@ -11,22 +11,28 @@ namespace NSync.Core
 {
     public class ReleasePackage : IEnableLogger
     {
-        readonly string packageFile;
         public ReleasePackage(string inputPackageFile)
         {
-            packageFile = inputPackageFile;
+            InputPackageFile = inputPackageFile;
         }
 
-        public void CreateReleasePackage(string outputFile, string packagesRootDir = null)
+        public string InputPackageFile { get; protected set; }
+        public string ReleasePackageFile { get; protected set; }
+
+        public string CreateReleasePackage(string outputFile, string packagesRootDir = null)
         {
-            var package = new ZipPackage(packageFile);
+            if (ReleasePackageFile != null) {
+                return ReleasePackageFile;
+            }
+
+            var package = new ZipPackage(InputPackageFile);
             var dependencies = findAllDependentPackages(package, packagesRootDir);
 
             var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
             tempPath.Create();
 
             try {
-                var zf = new ZipFile(packageFile);
+                var zf = new ZipFile(InputPackageFile);
                 zf.ExtractAll(tempPath.FullName);
     
                 dependencies.ForEach(pkg => {
@@ -61,6 +67,9 @@ namespace NSync.Core
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
                 zf.Save();
+
+                ReleasePackageFile = outputFile;
+                return ReleasePackageFile;
             } finally {
                 tempPath.Delete(true);
             }
@@ -80,7 +89,7 @@ namespace NSync.Core
 
         IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null)
         {
-            package = package ?? new ZipPackage(packageFile);
+            package = package ?? new ZipPackage(InputPackageFile);
 
             return package.Dependencies.SelectMany(x => {
                 var ret = findPackageFromName(x.Id, x.VersionSpec, packagesRootDir);
