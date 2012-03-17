@@ -11,22 +11,28 @@ namespace NSync.Core
 {
     public class ReleasePackage : IEnableLogger
     {
-        readonly string packageFile;
         public ReleasePackage(string inputPackageFile)
         {
-            packageFile = inputPackageFile;
+            InputPackageFile = inputPackageFile;
         }
 
-        public void CreateReleasePackage(string outputFile, string packagesRootDir = null)
+        public string InputPackageFile { get; protected set; }
+        public string ReleasePackageFile { get; protected set; }
+
+        public string CreateReleasePackage(string outputFile, string packagesRootDir = null)
         {
-            var package = new ZipPackage(packageFile);
+            if (ReleasePackageFile != null) {
+                return ReleasePackageFile;
+            }
+
+            var package = new ZipPackage(InputPackageFile);
             var dependencies = findAllDependentPackages(package, packagesRootDir);
 
             var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
             tempPath.Create();
 
             try {
-                var zf = new ZipFile(packageFile);
+                var zf = new ZipFile(InputPackageFile);
                 zf.ExtractAll(tempPath.FullName);
     
                 dependencies.ForEach(pkg => {
@@ -53,7 +59,64 @@ namespace NSync.Core
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
                 zf.Save();
+
+                ReleasePackageFile = outputFile;
+                return ReleasePackageFile;
             } finally {
+                tempPath.Delete(true);
+            }
+        }
+
+        public void CreateDeltaPackage(ReleasePackage baseFixture, string outputFile)
+        {
+            var baseTempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            baseTempPath.Create();
+
+            var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            tempPath.Create();
+
+            try {
+                var zf = new ZipFile(baseFixture.ReleasePackageFile);
+                zf.ExtractAll(baseTempPath.FullName);
+
+                zf = new ZipFile(ReleasePackageFile);
+                zf.ExtractAll(tempPath.FullName);
+
+                var baseLibFiles = baseTempPath.GetAllFilesRecursively()
+                    .Where(x => x.FullName.ToLowerInvariant().Contains("lib" + Path.DirectorySeparatorChar))
+                    .ToDictionary(k => k.FullName.Replace(baseTempPath.FullName, ""), v => v.FullName);
+
+                var libDir = tempPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
+                libDir.GetAllFilesRecursively().ForEach(libFile => {
+                    var relativePath = libFile.FullName.Replace(tempPath.FullName, "");
+
+                    if (!baseLibFiles.ContainsKey(relativePath)) {
+                        this.Log().Info("{0} not found in base package, marking as new", relativePath);
+                        return;
+                    }
+
+                    var oldData = File.ReadAllBytes(baseLibFiles[relativePath]);
+                    var newData = File.ReadAllBytes(libFile.FullName);
+
+                    if (bytesAreIdentical(oldData, newData)) {
+                        this.Log().Info("{0} hasn't changed, writing dummy file", relativePath);
+                        File.Create(libFile.FullName + ".diff").Dispose();
+                        libFile.Delete();
+                        return;
+                    }
+
+                    this.Log().Info("Delta patching {0} => {1}", baseLibFiles[relativePath], libFile.FullName);
+                    using (var of = File.Create(libFile.FullName + ".diff")) {
+                        BinaryPatchUtility.Create(oldData, newData, of);
+                        libFile.Delete();
+                    }
+                });
+
+                zf = new ZipFile(outputFile);
+                zf.AddDirectory(tempPath.FullName);
+                zf.Save();
+            } finally {
+                baseTempPath.Delete(true);
                 tempPath.Delete(true);
             }
         }
@@ -78,6 +141,24 @@ namespace NSync.Core
                 x => this.Log().Info("Deleting {0}", x.Name)).ForEach(x => x.Delete(true));
         }
 
+        bool bytesAreIdentical(byte[] oldData, byte[] newData)
+        {
+            if (oldData == null || newData == null) {
+                return oldData == newData;
+            }
+            if (oldData.LongLength != newData.LongLength) {
+                return false;
+            }
+
+            for(long i = 0; i < newData.LongLength; i++) {
+                if (oldData[i] != newData[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         void removeDependenciesFromPackageSpec(string specPath)
         {
             var xdoc = new XmlDocument();
@@ -92,7 +173,7 @@ namespace NSync.Core
 
         IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null)
         {
-            package = package ?? new ZipPackage(packageFile);
+            package = package ?? new ZipPackage(InputPackageFile);
 
             return package.Dependencies.SelectMany(x => {
                 var ret = findPackageFromName(x.Id, x.VersionSpec, packagesRootDir);
@@ -135,5 +216,7 @@ namespace NSync.Core
                 return true;
             });
         }
+
+
     }
 }
