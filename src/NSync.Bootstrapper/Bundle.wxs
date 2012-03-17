@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix 
+  xmlns="http://schemas.microsoft.com/wix/2006/wi"
+>
+
+  <Bundle 
+    Name="SampleApp" 
+    Version="1.0.0.0" 
+    Manufacturer="Example" 
+    UpgradeCode="c99db653-84c8-4c03-bc0e-716cc966b50c"
+  >
+    <BootstrapperApplicationRef Id="ManagedBootstrapperApplicationHost">
+      <Payload Name="BootstrapperCore.config" SourceFile="..\NSync.Bootstrapper.UI\bin\$(var.BUILD)\NSync.BootstrapperCore.config" />
+
+      <Payload SourceFile="..\NSync.Bootstrapper.UI\bin\$(var.BUILD)\NSync.Bootstrapper.UI.dll" />
+      <Payload SourceFile="..\NSync.Bootstrapper.UI\bin\$(var.BUILD)\Caliburn.Micro.dll" />
+      <Payload SourceFile="..\NSync.Bootstrapper.UI\bin\$(var.BUILD)\System.Windows.Interactivity.dll" />
+      <Payload SourceFile="..\NSync.Bootstrapper.UI\bin\$(var.BUILD)\MahApps.Metro.dll" />
+      <Payload SourceFile="..\NSync.Bootstrapper.UI\bin\$(var.BUILD)\Autofac.dll" />
+    </BootstrapperApplicationRef>
+
+    <Chain>
+
+      <PackageGroupRef Id="Netfx4Full" />
+
+      <!--
+      
+      -->
+      <MsiPackage
+        Id="SampleApp"
+        Cache="no"
+        Compressed="no"
+        Vital="yes"
+        Name="SampleApp.Setup.msi"
+        SourceFile="..\NSync.Setup\bin\$(var.BUILD)\SampleApp.Setup.msi"
+      />
+    </Chain>
+  </Bundle>
+</Wix>
