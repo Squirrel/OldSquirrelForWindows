@@ -29,7 +29,11 @@ namespace NSync.Tests.Core
                 this.Log().Info("Found {0} refs", refs);
                 refs.ShouldEqual(0);
 
+                this.Log().Info("Files in release package:");
+                pkg.GetFiles().ForEach(x => this.Log().Info(x.Path));
+
                 pkg.GetFiles().Any(x => x.Path.ToLowerInvariant().Contains(@"lib\sl")).ShouldBeFalse();
+                pkg.GetFiles().Any(x => x.Path.ToLowerInvariant().Contains(@".xml")).ShouldBeFalse();
             } finally {
                 File.Delete(outputPackage);
             }

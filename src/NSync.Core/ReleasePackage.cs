@@ -47,23 +47,35 @@ namespace NSync.Core
                 });
 
                 removeDependenciesFromPackageSpec(tempPath.GetFiles("*.nuspec").First().FullName);
+                removeSilverlightAssemblies(tempPath);
+                removeDeveloperDocumentation(tempPath);
 
-                // NB: Nuke Silverlight. We can't tell as easily if other
-                // profiles can be removed because you can load net20 DLLs
-                // inside .NET 4.0 apps
-                var libPath = tempPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
-                this.Log().Debug(libPath.FullName);
-                libPath.GetDirectories()
-                    .Where(x => x.Name.ToLowerInvariant().StartsWith("sl"))
-                    .Do(x => this.Log().Info("Deleting {0}", x.Name))
-                    .ForEach(x => x.Delete(true));
-    
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
                 zf.Save();
             } finally {
                 tempPath.Delete(true);
             }
+        }
+
+        void removeDeveloperDocumentation(DirectoryInfo expandedRepoPath)
+        {
+            expandedRepoPath.GetAllFilesRecursively()
+                .Where(x => x.Name.EndsWith(".dll", true, CultureInfo.InvariantCulture))
+                .Select(x => new FileInfo(x.FullName.ToLowerInvariant().Replace(".dll", ".xml")))
+                .Where(x => x.Exists)
+                .ForEach(x => x.Delete());
+        }
+
+        void removeSilverlightAssemblies(DirectoryInfo expandedRepoPath)
+        {
+            // NB: Nuke Silverlight. We can't tell as easily if other
+            // profiles can be removed because you can load net20 DLLs
+            // inside .NET 4.0 apps
+            var libPath = expandedRepoPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
+            this.Log().Debug(libPath.FullName);
+            libPath.GetDirectories().Where(x => x.Name.ToLowerInvariant().StartsWith("sl")).Do(
+                x => this.Log().Info("Deleting {0}", x.Name)).ForEach(x => x.Delete(true));
         }
 
         void removeDependenciesFromPackageSpec(string specPath)
