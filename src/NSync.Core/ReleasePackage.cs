@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using Ionic.Zip;
+using MarkdownSharp;
 using NuGet;
 
 namespace NSync.Core
@@ -145,6 +146,22 @@ namespace NSync.Core
 
         void renderReleaseNotesMarkdown(string specPath)
         {
+            var doc = new XmlDocument();
+            doc.Load(specPath);
+
+            // XXX: This code looks full tart
+            var metadata = doc.DocumentElement.ChildNodes.OfType<XmlElement>().First(x => x.Name.ToLowerInvariant() == "metadata");
+            var releaseNotes = metadata.ChildNodes.OfType<XmlElement>().FirstOrDefault(x => x.Name.ToLowerInvariant() == "releasenotes");
+
+            if (releaseNotes == null) {
+                this.Log().Info("No release notes found in {0}", specPath);
+                return;
+            }
+
+            var md = new Markdown();
+            releaseNotes.InnerText = String.Format("<![CDATA[\n" + "{0}\n" + "]]>", md.Transform(releaseNotes.InnerText));
+
+            doc.Save(specPath);
         }
 
         void removeDependenciesFromPackageSpec(string specPath)
