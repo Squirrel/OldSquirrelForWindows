@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NSync.Core;
@@ -8,7 +9,7 @@ using Xunit;
 
 namespace NSync.Tests.Core
 {
-    public class ReleasePackageTests : IEnableLogger
+    public class CreateReleasePackageTests : IEnableLogger
     {
         [Fact]
         public void ReleasePackageIntegrationTest()
@@ -60,6 +61,55 @@ namespace NSync.Tests.Core
 
             IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir);
             results.Count().ShouldBeGreaterThan(0);
+        }
+    }
+
+    public class CreateDeltaPackageTests
+    {
+        [Fact]
+        public void CreateDeltaPackageIntegrationTest()
+        {
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nupkg");
+
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            var baseFixture = new ReleasePackage(basePackage);
+            var fixture = new ReleasePackage(newPackage);
+
+            var tempFiles = Enumerable.Range(0, 3)
+                .Select(_ => Path.GetTempPath() + Guid.NewGuid().ToString() + ".nupkg")
+                .ToArray();
+
+            try {
+                baseFixture.CreateReleasePackage(tempFiles[0], sourceDir);
+                fixture.CreateReleasePackage(tempFiles[1], sourceDir);
+
+                (new FileInfo(baseFixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+                (new FileInfo(fixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+
+                fixture.CreateDeltaPackage(baseFixture, tempFiles[2]);
+
+                var fullPkg = new ZipPackage(tempFiles[1]);
+                var deltaPkg = new ZipPackage(tempFiles[2]);
+
+                fullPkg.Id.ShouldEqual(deltaPkg.Id);
+                fullPkg.Version.CompareTo(deltaPkg.Version).ShouldEqual(0);
+
+                // v1.1 adds a dependency on DotNetZip
+                deltaPkg.GetFiles()
+                    .Any(x => x.Path.ToLowerInvariant().Contains("ionic.zip"))
+                    .ShouldBeTrue();
+
+                // All the other files should be diffs
+                deltaPkg.GetFiles()
+                    .Where(x => !x.Path.ToLowerInvariant().Contains("ionic.zip"))
+                    .All(x => x.Path.ToLowerInvariant().EndsWith("diff"))
+                    .ShouldBeTrue();
+            } finally {
+                tempFiles.ForEach(File.Delete);
+            }
         }
     }
 }

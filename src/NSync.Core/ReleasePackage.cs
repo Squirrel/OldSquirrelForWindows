@@ -75,6 +75,11 @@ namespace NSync.Core
             }
         }
 
+        public void CreateDeltaPackage(ReleasePackage baseFixture, string tempFile)
+        {
+            throw new NotImplementedException();
+        }
+
         void removeDependenciesFromPackageSpec(string specPath)
         {
             var xdoc = new XmlDocument();
@@ -132,5 +137,7 @@ namespace NSync.Core
                 return true;
             });
         }
+
+
     }
 }
