@@ -75,9 +75,76 @@ namespace NSync.Core
             }
         }
 
-        public void CreateDeltaPackage(ReleasePackage baseFixture, string tempFile)
+        public void CreateDeltaPackage(ReleasePackage baseFixture, string outputFile)
         {
-            throw new NotImplementedException();
+            var baseTempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            baseTempPath.Create();
+
+            var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            tempPath.Create();
+
+            try {
+                var zf = new ZipFile(baseFixture.ReleasePackageFile);
+                zf.ExtractAll(baseTempPath.FullName);
+
+                zf = new ZipFile(ReleasePackageFile);
+                zf.ExtractAll(tempPath.FullName);
+
+                var baseLibFiles = baseTempPath.GetAllFilesRecursively()
+                    .Where(x => x.FullName.ToLowerInvariant().Contains("lib" + Path.DirectorySeparatorChar))
+                    .ToDictionary(k => k.FullName.Replace(baseTempPath.FullName, ""), v => v.FullName);
+
+                var libDir = tempPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
+                libDir.GetAllFilesRecursively().ForEach(libFile => {
+                    var relativePath = libFile.FullName.Replace(tempPath.FullName, "");
+
+                    if (!baseLibFiles.ContainsKey(relativePath)) {
+                        this.Log().Info("{0} not found in base package, marking as new", relativePath);
+                        return;
+                    }
+
+                    var oldData = File.ReadAllBytes(baseLibFiles[relativePath]);
+                    var newData = File.ReadAllBytes(libFile.FullName);
+
+                    if (bytesAreIdentical(oldData, newData)) {
+                        this.Log().Info("{0} hasn't changed, writing dummy file", relativePath);
+                        File.Create(libFile.FullName + ".diff").Dispose();
+                        libFile.Delete();
+                        return;
+                    }
+
+                    this.Log().Info("Delta patching {0} => {1}", baseLibFiles[relativePath], libFile.FullName);
+                    using (var of = File.Create(libFile.FullName + ".diff")) {
+                        BinaryPatchUtility.Create(oldData, newData, of);
+                        libFile.Delete();
+                    }
+                });
+
+                zf = new ZipFile(outputFile);
+                zf.AddDirectory(tempPath.FullName);
+                zf.Save();
+            } finally {
+                baseTempPath.Delete(true);
+                tempPath.Delete(true);
+            }
+        }
+
+        bool bytesAreIdentical(byte[] oldData, byte[] newData)
+        {
+            if (oldData == null || newData == null) {
+                return oldData == newData;
+            }
+            if (oldData.LongLength != newData.LongLength) {
+                return false;
+            }
+
+            for(long i = 0; i < newData.LongLength; i++) {
+                if (oldData[i] != newData[i]) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         void removeDependenciesFromPackageSpec(string specPath)
