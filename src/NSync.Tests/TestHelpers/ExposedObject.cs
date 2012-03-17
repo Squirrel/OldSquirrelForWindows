@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Dynamic;
 using System.Reflection;
@@ -86,11 +87,15 @@ namespace NSync.Tests.TestHelpers
             {
                 List<MethodInfo> methods = new List<MethodInfo>();
 
-                foreach (var method in m_genInstanceMethods[binder.Name][args.Length])
+                if (m_genInstanceMethods.ContainsKey(binder.Name) && 
+                    m_genInstanceMethods[binder.Name].ContainsKey(args.Length)) 
                 {
-                    if (method.GetGenericArguments().Length == typeArgs.Length)
+                    foreach (var method in m_genInstanceMethods[binder.Name][args.Length])
                     {
-                        methods.Add(method.MakeGenericMethod(typeArgs));
+                        if (method.GetGenericArguments().Length == typeArgs.Length)
+                        {
+                            methods.Add(method.MakeGenericMethod(typeArgs));
+                        }
                     }
                 }
 
