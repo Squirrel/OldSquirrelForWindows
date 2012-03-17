@@ -64,7 +64,7 @@ namespace NSync.Tests.Core
         }
     }
 
-    public class CreateDeltaPackageTests
+    public class CreateDeltaPackageTests : IEnableLogger
     {
         [Fact]
         public void CreateDeltaPackageIntegrationTest()
@@ -107,6 +107,14 @@ namespace NSync.Tests.Core
                     .Where(x => !x.Path.ToLowerInvariant().Contains("ionic.zip"))
                     .All(x => x.Path.ToLowerInvariant().EndsWith("diff"))
                     .ShouldBeTrue();
+
+                // Delta packages should be smaller than the original!
+                var fileInfos = tempFiles.Select(x => new FileInfo(x)).ToArray();
+                this.Log().Info("Base Size: {0}, Current Size: {1}, Delta Size: {2}",
+                    fileInfos[0].Length, fileInfos[1].Length, fileInfos[2].Length);
+
+                (fileInfos[2].Length - fileInfos[1].Length).ShouldBeLessThan(0);
+
             } finally {
                 tempFiles.ForEach(File.Delete);
             }
