@@ -84,7 +84,7 @@ namespace NSync.Tests.Core
                 // invulnerable to ExposedObject. Whyyyyyyyyy
                 var renderMinfo = fixture.GetType().GetMethod("renderReleaseNotesMarkdown", 
                     BindingFlags.NonPublic | BindingFlags.Instance);
-                renderMinfo.Invoke(fixture, new object[] {inputSpec});
+                renderMinfo.Invoke(fixture, new object[] {targetFile});
 
                 var doc = XDocument.Load(targetFile);
                 XNamespace ns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd";

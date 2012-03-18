@@ -13,22 +13,15 @@
     <id>NSync.Core</id>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Description</description>
-    <releaseNotes>&lt;![CDATA[
-&lt;p&gt;&lt;![CDATA[&lt;/p&gt;
+    <releaseNotes>
+## Release Notes for 1.1
 
-&lt;h2&gt;Release Notes for 1.1&lt;/h2&gt;
+1. Did some cool stuff
+1. Did another thing
+1. Did a third thing, pretty crazy!
 
-&lt;ol&gt;
-&lt;li&gt;Did some cool stuff&lt;/li&gt;
-&lt;li&gt;Did another thing&lt;/li&gt;
-&lt;li&gt;Did a third thing, pretty crazy!&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Make &lt;em&gt;sure&lt;/em&gt; to refrobulate the confabulator or &lt;strong&gt;terrible things will happen!&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;]]&gt;&lt;/p&gt;
-
-]]&gt;</releaseNotes>
+Make *sure* to refrobulate the confabulator or **terrible things will happen!**
+    </releaseNotes>
   </metadata>
   <files>
     <file src="lib\net40\NSync.Core.dll" target="lib\net40\NSync.Core.dll" />
