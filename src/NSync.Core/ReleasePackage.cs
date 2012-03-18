@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using Ionic.Zip;
+using MarkdownSharp;
 using NuGet;
 
 namespace NSync.Core
@@ -52,9 +53,11 @@ namespace NSync.Core
                         });
                 });
 
-                removeDependenciesFromPackageSpec(tempPath.GetFiles("*.nuspec").First().FullName);
+                var specPath = tempPath.GetFiles("*.nuspec").First().FullName;
+                removeDependenciesFromPackageSpec(specPath);
                 removeSilverlightAssemblies(tempPath);
                 removeDeveloperDocumentation(tempPath);
+                renderReleaseNotesMarkdown(specPath);
 
                 zf = new ZipFile(outputFile);
                 zf.AddDirectory(tempPath.FullName);
@@ -141,22 +144,24 @@ namespace NSync.Core
                 x => this.Log().Info("Deleting {0}", x.Name)).ForEach(x => x.Delete(true));
         }
 
-        bool bytesAreIdentical(byte[] oldData, byte[] newData)
+        void renderReleaseNotesMarkdown(string specPath)
         {
-            if (oldData == null || newData == null) {
-                return oldData == newData;
-            }
-            if (oldData.LongLength != newData.LongLength) {
-                return false;
+            var doc = new XmlDocument();
+            doc.Load(specPath);
+
+            // XXX: This code looks full tart
+            var metadata = doc.DocumentElement.ChildNodes.OfType<XmlElement>().First(x => x.Name.ToLowerInvariant() == "metadata");
+            var releaseNotes = metadata.ChildNodes.OfType<XmlElement>().FirstOrDefault(x => x.Name.ToLowerInvariant() == "releasenotes");
+
+            if (releaseNotes == null) {
+                this.Log().Info("No release notes found in {0}", specPath);
+                return;
             }
 
-            for(long i = 0; i < newData.LongLength; i++) {
-                if (oldData[i] != newData[i]) {
-                    return false;
-                }
-            }
+            var md = new Markdown();
+            releaseNotes.InnerText = String.Format("<![CDATA[\n" + "{0}\n" + "]]>", md.Transform(releaseNotes.InnerText));
 
-            return true;
+            doc.Save(specPath);
         }
 
         void removeDependenciesFromPackageSpec(string specPath)
@@ -217,6 +222,22 @@ namespace NSync.Core
             });
         }
 
+        bool bytesAreIdentical(byte[] oldData, byte[] newData)
+        {
+            if (oldData == null || newData == null) {
+                return oldData == newData;
+            }
+            if (oldData.LongLength != newData.LongLength) {
+                return false;
+            }
 
+            for(long i = 0; i < newData.LongLength; i++) {
+                if (oldData[i] != newData[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

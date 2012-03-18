@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Xml.Linq;
 using NSync.Core;
 using NSync.Tests.TestHelpers;
 using NuGet;
@@ -65,6 +67,36 @@ namespace NSync.Tests.Core
 
             IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir);
             results.Count().ShouldBeGreaterThan(0);
+        }
+
+        [Fact]
+        public void SpecFileMarkdownRenderingTest()
+        {
+            var dontcare = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nupkg");
+            var inputSpec = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nuspec");
+            var fixture = new ReleasePackage(dontcare);
+
+            var targetFile = Path.GetTempFileName();
+            File.Copy(inputSpec, targetFile, true);
+                
+            try {
+                // NB: For No Reason At All, renderReleaseNotesMarkdown is 
+                // invulnerable to ExposedObject. Whyyyyyyyyy
+                var renderMinfo = fixture.GetType().GetMethod("renderReleaseNotesMarkdown", 
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                renderMinfo.Invoke(fixture, new object[] {targetFile});
+
+                var doc = XDocument.Load(targetFile);
+                XNamespace ns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd";
+                var relNotesElement = doc.Descendants(ns + "releaseNotes").First();
+                var htmlText = relNotesElement.Value;
+
+                this.Log().Info("HTML Text:\n{0}", htmlText);
+
+                htmlText.Contains("## Release Notes").ShouldBeFalse();
+            } finally {
+                File.Delete(targetFile);
+            }
         }
     }
 
