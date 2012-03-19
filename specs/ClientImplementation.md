@@ -59,3 +59,70 @@ as simple as:
 
 On next startup, we blow away \app-[version] since it's now the previous
 version of the code.
+
+### Client-side API
+Referencing NSync.dll, `UpdateManager` is all the app dev needs to use.
+
+	UpdateManager
+		UpdateInformation CheckForUpdates()
+		UpdateInformation DownloadUpdate()
+		bool Upgrade()
+		UpdateState State
+		
+`UpdateInformation` contains information about pending updates if there is any, and is null if there isn't.
+
+	UpdateInformation
+		string Version
+		double Filesize
+		string ReleaseNotes*
+		
+`UpdateInformation.ReleaseNotes` would be blank/empty/null until the update is downloaded. The ["Latest" Pointer](Implementation.md) information doesn't (shouldn't?) contain that.
+		
+	UpdateState (enum)
+		Idle
+		Checking
+		Downloading
+		Updating
+		
+`UpdateManager.UpdateState` could/should be used for UI bindings, reflecting different states of the UI based on the update manager. Something stupid like the following could work, based on a State
+
+	 <Button FontFamily="../Fonts/#Entypo" FontSize="28" Margin="0,-15,10,-15" RenderTransformOrigin="0.45,0.5">
+        <Button.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform/>
+                <SkewTransform/>
+                <RotateTransform/>
+                <TranslateTransform/>
+            </TransformGroup>
+        </Button.RenderTransform>
+        <Button.Style>
+            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ChromelessButtonStyle}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding UpdateState}" Value="Unchecked">
+                        <Setter Property="Button.Content" Value="d" />
+                        <Setter Property="Button.ToolTip" Value="{DynamicResource CheckForUpdatesTooltip}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Background}" Value="True">
+                        <DataTrigger.EnterActions>
+                            <BeginStoryboard x:Name="rotatestart" Storyboard="{StaticResource rotate}" />
+                        </DataTrigger.EnterActions>
+                        <DataTrigger.ExitActions>
+                            <StopStoryboard BeginStoryboardName="rotatestart" />
+                        </DataTrigger.ExitActions>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding UpdateState}" Value="UpToDate">
+                        <Setter Property="Button.Content" Value="W" />
+                        <Setter Property="Button.ToolTip" Value="{DynamicResource UpToDateTooltip}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding UpdateState}" Value="UpdatePending">
+                        <Setter Property="Button.Content" Value="?" />
+                        <Setter Property="Button.ToolTip" Value="{DynamicResource UpdatePendingTooltip}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding UpdateState}" Value="Downloading">
+                        <Setter Property="Button.Content" Value="x" />
+                        <Setter Property="Button.ToolTip" Value="{DynamicResource CheckingForUpdatesTooltip}" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Button.Style>
+    </Button>
