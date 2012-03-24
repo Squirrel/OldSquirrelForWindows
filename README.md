@@ -25,7 +25,7 @@ without having to jump through insane hoops
 ###### Updates
 
 * Updates should be able to be applied while the application is running
-* At no time should the user ever be forced to stop what he's doing
+* At no time should the user ever be forced to stop what he or she is doing
 * No Reboots, for fuck's sake.
 * The client API should be able to check for updates, receive a (preferably in
   HTML) ChangeLog
