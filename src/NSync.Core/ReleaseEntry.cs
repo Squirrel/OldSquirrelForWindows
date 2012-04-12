@@ -37,6 +37,10 @@ namespace NSync.Core
             return new ReleaseEntry(m.Groups[1].Value, m.Groups[2].Value, size, isDelta);
         }
 
+        public string EntryAsString {
+            get { return String.Format("{0} {1} {2}", SHA1, Filename, Filesize); } 
+        }
+
         public static ReleaseEntry GenerateFromFile(Stream file, string filename)
         {
             var sha1 = System.Security.Cryptography.SHA1.Create();
