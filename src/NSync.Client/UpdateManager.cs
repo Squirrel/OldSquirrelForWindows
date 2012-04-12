@@ -45,6 +45,8 @@ namespace NSync.Client
             if (localReleases.Count() == remoteReleases.Count()) {
                 return null;
             }
+
+            throw new NotImplementedException();
         }
     }
 
