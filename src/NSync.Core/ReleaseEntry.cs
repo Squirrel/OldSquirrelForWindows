@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace NSync.Core
 {
@@ -31,8 +33,21 @@ namespace NSync.Core
             }
 
             long size = Int64.Parse(m.Groups[3].Value);
-            bool isDelta = m.Groups[2].Value.EndsWith(".delta", StringComparison.InvariantCultureIgnoreCase);
+            bool isDelta = filenameIsDeltaFile(m.Groups[2].Value);
             return new ReleaseEntry(m.Groups[1].Value, m.Groups[2].Value, size, isDelta);
+        }
+
+        public static ReleaseEntry GenerateFromFile(Stream file, string filename)
+        {
+            var sha1 = System.Security.Cryptography.SHA1.Create();
+
+            var hash = BitConverter.ToString(sha1.ComputeHash(file)).Replace("-", String.Empty); 
+            return new ReleaseEntry(hash, filename, file.Length, filenameIsDeltaFile(filename));
+        }
+
+        static bool filenameIsDeltaFile(string filename)
+        {
+            return filename.EndsWith(".delta", StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
