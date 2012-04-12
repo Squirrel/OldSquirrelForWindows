@@ -19,8 +19,8 @@ namespace NSync.Tests.Core
         public void ParseValidReleaseEntryLines(string releaseEntry, string fileName, long fileSize)
         {
             var fixture = ReleaseEntry.ParseReleaseEntry(releaseEntry);
-            Assert.Equal(fixture.Filename, fileName);
-            Assert.Equal(fixture.Filesize, fileSize);
+            Assert.Equal(fileName, fixture.Filename);
+            Assert.Equal(fileSize, fixture.Filesize);
         }
 
         [Theory]
