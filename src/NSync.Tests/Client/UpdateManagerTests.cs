@@ -16,7 +16,7 @@ namespace NSync.Tests.Client
         public void NewReleasesShouldBeDetected()
         {
             var openPath = new Func<string, Stream>(s => {
-                Assert.Equal(s, "RELEASES");
+                Assert.Equal(s, Path.Combine("packages", "RELEASES"));
                 return File.OpenRead(IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOh"));
             });
 
@@ -29,7 +29,8 @@ namespace NSync.Tests.Client
             var result = fixture.CheckForUpdate().First();
 
             Assert.NotNull(result);
-            Assert.Equal("1.1", result.Version);
+            Assert.Equal(1, result.Version.Major);
+            Assert.Equal(1, result.Version.Minor);
         }
     }
 }
