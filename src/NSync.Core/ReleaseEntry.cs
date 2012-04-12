@@ -37,6 +37,19 @@ namespace NSync.Core
             return new ReleaseEntry(m.Groups[1].Value, m.Groups[2].Value, size, isDelta);
         }
 
+        public static IEnumerable<ReleaseEntry> ParseReleaseFile(string file)
+        {
+            var ret = file.Split('\n').Select(ParseReleaseEntry).ToArray();
+            return ret.Any(x => x == null) ? null : ret;
+        }
+
+        public static void WriteReleaseFile(IEnumerable<ReleaseEntry> releaseEntries, string path)
+        {
+            File.WriteAllText(path, 
+                String.Join("\n", releaseEntries.Select(x => x.EntryAsString)), 
+                Encoding.UTF8);
+        }
+
         public string EntryAsString {
             get { return String.Format("{0} {1} {2}", SHA1, Filename, Filesize); } 
         }
