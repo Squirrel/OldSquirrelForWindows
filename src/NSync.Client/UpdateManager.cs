@@ -8,7 +8,7 @@ using NSync.Core;
 
 namespace NSync.Client
 {
-    public class UpdateManager
+    public class UpdateManager : IEnableLogger
     {
         Func<string, Stream> openPath;
         Func<string, IObservable<string>> downloadUrl;
@@ -43,15 +43,44 @@ namespace NSync.Client
         UpdateInfo determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
         {
             if (localReleases.Count() == remoteReleases.Count()) {
+                this.Log().Info("No updates, remote and local are the same");
                 return null;
             }
 
-            throw new NotImplementedException();
+            if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
+                this.Log().Warn("hwhat, local version is greater than remote version");
+                return null;
+            }
+
+            return UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases);
+        }
+
+        ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
+        {
+            return localReleases.MaxBy(x => x.Version).Single(x => !x.IsDelta);
         }
     }
 
     public class UpdateInfo
     {
-        public string Version { get; protected set; }
+        public Version Version { get; protected set; }
+        public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
+
+        protected UpdateInfo(ReleaseEntry latestRelease, IEnumerable<ReleaseEntry> releasesToApply)
+        {
+            Version = latestRelease.Version;
+            ReleasesToApply = releasesToApply;
+        }
+
+        public static UpdateInfo Create(ReleaseEntry currentVersion, IEnumerable<ReleaseEntry> availableReleases)
+        {
+            var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
+            var latestFull = availableReleases.MaxBy(x => x.Version).Single(x => !x.IsDelta);
+            var deltasSize = newerThanUs.Where(x => x.IsDelta).Sum(x => x.Filesize);
+
+            return (deltasSize > latestFull.Filesize)
+                ? new UpdateInfo(latestFull, newerThanUs.Where(x => x.IsDelta).ToArray())
+                : new UpdateInfo(latestFull, new[] {latestFull});
+        }
     }
 }
