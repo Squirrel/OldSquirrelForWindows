@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 11
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSync.Core", "NSync.Core\NSync.Core.csproj", "{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSync.Tests", "NSync.Tests\NSync.Tests.csproj", "{EA09F209-2552-4320-9195-ED661C33D975}"
@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{DCF5FB
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSync.Client", "NSync.Client\NSync.Client.csproj", "{F23CEFD4-F1BA-4C37-A834-89A5E38055DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +27,10 @@ Global
 		{EA09F209-2552-4320-9195-ED661C33D975}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA09F209-2552-4320-9195-ED661C33D975}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA09F209-2552-4320-9195-ED661C33D975}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F23CEFD4-F1BA-4C37-A834-89A5E38055DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F23CEFD4-F1BA-4C37-A834-89A5E38055DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F23CEFD4-F1BA-4C37-A834-89A5E38055DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F23CEFD4-F1BA-4C37-A834-89A5E38055DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
