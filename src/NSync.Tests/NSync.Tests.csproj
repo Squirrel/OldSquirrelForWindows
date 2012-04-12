@@ -86,6 +86,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\UpdateManagerTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -100,6 +101,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NSync.Client\NSync.Client.csproj">
+      <Project>{f23cefd4-f1ba-4c37-a834-89a5e38055dd}</Project>
+      <Name>NSync.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NSync.Core\NSync.Core.csproj">
       <Project>{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}</Project>
       <Name>NSync.Core</Name>
