@@ -20,6 +20,41 @@ namespace NSync.Core
             SHA1 = sha1; Filename = filename; Filesize = filesize; IsDelta = isDelta;
         }
 
+        public string EntryAsString {
+            get { return String.Format("{0} {1} {2}", SHA1, Filename, Filesize); } 
+        }
+
+        public Version Version {
+            get {
+                var parts = Filename
+                    .Replace(".nupkg", "").Replace(".delta", "")
+                    .Split('.', '-').Reverse();
+
+                var numberRegex = new Regex(@"^\d+$");
+
+                var versionFields = parts
+                    .Where(x => numberRegex.IsMatch(x))
+                    .Select(Int32.Parse)
+                    .Reverse()
+                    .ToArray();
+
+                if (versionFields.Length < 2 || versionFields.Length > 4) {
+                    return null;
+                }
+
+                switch(versionFields.Length) {
+                case 2:
+                    return new Version(versionFields[0], versionFields[1]);
+                case 3:
+                    return new Version(versionFields[0], versionFields[1], versionFields[2]);
+                case 4:
+                    return new Version(versionFields[0], versionFields[1], versionFields[2], versionFields[3]);
+                }
+
+                return null;
+            } 
+        }
+
         static readonly Regex entryRegex = new Regex(@"^([0-9a-fA-F]{40})\s+(\S+)\s+(\d+)$");
         public static ReleaseEntry ParseReleaseEntry(string entry)
         {
@@ -48,10 +83,6 @@ namespace NSync.Core
             File.WriteAllText(path, 
                 String.Join("\n", releaseEntries.Select(x => x.EntryAsString)), 
                 Encoding.UTF8);
-        }
-
-        public string EntryAsString {
-            get { return String.Format("{0} {1} {2}", SHA1, Filename, Filesize); } 
         }
 
         public static ReleaseEntry GenerateFromFile(Stream file, string filename)
