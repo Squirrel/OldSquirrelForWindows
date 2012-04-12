@@ -74,7 +74,11 @@ namespace NSync.Core
 
         public static IEnumerable<ReleaseEntry> ParseReleaseFile(string file)
         {
-            var ret = file.Split('\n').Select(ParseReleaseEntry).ToArray();
+            var ret = file.Split('\n')
+                .Where(x => !String.IsNullOrWhiteSpace(x))
+                .Select(ParseReleaseEntry)
+                .ToArray();
+
             return ret.Any(x => x == null) ? null : ret;
         }
 
