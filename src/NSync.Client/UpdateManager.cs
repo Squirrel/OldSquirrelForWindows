@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -16,17 +17,24 @@ namespace NSync.Client
 
     public class UpdateManager : IEnableLogger, IUpdateManager
     {
-        Func<string, Stream> openPath;
-        Func<string, IObservable<string>> downloadUrl;
-        string updateUrl;
+        readonly IFileSystemFactory fileSystem;
+        readonly string rootAppDirectory;
+        readonly Func<string, IObservable<string>> downloadUrl;
+        readonly string updateUrl;
 
-        // TODO: overload with default implementations for resolving package store and downloading resource
         public UpdateManager(string url, 
-            Func<string, Stream> openPath = null,
+            string applicationName,
+            string rootDirectory = null,
+            IFileSystemFactory fileSystem = null,
             Func<string, IObservable<string>> downloadUrl = null)
         {
             updateUrl = url;
-            this.openPath = openPath;
+
+            rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
+            this.fileSystem = fileSystem ?? new AnonFileSystem(
+                s => new DirectoryInfoWrapper(new DirectoryInfo(s)),
+                s => new FileInfoWrapper(new FileInfo(s)),
+                s => new FileWrapper());
             this.downloadUrl = downloadUrl;
         }
 
@@ -34,7 +42,8 @@ namespace NSync.Client
         {
             IEnumerable<ReleaseEntry> localReleases;
 
-            using (var sr = new StreamReader(openPath(Path.Combine("packages", "RELEASES")))) {
+            using(var file = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES")).OpenRead())
+            using (var sr = new StreamReader(file)) {
                 localReleases = ReleaseEntry.ParseReleaseFile(sr.ReadToEnd());
             }
 
@@ -49,8 +58,7 @@ namespace NSync.Client
 
         public void ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
         {
-            foreach (var p in releasesToApply)
-            {
+            foreach (var p in releasesToApply) {
                 var file = p.Filename;
                 // TODO: determine if we can use delta package
                 // TODO: download optimal package
@@ -84,6 +92,11 @@ namespace NSync.Client
         ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
         {
             return localReleases.MaxBy(x => x.Version).Single(x => !x.IsDelta);
+        }
+
+        static string getLocalAppDataDirectory()
+        {
+            return Environment.GetEnvironmentVariable("LocalAppData") ?? Environment.GetEnvironmentVariable("AppData");
         }
     }
 
