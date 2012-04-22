@@ -13,7 +13,7 @@
 *.png 	binary
 *.gif 	binary
 
-*.cs text diff=csharp 
+*.cs text diff=csharp
 *.vb text
 *.c text
 *.cpp text
