@@ -19,13 +19,14 @@ namespace NSync.Client
         Func<string, IObservable<string>> downloadUrl;
         string updateUrl;
 
+        // TODO: overload with default implementations for resolving package store and downloading resource
         public UpdateManager(string url, 
-            Func<string, Stream> openPathMock = null,
-            Func<string, IObservable<string>> downloadUrlMock = null)
+            Func<string, Stream> openPath = null,
+            Func<string, IObservable<string>> downloadUrl = null)
         {
             updateUrl = url;
-            openPath = openPathMock;
-            downloadUrl = downloadUrlMock;
+            this.openPath = openPath;
+            this.downloadUrl = downloadUrl;
         }
 
         public IObservable<UpdateInfo> CheckForUpdate()
