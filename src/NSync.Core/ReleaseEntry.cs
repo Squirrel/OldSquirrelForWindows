@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Security.Cryptography;
 
 namespace NSync.Core
 {
@@ -55,7 +54,7 @@ namespace NSync.Core
             } 
         }
 
-        static readonly Regex entryRegex = new Regex(@"^([0-9a-fA-F]{40})\s+(\S+)\s+(\d+)$");
+        static readonly Regex entryRegex = new Regex(@"^([0-9a-fA-F]{40})\s+(\S+)\s+(\d+)[\r]*$");
         public static ReleaseEntry ParseReleaseEntry(string entry)
         {
             var m = entryRegex.Match(entry);

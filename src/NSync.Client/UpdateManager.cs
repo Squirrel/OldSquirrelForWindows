@@ -11,6 +11,7 @@ namespace NSync.Client
     public interface IUpdateManager
     {
         IObservable<UpdateInfo> CheckForUpdate();
+        void ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply);
     }
 
     public class UpdateManager : IEnableLogger, IUpdateManager
@@ -19,13 +20,14 @@ namespace NSync.Client
         Func<string, IObservable<string>> downloadUrl;
         string updateUrl;
 
+        // TODO: overload with default implementations for resolving package store and downloading resource
         public UpdateManager(string url, 
-            Func<string, Stream> openPathMock = null,
-            Func<string, IObservable<string>> downloadUrlMock = null)
+            Func<string, Stream> openPath = null,
+            Func<string, IObservable<string>> downloadUrl = null)
         {
             updateUrl = url;
-            openPath = openPathMock;
-            downloadUrl = downloadUrlMock;
+            this.openPath = openPath;
+            this.downloadUrl = downloadUrl;
         }
 
         public IObservable<UpdateInfo> CheckForUpdate()
@@ -43,6 +45,25 @@ namespace NSync.Client
 
             ret.Connect();
             return ret;
+        }
+
+        public void ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
+        {
+            foreach (var p in releasesToApply)
+            {
+                var file = p.Filename;
+                // TODO: determine if we can use delta package
+                // TODO: download optimal package
+                // TODO: verify integrity of packages
+                // TODO: apply package changes to destination
+
+                // Q: is file in release relative path or can it support absolute path?
+                // Q: have left destination parameter out of this call
+                //      - shall NSync take care of the switching between current exe and new exe?
+                //      - pondering how to do this right now
+            }
+
+            // TODO: what shall we return? we may have issues with integrity of packages/missing packages etc
         }
 
         UpdateInfo determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
