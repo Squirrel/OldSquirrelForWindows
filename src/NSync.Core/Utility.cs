@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace NSync.Core
 {
@@ -46,5 +47,31 @@ namespace NSync.Core
             return acc;
         }
 
+        public static void Retry(this Action block, int retries = 2)
+        {
+            Func<object> thunk = () => {
+                block();
+                return null;
+            };
+
+            thunk.Retry(retries);
+        }
+
+        public static T Retry<T>(this Func<T> block, int retries = 2)
+        {
+            while (true) {
+                try {
+                    T ret = block();
+                    return ret;
+                } catch (Exception) {
+                    if (retries == 0) {
+                        throw;
+                    }
+
+                    retries--;
+                    Thread.Sleep(250);
+                }
+            }
+        }
     }
 }
