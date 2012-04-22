@@ -150,7 +150,6 @@ namespace NSync.Tests.Core
                     fileInfos[0].Length, fileInfos[1].Length, fileInfos[2].Length);
 
                 (fileInfos[2].Length - fileInfos[1].Length).ShouldBeLessThan(0);
-
             } finally {
                 tempFiles.ForEach(File.Delete);
             }

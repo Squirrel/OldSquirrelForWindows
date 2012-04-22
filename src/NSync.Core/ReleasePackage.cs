@@ -33,8 +33,9 @@ namespace NSync.Core
             tempPath.Create();
 
             try {
-                var zf = new ZipFile(InputPackageFile);
-                zf.ExtractAll(tempPath.FullName);
+                using(var zf = new ZipFile(InputPackageFile)) {
+                    zf.ExtractAll(tempPath.FullName);
+                }
     
                 dependencies.ForEach(pkg => {
                     this.Log().Info("Scanning {0}", pkg.Id);
@@ -59,9 +60,10 @@ namespace NSync.Core
                 removeDeveloperDocumentation(tempPath);
                 renderReleaseNotesMarkdown(specPath);
 
-                zf = new ZipFile(outputFile);
-                zf.AddDirectory(tempPath.FullName);
-                zf.Save();
+                using (var zf = new ZipFile(outputFile)) {
+                    zf.AddDirectory(tempPath.FullName);
+                    zf.Save();
+                }
 
                 ReleasePackageFile = outputFile;
                 return ReleasePackageFile;
@@ -79,11 +81,13 @@ namespace NSync.Core
             tempPath.Create();
 
             try {
-                var zf = new ZipFile(baseFixture.ReleasePackageFile);
-                zf.ExtractAll(baseTempPath.FullName);
-
-                zf = new ZipFile(ReleasePackageFile);
-                zf.ExtractAll(tempPath.FullName);
+                using (var zf = new ZipFile(baseFixture.ReleasePackageFile)) {
+                    zf.ExtractAll(baseTempPath.FullName);
+                }
+                
+                using (var zf = new ZipFile(ReleasePackageFile)) {
+                    zf.ExtractAll(tempPath.FullName);
+                }
 
                 var baseLibFiles = baseTempPath.GetAllFilesRecursively()
                     .Where(x => x.FullName.ToLowerInvariant().Contains("lib" + Path.DirectorySeparatorChar))
@@ -115,9 +119,10 @@ namespace NSync.Core
                     }
                 });
 
-                zf = new ZipFile(outputFile);
-                zf.AddDirectory(tempPath.FullName);
-                zf.Save();
+                using (var zf = new ZipFile(outputFile)) {
+                    zf.AddDirectory(tempPath.FullName);
+                    zf.Save();
+                }
             } finally {
                 baseTempPath.Delete(true);
                 tempPath.Delete(true);
