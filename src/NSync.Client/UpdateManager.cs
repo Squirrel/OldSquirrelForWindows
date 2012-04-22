@@ -8,7 +8,12 @@ using NSync.Core;
 
 namespace NSync.Client
 {
-    public class UpdateManager : IEnableLogger
+    public interface IUpdateManager
+    {
+        IObservable<UpdateInfo> CheckForUpdate();
+    }
+
+    public class UpdateManager : IEnableLogger, IUpdateManager
     {
         Func<string, Stream> openPath;
         Func<string, IObservable<string>> downloadUrl;
