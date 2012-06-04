@@ -42,7 +42,8 @@ namespace NSync.Client
         {
             IEnumerable<ReleaseEntry> localReleases;
 
-            using(var file = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES")).OpenRead())
+            // NB: sr disposes file
+            var file = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES")).OpenRead();
             using (var sr = new StreamReader(file)) {
                 localReleases = ReleaseEntry.ParseReleaseFile(sr.ReadToEnd());
             }
