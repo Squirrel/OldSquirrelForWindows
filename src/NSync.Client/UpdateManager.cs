@@ -35,6 +35,7 @@ namespace NSync.Client
                 s => new DirectoryInfoWrapper(new DirectoryInfo(s)),
                 s => new FileInfoWrapper(new FileInfo(s)),
                 s => new FileWrapper());
+
             this.downloadUrl = downloadUrl;
         }
 
@@ -82,9 +83,12 @@ namespace NSync.Client
                 return null;
             }
 
+
             if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
                 this.Log().Warn("hwhat, local version is greater than remote version");
-                return null;
+
+                var latestFullRelease = remoteReleases.Where(x => !x.IsDelta).MaxBy(x => x.Version);
+                return UpdateInfo.Create(findCurrentVersion(localReleases), latestFullRelease.Take(1));
             }
 
             return UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases);
