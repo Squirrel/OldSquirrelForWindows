@@ -5,6 +5,7 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
 using NSync.Core;
 
 namespace NSync.Client
@@ -34,19 +35,28 @@ namespace NSync.Client
             this.fileSystem = fileSystem ?? new AnonFileSystem(
                 s => new DirectoryInfoWrapper(new DirectoryInfo(s)),
                 s => new FileInfoWrapper(new FileInfo(s)),
-                s => new FileWrapper());
+                s => new FileWrapper(),
+                s => new DirectoryInfoWrapper(new DirectoryInfo(s).CreateRecursive()));
 
             this.downloadUrl = downloadUrl;
         }
 
         public IObservable<UpdateInfo> CheckForUpdate()
         {
-            IEnumerable<ReleaseEntry> localReleases;
+            IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
 
-            // NB: sr disposes file
-            var file = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES")).OpenRead();
-            using (var sr = new StreamReader(file)) {
-                localReleases = ReleaseEntry.ParseReleaseFile(sr.ReadToEnd());
+            try {
+                var fi = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES"));
+                var file = fi.OpenRead();
+
+                // NB: sr disposes file
+                using (var sr = new StreamReader(file, Encoding.UTF8)) {
+                    localReleases = ReleaseEntry.ParseReleaseFile(sr.ReadToEnd());
+                }
+            } catch (Exception ex) {
+                // Something has gone wrong, we'll start from scratch.
+                this.Log().WarnException("Failed to load local release list", ex);
+                initializeClientAppDirectory();
             }
 
             var ret = downloadUrl(updateUrl)
@@ -56,6 +66,11 @@ namespace NSync.Client
 
             ret.Connect();
             return ret;
+        }
+
+        void initializeClientAppDirectory()
+        {
+            fileSystem.CreateDirectoryRecursive(Path.Combine(rootAppDirectory, "packages"));
         }
 
         public void ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
@@ -83,6 +98,12 @@ namespace NSync.Client
                 return null;
             }
 
+            if (localReleases.IsEmpty()) {
+                this.Log().Warn("First run or local directory is corrupt, starting from scratch");
+
+                var latestFullRelease = remoteReleases.Where(x => !x.IsDelta).MaxBy(x => x.Version);
+                return UpdateInfo.Create(findCurrentVersion(localReleases), latestFullRelease.Take(1));
+            }
 
             if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
                 this.Log().Warn("hwhat, local version is greater than remote version");
@@ -101,7 +122,7 @@ namespace NSync.Client
 
         static string getLocalAppDataDirectory()
         {
-            return Environment.GetEnvironmentVariable("LocalAppData") ?? Environment.GetEnvironmentVariable("AppData");
+            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
     }
 

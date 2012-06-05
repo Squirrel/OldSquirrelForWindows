@@ -41,5 +41,23 @@ namespace NSync.Tests.Client
             Assert.Equal(1, result.Version.Major);
             Assert.Equal(1, result.Version.Minor);
         }
+
+        [Fact]
+        public void NoReleasesFileMeansWeStartFromScratch()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void NoDirectoryMeansWeStartFromScratch()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void CorruptedReleaseFileMeansWeStartFromScratch()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

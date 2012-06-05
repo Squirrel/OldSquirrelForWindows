@@ -15,7 +15,7 @@ namespace NSync.Core
                 .Concat(rootPath.GetFiles());
         }
 
-        public static void CreateRecursive(this DirectoryInfo This)
+        public static DirectoryInfo CreateRecursive(this DirectoryInfo This)
         {
             This.FullName.Split(Path.DirectorySeparatorChar).scan("", (acc, x) =>
             {
@@ -33,6 +33,8 @@ namespace NSync.Core
 
                 return (new DirectoryInfo(path)).FullName;
             });
+
+            return This;
         }
         
         static TAcc scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)

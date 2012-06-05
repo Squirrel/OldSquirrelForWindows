@@ -11,6 +11,7 @@ namespace NSync.Core
         DirectoryInfoBase GetDirectoryInfo(string path);
         FileInfoBase GetFileInfo(string path);
         FileBase GetFile(string path);
+        DirectoryInfoBase CreateDirectoryRecursive(string combine);
     }
 
     public class AnonFileSystem : IFileSystemFactory
@@ -18,12 +19,17 @@ namespace NSync.Core
         Func<string, DirectoryInfoBase> getDirInfo;
         Func<string, FileInfoBase> getFileInfo;
         Func<string, FileBase> getFile;
+        Func<string, DirectoryInfoBase> createDirRecursive;
 
-        public AnonFileSystem(Func<string, DirectoryInfoBase> getDirectoryInfo, Func<string, FileInfoBase> getFileInfo, Func<string, FileBase> getFile)
+        public AnonFileSystem(Func<string, DirectoryInfoBase> getDirectoryInfo, 
+            Func<string, FileInfoBase> getFileInfo, 
+            Func<string, FileBase> getFile,
+            Func<string, DirectoryInfoBase> createDirRecursive)
         {
-            getDirInfo = getDirectoryInfo;
+            this.getDirInfo = getDirectoryInfo;
             this.getFileInfo = getFileInfo;
             this.getFile = getFile;
+            this.createDirRecursive = createDirRecursive;
         }
 
         public DirectoryInfoBase GetDirectoryInfo(string path)
@@ -39,6 +45,11 @@ namespace NSync.Core
         public FileBase GetFile(string path)
         {
             return getFile(path);
+        }
+
+        public DirectoryInfoBase CreateDirectoryRecursive(string path)
+        {
+            return createDirRecursive(path);
         }
     }
 }
