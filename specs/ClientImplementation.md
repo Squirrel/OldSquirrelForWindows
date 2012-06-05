@@ -60,6 +60,14 @@ as simple as:
 On next startup, we blow away \app-[version] since it's now the previous
 version of the code.
 
+### What do we do on Setup? (Bootstrapping)
+
+Since the WiX setup application is too dumb to setup our default directory, in
+order to simplify trying to bootstrap our app directory, we'll just recreate
+it. This is some wasted bandwidth, but oh well. If the packages or app root
+doesn't actually exist, we'll download the latest full release and set up the
+app.
+
 ### Client-side API
 Referencing NSync.dll, `UpdateManager` is all the app dev needs to use.
 
@@ -69,14 +77,17 @@ Referencing NSync.dll, `UpdateManager` is all the app dev needs to use.
 		bool Upgrade()
 		UpdateState State
 		
-`UpdateInformation` contains information about pending updates if there is any, and is null if there isn't.
+`UpdateInformation` contains information about pending updates if there is
+any, and is null if there isn't.
 
 	UpdateInformation
 		string Version
 		double Filesize
 		string ReleaseNotes*
 		
-`UpdateInformation.ReleaseNotes` would be blank/empty/null until the update is downloaded. The ["Latest" Pointer](Implementation.md) information doesn't (shouldn't?) contain that.
+`UpdateInformation.ReleaseNotes` would be blank/empty/null until the update is
+downloaded. The ["Latest" Pointer](Implementation.md) information doesn't
+(shouldn't?) contain that.
 		
 	UpdateState (enum)
 		Idle
@@ -84,9 +95,11 @@ Referencing NSync.dll, `UpdateManager` is all the app dev needs to use.
 		Downloading
 		Updating
 		
-`UpdateManager.UpdateState` could/should be used for UI bindings, reflecting different states of the UI based on the update manager. Something stupid like the following could work, based on a State
+`UpdateManager.UpdateState` could/should be used for UI bindings, reflecting
+different states of the UI based on the update manager. Something stupid like
+the following could work, based on a State
 
-	 <Button FontFamily="../Fonts/#Entypo" FontSize="28" Margin="0,-15,10,-15" RenderTransformOrigin="0.45,0.5">
+	<Button FontFamily="../Fonts/#Entypo" FontSize="28" Margin="0,-15,10,-15" RenderTransformOrigin="0.45,0.5">
         <Button.RenderTransform>
             <TransformGroup>
                 <ScaleTransform/>
