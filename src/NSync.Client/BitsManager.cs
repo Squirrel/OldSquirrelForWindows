@@ -31,10 +31,12 @@ namespace NSync.Client
     public sealed class BitsUrlDownloader : IUrlDownloader, IDisposable
     {
         BitsManager manager;
+        string applicationName;
 
-        public BitsUrlDownloader()
+        public BitsUrlDownloader(string applicationName)
         {
             manager = new BitsManager();
+            this.applicationName = applicationName;
         }
 
         public IObservable<string> DownloadUrl(string url)
@@ -47,25 +49,27 @@ namespace NSync.Client
             var ret = new AsyncSubject<Unit>();
             var jobFiles = urls.Zip(localPaths, (url, path) => new {url, path});
 
-            // XXX: SafeDelete
-            localPaths
-                .Select(x => new FileInfo(x))
-                .Where(x => x.Exists)
-                .ForEach(x => x.Delete());
-
-            var job = manager.CreateJob("Downloading updates" , JobType.Download);
+            var job = manager.CreateJob(applicationName + "_" + Guid.NewGuid() , JobType.Download);
             job.OnJobError += (o, e) => ret.OnError(new BitsException(e.Error));
             job.OnJobTransferred += (o, e) => {
                 try {
                     job.Complete();
-                    ret.OnNext(Unit.Default); 
-                    ret.OnCompleted();
+
+                    if (job.ErrorCount != 0) {
+                        ret.OnError(new BitsException(job.Error));
+                    } else {
+                        ret.OnNext(Unit.Default); 
+                        ret.OnCompleted();
+                    }
                 } catch (Exception ex) {
                     ret.OnError(ex);
                 }
             };
 
-            jobFiles.ForEach(x => job.AddFile(x.url, x.path));
+            jobFiles
+                .Where(x => !File.Exists(x.path))
+                .ForEach(x => job.AddFile(x.url, x.path));
+
             job.Resume();
 
             return ret;

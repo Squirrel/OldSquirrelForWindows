@@ -28,7 +28,7 @@ namespace NSync.Tests.Client
 
             string tempPath = null;
             using (IntegrationTestHelper.WithTempDirectory(out tempPath))
-            using (var fixture = new BitsUrlDownloader()) {
+            using (var fixture = new BitsUrlDownloader("BITSTests")) {
                 fixture.QueueBackgroundDownloads(urls, files.Select(x => Path.Combine(tempPath, x)))
                     .Timeout(TimeSpan.FromSeconds(120), RxApp.TaskpoolScheduler)
                     .First();
@@ -57,7 +57,7 @@ namespace NSync.Tests.Client
 
             string tempPath = null;
             using (IntegrationTestHelper.WithTempDirectory(out tempPath))
-            using (var fixture = new BitsUrlDownloader()) {
+            using (var fixture = new BitsUrlDownloader("BITSTests")) {
                 Assert.Throws<Exception>(() => {
                     fixture.QueueBackgroundDownloads(urls, files.Select(x => Path.Combine(tempPath, x)))
                         .Timeout(TimeSpan.FromSeconds(120), RxApp.TaskpoolScheduler)
