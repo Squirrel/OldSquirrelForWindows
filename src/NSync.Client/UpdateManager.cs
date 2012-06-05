@@ -6,14 +6,18 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Security.Cryptography;
 using System.Text;
 using NSync.Core;
+using ReactiveUI;
+using IEnableLogger = NSync.Core.IEnableLogger;
 
 namespace NSync.Client
 {
     public interface IUpdateManager
     {
         IObservable<UpdateInfo> CheckForUpdate();
+        IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
         IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply);
     }
 
@@ -21,16 +25,16 @@ namespace NSync.Client
     {
         readonly IFileSystemFactory fileSystem;
         readonly string rootAppDirectory;
-        readonly Func<string, IObservable<string>> downloadUrl;
-        readonly string updateUrl;
+        readonly IUrlDownloader urlDownloader;
+        readonly string updateUrlOrPath;
 
-        public UpdateManager(string url, 
+        public UpdateManager(string urlOrPath, 
             string applicationName,
             string rootDirectory = null,
             IFileSystemFactory fileSystem = null,
-            Func<string, IObservable<string>> downloadUrl = null)
+            IUrlDownloader urlDownloader = null)
         {
-            updateUrl = url;
+            updateUrlOrPath = urlOrPath;
 
             rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
             this.fileSystem = fileSystem ?? new AnonFileSystem(
@@ -38,9 +42,10 @@ namespace NSync.Client
                 s => new FileInfoWrapper(new FileInfo(s)),
                 s => new FileWrapper(),
                 s => new DirectoryInfoWrapper(new DirectoryInfo(s).CreateRecursive()),
-                s => new DirectoryInfo(s).Delete(true));
+                s => new DirectoryInfo(s).Delete(true),
+                Utility.CopyToAsync);
 
-            this.downloadUrl = downloadUrl;
+            this.urlDownloader = urlDownloader;
         }
 
         public IObservable<UpdateInfo> CheckForUpdate()
@@ -61,13 +66,52 @@ namespace NSync.Client
                 initializeClientAppDirectory();
             }
 
-            var ret = downloadUrl(updateUrl)
+            var releaseFile = isHttpUrl(updateUrlOrPath) ?
+                urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES")) :
+                Observable.Return(File.ReadAllText(Path.Combine(updateUrlOrPath, "RELEASES")));
+
+            var ret =  releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
                 .Select(releases => determineUpdateInfo(localReleases, releases))
                 .Multicast(new AsyncSubject<UpdateInfo>());
 
             ret.Connect();
             return ret;
+        }
+
+        public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
+        {
+            IObservable<Unit> downloadResult;
+
+            if (isHttpUrl(updateUrlOrPath)) {
+                var urls = releasesToDownload.Select(x => String.Format("{0}/{1}", updateUrlOrPath, x.Filename));
+                var paths = releasesToDownload.Select(x => Path.Combine(rootAppDirectory, "packages", x.Filename));
+
+                downloadResult = urlDownloader.QueueBackgroundDownloads(urls, paths);
+            } else {
+                downloadResult = releasesToDownload.ToObservable()
+                    .Select(x => Observable.Defer(() =>
+                        fileSystem.CopyAsync(
+                            Path.Combine(updateUrlOrPath, x.Filename),
+                            Path.Combine(rootAppDirectory, "packages", x.Filename))))
+                    .Merge(2);
+            }
+
+            return downloadResult.SelectMany(_ => checksumPackages(releasesToDownload));
+        }
+
+
+        public IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
+        {
+            foreach (var p in releasesToApply) {
+                var file = p.Filename;
+                // Q: is file in release relative path or can it support absolute path?
+                // Q: have left destination parameter out of this call
+                //      - shall NSync take care of the switching between current exe and new exe?
+                //      - pondering how to do this right now
+            }
+
+            return Observable.Throw<Unit>(new NotImplementedException());
         }
 
         void initializeClientAppDirectory()
@@ -77,24 +121,6 @@ namespace NSync.Client
                 fileSystem.DeleteDirectoryRecursive(pkgDir);
             }
             fileSystem.CreateDirectoryRecursive(pkgDir);
-        }
-
-        public IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
-        {
-            foreach (var p in releasesToApply) {
-                var file = p.Filename;
-                // TODO: determine if we can use delta package
-                // TODO: download optimal package
-                // TODO: verify integrity of packages
-                // TODO: apply package changes to destination
-
-                // Q: is file in release relative path or can it support absolute path?
-                // Q: have left destination parameter out of this call
-                //      - shall NSync take care of the switching between current exe and new exe?
-                //      - pondering how to do this right now
-            }
-
-            return Observable.Throw<Unit>(new NotImplementedException());
         }
 
         UpdateInfo determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
@@ -129,6 +155,50 @@ namespace NSync.Client
         static string getLocalAppDataDirectory()
         {
             return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        }
+        
+        static bool isHttpUrl(string urlOrPath)
+        {
+            try {
+                var url = new Uri(urlOrPath);
+                return new[] {"https", "http"}.Contains(url.Scheme.ToLowerInvariant());
+            } catch (Exception) {
+                return false;
+            }
+        }
+
+        IObservable<Unit> checksumPackages(IEnumerable<ReleaseEntry> releasesDownloaded)
+        {
+            return releasesDownloaded.ToObservable()
+                .Select(x => Observable.Defer(() => checksumPackage(x)))
+                .Merge(3)
+                .Aggregate(Unit.Default, (acc, _) => acc);
+        }
+
+        IObservable<Unit> checksumPackage(ReleaseEntry downloadedRelease)
+        {
+            return Observable.Start(() => {
+                var targetPackage = fileSystem.GetFileInfo(
+                    Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
+
+                if (!targetPackage.Exists) {
+                    this.Log().Error("File should exist but doesn't", targetPackage.FullName);
+                    throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
+                }
+
+                if (targetPackage.Length != downloadedRelease.Filesize) {
+                    this.Log().Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
+                    throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
+                } 
+
+                using (var file = targetPackage.OpenRead()) {
+                    var hash = Utility.CalculateStreamSHA1(file);
+                    if (hash != downloadedRelease.SHA1) {
+                        this.Log().Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
+                        throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
+                    }
+                }
+            }, RxApp.TaskpoolScheduler);
         }
     }
 

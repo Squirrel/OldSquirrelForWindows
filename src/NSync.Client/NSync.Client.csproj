@@ -37,6 +37,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="ReactiveUI, Version=2.5.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-core.2.5.2.0\lib\Net4\ReactiveUI.dll</HintPath>
+    </Reference>
     <Reference Include="SharpBITS.Base">
       <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
     </Reference>

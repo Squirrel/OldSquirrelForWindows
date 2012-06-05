@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Reactive;
 using System.Text;
 
 namespace NSync.Core
@@ -13,6 +14,7 @@ namespace NSync.Core
         FileBase GetFile(string path);
         DirectoryInfoBase CreateDirectoryRecursive(string path);
         void DeleteDirectoryRecursive(string path);
+        IObservable<Unit> CopyAsync(string from, string to);
     }
 
     public class AnonFileSystem : IFileSystemFactory
@@ -22,18 +24,21 @@ namespace NSync.Core
         Func<string, FileBase> getFile;
         Func<string, DirectoryInfoBase> createDirRecursive;
         Action<string> deleteDirRecursive;
+        Func<string, string, IObservable<Unit>> copyAsync;
 
-        public AnonFileSystem(Func<string, DirectoryInfoBase> getDirectoryInfo, 
+        public AnonFileSystem(Func<string, DirectoryInfoBase> getDirInfo, 
             Func<string, FileInfoBase> getFileInfo, 
             Func<string, FileBase> getFile,
             Func<string, DirectoryInfoBase> createDirRecursive,
-            Action<string> deleteDirRecursive)
+            Action<string> deleteDirRecursive,
+            Func<string, string, IObservable<Unit>> copyAsync)
         {
-            this.getDirInfo = getDirectoryInfo;
+            this.getDirInfo = getDirInfo;
             this.getFileInfo = getFileInfo;
             this.getFile = getFile;
             this.createDirRecursive = createDirRecursive;
             this.deleteDirRecursive = deleteDirRecursive;
+            this.copyAsync = copyAsync;
         }
 
         public DirectoryInfoBase GetDirectoryInfo(string path)
@@ -59,6 +64,11 @@ namespace NSync.Core
         public void DeleteDirectoryRecursive(string path)
         {
             deleteDirRecursive(path);
+        }
+
+        public IObservable<Unit> CopyAsync(string from, string to)
+        {
+            return copyAsync(from, to);
         }
     }
 }

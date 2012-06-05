@@ -18,23 +18,21 @@ namespace NSync.Tests.Client
         [Fact]
         public void NewReleasesShouldBeDetected()
         {
-            var downloadUrl = new Func<string, IObservable<string>>(url => {
-                var path = IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOne");
-                return Observable.Return(File.ReadAllText(path, Encoding.UTF8));
-            });
-
             string expectedPath = Path.Combine(".", "theApp", "packages", "RELEASES");
 
             var fileInfo = new Mock<FileInfoBase>();
             fileInfo.Setup(x => x.OpenRead())
                 .Returns(File.OpenRead(IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOh")));
 
-            var fs = new AnonFileSystem(_ => null, path => {
-                Assert.Equal(expectedPath, path);
-                return fileInfo.Object;
-            }, _ => null);
+            var fs = new Mock<IFileSystemFactory>();
+            fs.Setup(x => x.GetFileInfo(expectedPath)).Returns(fileInfo.Object);
 
-            var fixture = new UpdateManager("http://lol", "theApp", ".", fs, downloadUrl);
+            var urlDownloader = new Mock<IUrlDownloader>();
+            var dlPath = IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOne");
+            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
+                .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
+
+            var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
             var result = fixture.CheckForUpdate().First();
 
             Assert.NotNull(result);
@@ -56,6 +54,36 @@ namespace NSync.Tests.Client
 
         [Fact]
         public void CorruptedReleaseFileMeansWeStartFromScratch()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void ChecksumShouldPassOnValidPackages()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void ChecksumShouldFailIfFilesAreMissing()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void ChecksumShouldFailIfFilesAreBogus()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void DownloadReleasesFromHttpServerIntegrationTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void DownloadReleasesFromFileDirectoryIntegrationTest()
         {
             throw new NotImplementedException();
         }
