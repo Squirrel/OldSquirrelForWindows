@@ -72,7 +72,7 @@ namespace NSync.Client
 
             var ret =  releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
-                .Select(releases => determineUpdateInfo(localReleases, releases))
+                .SelectMany(releases => determineUpdateInfo(localReleases, releases))
                 .Multicast(new AsyncSubject<UpdateInfo>());
 
             ret.Connect();
@@ -115,33 +115,44 @@ namespace NSync.Client
             fileSystem.CreateDirectoryRecursive(pkgDir);
         }
 
-        UpdateInfo determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
+        IObservable<UpdateInfo> determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
         {
+            localReleases = localReleases ?? Enumerable.Empty<ReleaseEntry>();
+
+            if (remoteReleases == null) {
+                this.Log().Warn("Release information couldn't be determined due to remote corrupt RELEASES file");
+                return Observable.Throw<UpdateInfo>(new Exception("Corrupt remote RELEASES file"));
+            }
+
             if (localReleases.Count() == remoteReleases.Count()) {
                 this.Log().Info("No updates, remote and local are the same");
-                return null;
+                return Observable.Return<UpdateInfo>(null);
             }
 
             if (localReleases.IsEmpty()) {
                 this.Log().Warn("First run or local directory is corrupt, starting from scratch");
 
-                var latestFullRelease = remoteReleases.Where(x => !x.IsDelta).MaxBy(x => x.Version);
-                return UpdateInfo.Create(findCurrentVersion(localReleases), latestFullRelease.Take(1));
+                var latestFullRelease = findCurrentVersion(remoteReleases);
+                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}));
             }
 
             if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
                 this.Log().Warn("hwhat, local version is greater than remote version");
 
-                var latestFullRelease = remoteReleases.Where(x => !x.IsDelta).MaxBy(x => x.Version);
-                return UpdateInfo.Create(findCurrentVersion(localReleases), latestFullRelease.Take(1));
+                var latestFullRelease = findCurrentVersion(remoteReleases);
+                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}));
             }
 
-            return UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases);
+            return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases));
         }
 
         ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
         {
-            return localReleases.MaxBy(x => x.Version).Single(x => !x.IsDelta);
+            if (!localReleases.Any()) {
+                return null;
+            }
+
+            return localReleases.MaxBy(x => x.Version).SingleOrDefault(x => !x.IsDelta);
         }
 
         static string getLocalAppDataDirectory()
@@ -203,19 +214,24 @@ namespace NSync.Client
 
         protected UpdateInfo(ReleaseEntry latestRelease, IEnumerable<ReleaseEntry> releasesToApply)
         {
-            Version = latestRelease.Version;
+            Version = latestRelease != null ? latestRelease.Version : null;
             ReleasesToApply = releasesToApply;
         }
 
         public static UpdateInfo Create(ReleaseEntry currentVersion, IEnumerable<ReleaseEntry> availableReleases)
         {
-            var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
             var latestFull = availableReleases.MaxBy(x => x.Version).Single(x => !x.IsDelta);
+
+            if (currentVersion == null) {
+                return new UpdateInfo(null, new[] { latestFull });
+            }
+
+            var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
             var deltasSize = newerThanUs.Where(x => x.IsDelta).Sum(x => x.Filesize);
 
             return (deltasSize > latestFull.Filesize)
                 ? new UpdateInfo(latestFull, newerThanUs.Where(x => x.IsDelta).ToArray())
-                : new UpdateInfo(latestFull, new[] {latestFull});
+                : new UpdateInfo(latestFull, new[] { latestFull });
         }
     }
 }

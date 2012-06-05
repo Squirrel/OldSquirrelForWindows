@@ -13,7 +13,7 @@ namespace NSync.Tests.Client
 {
     public class BitsManagerTests
     {
-        [Fact]
+        [Fact(Skip = "Reenable this once we have proper BITS bindings")]
         public void BitsDownloadsSomeUrls()
         {
             var urls = new[] {
@@ -42,7 +42,7 @@ namespace NSync.Tests.Client
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Reenable this once we have proper BITS bindings")]
         public void BitsFailsOnGarbageUrls()
         {
             var urls = new[] {

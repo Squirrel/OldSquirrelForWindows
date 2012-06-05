@@ -60,11 +60,11 @@ namespace NSync.Core
         {
             var m = entryRegex.Match(entry);
             if (!m.Success) {
-                return null;
+                throw new Exception("Invalid release entry: " + entry);
             }
 
             if (m.Groups.Count != 4) {
-                return null;
+                throw new Exception("Invalid release entry: " + entry);
             }
 
             long size = Int64.Parse(m.Groups[3].Value);
