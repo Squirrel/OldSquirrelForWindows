@@ -103,14 +103,6 @@ namespace NSync.Client
 
         public IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
         {
-            foreach (var p in releasesToApply) {
-                var file = p.Filename;
-                // Q: is file in release relative path or can it support absolute path?
-                // Q: have left destination parameter out of this call
-                //      - shall NSync take care of the switching between current exe and new exe?
-                //      - pondering how to do this right now
-            }
-
             return Observable.Throw<Unit>(new NotImplementedException());
         }
 
