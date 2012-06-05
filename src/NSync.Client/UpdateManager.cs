@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -13,7 +14,7 @@ namespace NSync.Client
     public interface IUpdateManager
     {
         IObservable<UpdateInfo> CheckForUpdate();
-        void ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply);
+        IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply);
     }
 
     public class UpdateManager : IEnableLogger, IUpdateManager
@@ -36,7 +37,8 @@ namespace NSync.Client
                 s => new DirectoryInfoWrapper(new DirectoryInfo(s)),
                 s => new FileInfoWrapper(new FileInfo(s)),
                 s => new FileWrapper(),
-                s => new DirectoryInfoWrapper(new DirectoryInfo(s).CreateRecursive()));
+                s => new DirectoryInfoWrapper(new DirectoryInfo(s).CreateRecursive()),
+                s => new DirectoryInfo(s).Delete(true));
 
             this.downloadUrl = downloadUrl;
         }
@@ -70,10 +72,14 @@ namespace NSync.Client
 
         void initializeClientAppDirectory()
         {
-            fileSystem.CreateDirectoryRecursive(Path.Combine(rootAppDirectory, "packages"));
+            var pkgDir = Path.Combine(rootAppDirectory, "packages");
+            if (fileSystem.GetDirectoryInfo(pkgDir).Exists) {
+                fileSystem.DeleteDirectoryRecursive(pkgDir);
+            }
+            fileSystem.CreateDirectoryRecursive(pkgDir);
         }
 
-        public void ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
+        public IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
         {
             foreach (var p in releasesToApply) {
                 var file = p.Filename;
@@ -88,7 +94,7 @@ namespace NSync.Client
                 //      - pondering how to do this right now
             }
 
-            // TODO: what shall we return? we may have issues with integrity of packages/missing packages etc
+            return Observable.Throw<Unit>(new NotImplementedException());
         }
 
         UpdateInfo determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
