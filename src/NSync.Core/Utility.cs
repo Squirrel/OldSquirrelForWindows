@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Security.Cryptography;
 using System.Threading;
+using ReactiveUI;
 
 namespace NSync.Core
 {
@@ -36,7 +40,19 @@ namespace NSync.Core
 
             return This;
         }
-        
+
+        public static string CalculateStreamSHA1(Stream file)
+        {
+            var sha1 = SHA1.Create();
+            return BitConverter.ToString(sha1.ComputeHash(file)).Replace("-", String.Empty);
+        }
+
+        public static IObservable<Unit> CopyToAsync(string from, string to)
+        {
+            // XXX: SafeCopy
+            return Observable.Start(() => File.Copy(from, to, true), RxApp.TaskpoolScheduler);
+        }
+
         static TAcc scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)
         {
             TAcc acc = initialValue;

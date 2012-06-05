@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -90,9 +91,7 @@ namespace NSync.Core
 
         public static ReleaseEntry GenerateFromFile(Stream file, string filename)
         {
-            var sha1 = System.Security.Cryptography.SHA1.Create();
-
-            var hash = BitConverter.ToString(sha1.ComputeHash(file)).Replace("-", String.Empty); 
+            var hash = Utility.CalculateStreamSHA1(file); 
             return new ReleaseEntry(hash, filename, file.Length, filenameIsDeltaFile(filename));
         }
 
