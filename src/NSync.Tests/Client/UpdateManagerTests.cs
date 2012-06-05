@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
@@ -165,19 +166,90 @@ namespace NSync.Tests.Client
             [Fact]
             public void ChecksumShouldPassOnValidPackages()
             {
-                throw new NotImplementedException();
+                var filename = "NSync.Core.1.0.0.0.nupkg";
+                var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
+                var fs = new Mock<IFileSystemFactory>();
+                var urlDownloader = new Mock<IUrlDownloader>();
+
+                ReleaseEntry entry;
+                using (var f = File.OpenRead(nuGetPkg)) {
+                    entry = ReleaseEntry.GenerateFromFile(f, filename);
+                }
+
+                var fileInfo = new Mock<FileInfoBase>();
+                fileInfo.Setup(x => x.OpenRead()).Returns(File.OpenRead(nuGetPkg));
+                fileInfo.Setup(x => x.Exists).Returns(true);
+                fileInfo.Setup(x => x.Length).Returns(new FileInfo(nuGetPkg).Length);
+
+                fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
+
+                var fixture = ExposedObject.From(
+                    new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
+
+                IObservable<Unit> result = fixture.checksumPackage(entry);
+                result.First();
             }
 
             [Fact]
             public void ChecksumShouldFailIfFilesAreMissing()
             {
-                throw new NotImplementedException();
+                var filename = "NSync.Core.1.0.0.0.nupkg";
+                var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
+                var fs = new Mock<IFileSystemFactory>();
+                var urlDownloader = new Mock<IUrlDownloader>();
+
+                ReleaseEntry entry;
+                using (var f = File.OpenRead(nuGetPkg)) {
+                    entry = ReleaseEntry.GenerateFromFile(f, filename);
+                }
+
+                var fileInfo = new Mock<FileInfoBase>();
+                fileInfo.Setup(x => x.OpenRead()).Returns(File.OpenRead(nuGetPkg));
+                fileInfo.Setup(x => x.Exists).Returns(false);
+
+                fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
+
+                var fixture = ExposedObject.From(
+                    new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
+
+                IObservable<Unit> result = fixture.checksumPackage(entry);
+                Assert.Throws<Exception>(() => result.First());
             }
 
             [Fact]
             public void ChecksumShouldFailIfFilesAreBogus()
             {
-                throw new NotImplementedException();
+                var filename = "NSync.Core.1.0.0.0.nupkg";
+                var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
+                var fs = new Mock<IFileSystemFactory>();
+                var urlDownloader = new Mock<IUrlDownloader>();
+
+                ReleaseEntry entry;
+                using (var f = File.OpenRead(nuGetPkg)) {
+                    entry = ReleaseEntry.GenerateFromFile(f, filename);
+                }
+
+                var fileInfo = new Mock<FileInfoBase>();
+                fileInfo.Setup(x => x.OpenRead()).Returns(new MemoryStream(Encoding.UTF8.GetBytes("Lol broken")));
+                fileInfo.Setup(x => x.Exists).Returns(true);
+                fileInfo.Setup(x => x.Length).Returns(new FileInfo(nuGetPkg).Length);
+                fileInfo.Setup(x => x.Delete()).Verifiable();
+
+                fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
+
+                var fixture = ExposedObject.From(
+                    new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
+
+                bool shouldDie = true;
+                IObservable<Unit> result = fixture.checksumPackage(entry);
+                try {
+                    result.First();
+                } catch (Exception ex) {
+                    shouldDie = false;
+                }
+
+                shouldDie.ShouldBeFalse();
+                fileInfo.Verify(x => x.Delete(), Times.Once());
             }
 
             [Fact]

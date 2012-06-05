@@ -191,7 +191,7 @@ namespace NSync.Client
 
                 if (targetPackage.Length != downloadedRelease.Filesize) {
                     this.Log().Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
-                    File.Delete(targetPackage.FullName);
+                    targetPackage.Delete();
                     throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
                 } 
 
@@ -199,7 +199,7 @@ namespace NSync.Client
                     var hash = Utility.CalculateStreamSHA1(file);
                     if (hash != downloadedRelease.SHA1) {
                         this.Log().Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
-                        File.Delete(targetPackage.FullName);
+                        targetPackage.Delete();
                         throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
                     }
                 }
