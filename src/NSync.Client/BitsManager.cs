@@ -31,7 +31,7 @@ namespace NSync.Client
     public sealed class BitsUrlDownloader : IUrlDownloader, IDisposable
     {
         BitsManager manager;
-        string applicationName;
+        readonly string applicationName;
 
         public BitsUrlDownloader(string applicationName)
         {

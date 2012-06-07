@@ -97,7 +97,7 @@ namespace NSync.Client
                     .Merge(2);
             }
 
-            return downloadResult.SelectMany(_ => checksumPackages(releasesToDownload));
+            return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
         }
 
 
@@ -170,7 +170,7 @@ namespace NSync.Client
             }
         }
 
-        IObservable<Unit> checksumPackages(IEnumerable<ReleaseEntry> releasesDownloaded)
+        IObservable<Unit> checksumAllPackages(IEnumerable<ReleaseEntry> releasesDownloaded)
         {
             return releasesDownloaded.ToObservable()
                 .Select(x => Observable.Defer(() => checksumPackage(x)))
