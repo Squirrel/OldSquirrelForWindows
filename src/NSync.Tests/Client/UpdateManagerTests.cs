@@ -159,6 +159,18 @@ namespace NSync.Tests.Client
 
                 Assert.Throws<Exception>(() => fixture.CheckForUpdate().First());
             }
+
+            [Fact]
+            public void IfLocalVersionGreaterThanRemoteWeRollback()
+            {
+                throw new NotImplementedException();
+            }
+
+            [Fact]
+            public void IfLocalAndRemoteAreEqualThenDoNothing()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public class DownloadReleasesTests
