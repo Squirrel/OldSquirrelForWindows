@@ -98,6 +98,34 @@ namespace NSync.Tests.Core
                 File.Delete(targetFile);
             }
         }
+
+        [Fact]
+        public void ApplyDeltaPackageTest()
+        {
+            var basePackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.0.0.0-full.nupkg"));
+            var deltaPackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0-delta.nupkg"));
+            var expectedPackageFile = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0-full.nupkg");
+            var outFile = Path.GetTempFileName() + ".nupkg";
+
+            try {
+                basePackage.ApplyDeltaPackage(deltaPackage, outFile);
+                var result = new ZipPackage(outFile);
+                var expected = new ZipPackage(expectedPackageFile);
+
+                result.Id.ShouldEqual(expected.Id);
+                result.Version.ShouldEqual(expected.Version);
+
+                Enumerable.Zip(
+                    expected.GetFiles().Select(x => x.Path).OrderBy(x => x),
+                    result.GetFiles().Select(x => x.Path).OrderBy(x => x),
+                    (e, a) => e == a 
+                ).All(x => x).ShouldBeTrue();
+            } finally {
+                if (File.Exists(outFile)) {
+                    File.Delete(outFile);
+                }
+            }
+        }
     }
 
     public class CreateDeltaPackageTests : IEnableLogger

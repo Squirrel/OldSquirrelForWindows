@@ -72,7 +72,7 @@ namespace NSync.Core
             }
         }
 
-        public void CreateDeltaPackage(ReleasePackage baseFixture, string outputFile)
+        public ReleasePackage CreateDeltaPackage(ReleasePackage baseFixture, string outputFile)
         {
             var baseTempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
             baseTempPath.Create();
@@ -127,6 +127,8 @@ namespace NSync.Core
                 baseTempPath.Delete(true);
                 tempPath.Delete(true);
             }
+
+            return new ReleasePackage(outputFile);
         }
 
         void removeDeveloperDocumentation(DirectoryInfo expandedRepoPath)
@@ -197,7 +199,7 @@ namespace NSync.Core
 
         IPackage findPackageFromName(string id, IVersionSpec versionSpec, string packagesRootDir = null, IQueryable<IPackage> machineCache = null)
         {
-            IQueryable<IPackage> localPackages = Enumerable.Empty<IPackage>().AsQueryable();
+            var localPackages = Enumerable.Empty<IPackage>().AsQueryable();
             machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
 
             if (packagesRootDir != null) {
@@ -243,6 +245,11 @@ namespace NSync.Core
             }
 
             return true;
+        }
+
+        public ReleasePackage ApplyDeltaPackage(ReleasePackage deltaPackage, string outputFile)
+        {
+            throw new NotImplementedException();
         }
     }
 }
