@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml;
 using Ionic.Zip;
 using MarkdownSharp;
@@ -131,6 +132,77 @@ namespace NSync.Core
             return new ReleasePackage(outputFile);
         }
 
+        public ReleasePackage ApplyDeltaPackage(ReleasePackage deltaPackage, string outputFile)
+        {
+            string workingPath;
+            string deltaPath;
+
+            using (Utility.WithTempDirectory(out deltaPath))
+            using (Utility.WithTempDirectory(out workingPath))
+            using (var deltaZip = new ZipFile(deltaPackage.InputPackageFile))
+            using (var baseZip = new ZipFile(InputPackageFile)) {
+                deltaZip.ExtractAll(deltaPath);
+                baseZip.ExtractAll(workingPath);
+
+                var pathsVisited = new List<string>();
+                new DirectoryInfo(deltaPath).GetAllFilesRecursively()
+                    .Select(x => x.FullName.Replace(deltaPath + Path.DirectorySeparatorChar, ""))
+                    .Where(x => x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
+                    .ForEach(file => {
+                        var inputFile = Path.Combine(deltaPath, file);
+                        var finalTarget = Path.Combine(workingPath, Regex.Replace(file, @".diff$", ""));
+                        var outPath = Path.GetTempFileName();
+
+                        pathsVisited.Add(Regex.Replace(file, @".diff$", "").ToLowerInvariant());
+
+                        if (new FileInfo(inputFile).Length == 0) {
+                            this.Log().Info("{0} exists unchanged, skipping", file);
+                            return;
+                        }
+
+                        if (file.EndsWith(".diff")) {
+                            using (var of = File.OpenWrite(outPath))
+                            using (var inf = File.OpenRead(finalTarget)) {
+                                this.Log().Info("Applying Diff to {0}", file);
+                                BinaryPatchUtility.Apply(inf, () => File.OpenRead(inputFile), of);
+                            }
+                        } else {
+                            using (var of = File.OpenWrite(outPath))
+                            using (var inf = File.OpenRead(inputFile)) {
+                                this.Log().Info("Adding new file: {0}", file);
+                                inf.CopyTo(of);
+                            }
+                        }
+
+                        File.Delete(finalTarget);
+                        File.Move(outPath, finalTarget);
+                    });
+
+                new DirectoryInfo(workingPath).GetAllFilesRecursively()
+                    .Select(x => x.FullName.Replace(workingPath + Path.DirectorySeparatorChar, "").ToLowerInvariant())
+                    .Where(x => x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase) && !pathsVisited.Contains(x))
+                    .ForEach(x => { 
+                        this.Log().Info("{0} was in old package but not in new one, deleting", x);
+                        File.Delete(Path.Combine(workingPath, x));
+                    });
+
+                new DirectoryInfo(deltaPath).GetAllFilesRecursively()
+                    .Select(x => x.FullName.Replace(deltaPath + Path.DirectorySeparatorChar, ""))
+                    .Where(x => !x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
+                    .ForEach(x => {
+                        this.Log().Info("Updating metadata file: {0}", x);
+                        File.Copy(Path.Combine(deltaPath, x), Path.Combine(workingPath, x), true);
+                    });
+
+                using (var zf = new ZipFile(outputFile)) {
+                    zf.AddDirectory(workingPath);
+                    zf.Save();
+                }
+            }
+
+            return new ReleasePackage(outputFile);
+        }
+
         void removeDeveloperDocumentation(DirectoryInfo expandedRepoPath)
         {
             expandedRepoPath.GetAllFilesRecursively()
@@ -247,9 +319,5 @@ namespace NSync.Core
             return true;
         }
 
-        public ReleasePackage ApplyDeltaPackage(ReleasePackage deltaPackage, string outputFile)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

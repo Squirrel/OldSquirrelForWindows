@@ -115,6 +115,12 @@ namespace NSync.Tests.Core
                 result.Id.ShouldEqual(expected.Id);
                 result.Version.ShouldEqual(expected.Version);
 
+                this.Log().Info("Expected file list:");
+                expected.GetFiles().Select(x => x.Path).OrderBy(x => x).ForEach(x => this.Log().Info(x));
+
+                this.Log().Info("Actual file list:");
+                result.GetFiles().Select(x => x.Path).OrderBy(x => x).ForEach(x => this.Log().Info(x));
+
                 Enumerable.Zip(
                     expected.GetFiles().Select(x => x.Path).OrderBy(x => x),
                     result.GetFiles().Select(x => x.Path).OrderBy(x => x),
