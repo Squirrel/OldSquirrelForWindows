@@ -5,11 +5,13 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Text;
 using Moq;
 using NSync.Client;
 using NSync.Core;
 using NSync.Tests.TestHelpers;
+using NuGet;
 using Xunit;
 
 namespace NSync.Tests.Client
@@ -274,6 +276,49 @@ namespace NSync.Tests.Client
             public void DownloadReleasesFromFileDirectoryIntegrationTest()
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        public class ApplyReleasesTests
+        {
+            [Fact]
+            public void ApplyReleasesWithOneReleaseFile()
+            {
+                throw new NotImplementedException();
+            }
+
+            [Fact]
+            public void ApplyReleasesWithDeltaReleases()
+            {
+                throw new NotImplementedException();
+            }
+
+            [Fact]
+            public void CreateFullPackagesFromDeltaSmokeTest()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    Directory.CreateDirectory(Path.Combine(tempDir, "packages"));
+
+                    new[] {
+                        "NSync.Core.1.0.0.0-full.nupkg",
+                        "NSync.Core.1.1.0.0-delta.nupkg"
+                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "packages", x)));
+
+                    var urlDownloader = new Mock<IUrlDownloader>();
+                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+
+                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.0.0.0-full.nupkg"));
+                    var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
+
+                    var resultObs = (IObservable<ReleaseEntry>)fixture.GetType().GetMethod("createFullPackagesFromDeltas", BindingFlags.NonPublic | BindingFlags.Instance)
+                        .Invoke(fixture, new object[] { new[] {deltaEntry}, baseEntry });
+
+                    var result = resultObs.First();
+                    var zp = new ZipPackage(Path.Combine(tempDir, "packages", result.Filename));
+
+                    zp.Version.ToString().ShouldEqual("1.1.0.0");
+                }
             }
         }
     }

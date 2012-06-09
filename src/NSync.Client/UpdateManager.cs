@@ -251,6 +251,10 @@ namespace NSync.Client
                     Regex.Replace(deltaPkg.InputPackageFile, @"-delta.nupkg$", ".nupkg", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant));
             }, RxApp.TaskpoolScheduler);
 
+            if (releasesToApply.Count() == 1) {
+                return ret.Select(x => ReleaseEntry.GenerateFromFile(x.InputPackageFile));
+            }
+
             return ret.SelectMany(x =>
                 createFullPackagesFromDeltas(releasesToApply.Skip(1), ReleaseEntry.GenerateFromFile(File.OpenRead(x.InputPackageFile), x.InputPackageFile)));
         }
