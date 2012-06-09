@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using NSync.Client;
+using NSync.Core;
 using NSync.Tests.TestHelpers;
 using ReactiveUI;
 using Xunit;
@@ -27,7 +28,7 @@ namespace NSync.Tests.Client
             };
 
             string tempPath = null;
-            using (IntegrationTestHelper.WithTempDirectory(out tempPath))
+            using (Utility.WithTempDirectory(out tempPath))
             using (var fixture = new BitsUrlDownloader("BITSTests")) {
                 fixture.QueueBackgroundDownloads(urls, files.Select(x => Path.Combine(tempPath, x)))
                     .Timeout(TimeSpan.FromSeconds(120), RxApp.TaskpoolScheduler)
@@ -56,7 +57,7 @@ namespace NSync.Tests.Client
             };
 
             string tempPath = null;
-            using (IntegrationTestHelper.WithTempDirectory(out tempPath))
+            using (Utility.WithTempDirectory(out tempPath))
             using (var fixture = new BitsUrlDownloader("BITSTests")) {
                 Assert.Throws<Exception>(() => {
                     fixture.QueueBackgroundDownloads(urls, files.Select(x => Path.Combine(tempPath, x)))
