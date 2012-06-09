@@ -239,6 +239,10 @@ namespace NSync.Client
                 return Observable.Return(releasesToApply.MaxBy(x => x.Version).First());
             }
 
+            if (!releasesToApply.Any(x => x.IsDelta)) {
+                return Observable.Throw<ReleaseEntry>(new Exception("Cannot apply combinations of delta and full packages"));
+            }
+
             var ret = Observable.Start(() => {
                 var basePkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", currentVersion.Filename));
                 var deltaPkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", releasesToApply.First().Filename));
