@@ -31,7 +31,7 @@ namespace NSync.Core
         public Version Version {
             get {
                 var parts = Filename
-                    .Replace(".nupkg", "").Replace(".delta", "")
+                    .Replace(".nupkg", "").Replace("-delta", "")
                     .Split('.', '-').Reverse();
 
                 var numberRegex = new Regex(@"^\d+$");
@@ -109,9 +109,16 @@ namespace NSync.Core
             return new ReleaseEntry(hash, filename, file.Length, filenameIsDeltaFile(filename));
         }
 
+        public static ReleaseEntry GenerateFromFile(string filename)
+        {
+            using (var inf = File.OpenRead(filename)) {
+                return GenerateFromFile(inf, filename);
+            }
+        }
+
         static bool filenameIsDeltaFile(string filename)
         {
-            return filename.EndsWith(".delta", StringComparison.InvariantCultureIgnoreCase);
+            return filename.EndsWith("-delta.nupkg", StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

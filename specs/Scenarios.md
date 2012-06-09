@@ -12,7 +12,8 @@ and type `Create-Release`. What does this do? It:
 * It puts the package in a special "Releases" directory of my solution (along
   perhaps with a special "delta package" for updates)
 * It also creates a Setup.exe that I can distribute to people
-* Can also transform `changelog.md` to `changelog.html` using either bundled Pretzel in the Nsync nuget, or wrapping around MarkdownDeep
+* Can also transform `changelog.md` to `changelog.html` using either bundled
+  Pretzel in the Nsync nuget, or wrapping around MarkdownDeep
 
 I've created a new release. Now, I want to share it with the world! I upload
 the contents of my Releases directory verbatim to the web via S3 / FTP /

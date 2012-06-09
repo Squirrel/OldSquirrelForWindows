@@ -248,7 +248,7 @@ namespace NSync.Client
                 var deltaPkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", releasesToApply.First().Filename));
 
                 return basePkg.ApplyDeltaPackage(deltaPkg,
-                    Regex.Replace(deltaPkg.InputPackageFile, @"-delta.nupkg$", "-full.nupkg", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant));
+                    Regex.Replace(deltaPkg.InputPackageFile, @"-delta.nupkg$", ".nupkg", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant));
             }, RxApp.TaskpoolScheduler);
 
             return ret.SelectMany(x =>

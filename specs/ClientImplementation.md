@@ -19,7 +19,7 @@ folders:
 ```
   \packages
     MyCoolApp-1.0.nupkg
-    MyCoolApp-1.1.nupkg.delta
+    MyCoolApp-1.1-delta.nupkg
     MyCoolApp-1.1.nupkg   ## Generated from 1.0+1.1-delta
   \app-[version]
 ```
