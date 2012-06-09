@@ -9,7 +9,9 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using NSync.Core;
+using NuGet;
 using ReactiveUI;
 using IEnableLogger = NSync.Core.IEnableLogger;
 
@@ -19,7 +21,7 @@ namespace NSync.Client
     {
         IObservable<UpdateInfo> CheckForUpdate();
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
-        IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply);
+        IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply);
     }
 
     public class UpdateManager : IEnableLogger, IUpdateManager
@@ -106,12 +108,29 @@ namespace NSync.Client
             return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
         }
 
-
-        public IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
+        public IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply)
         {
-            Contract.Requires(releasesToApply != null);
+            Contract.Requires(updatesToApply != null);
+            var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.CurrentRelease);
 
-            return Observable.Throw<Unit>(new NotImplementedException());
+            return fullPackageToApply.SelectMany(release => Observable.Start(() => {
+                var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
+                var target = new DirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
+                target.Create();
+
+                pkg.GetFiles()
+                    .Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
+                    .ForEach(x => {
+                        var m = Regex.Match(x.Path, @".*\\([^\\]+)$");
+                        var targetPath = Path.Combine(target.FullName, m.Groups[1].Value);
+
+                        using (var inf = x.GetStream())
+                        using (var of = File.Open(targetPath, FileMode.CreateNew, FileAccess.Write)) {
+                            this.Log().Info("Writing {0} to app directory", targetPath);
+                            inf.CopyTo(of);
+                        }
+                    });
+            }));
         }
 
         void initializeClientAppDirectory()
@@ -213,16 +232,36 @@ namespace NSync.Client
                 }
             }, RxApp.TaskpoolScheduler);
         }
+
+        IObservable<ReleaseEntry> createFullPackagesFromDeltas(IEnumerable<ReleaseEntry> releasesToApply, ReleaseEntry currentVersion)
+        {
+            if (!releasesToApply.Any() || releasesToApply.All(x => !x.IsDelta)) {
+                return Observable.Return(releasesToApply.MaxBy(x => x.Version).First());
+            }
+
+            var ret = Observable.Start(() => {
+                var basePkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", currentVersion.Filename));
+                var deltaPkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", releasesToApply.First().Filename));
+
+                return basePkg.ApplyDeltaPackage(deltaPkg,
+                    Regex.Replace(deltaPkg.InputPackageFile, @"-delta.nupkg$", "-full.nupkg", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant));
+            }, RxApp.TaskpoolScheduler);
+
+            return ret.SelectMany(x =>
+                createFullPackagesFromDeltas(releasesToApply.Skip(1), ReleaseEntry.GenerateFromFile(File.OpenRead(x.InputPackageFile), x.InputPackageFile)));
+        }
     }
 
     public class UpdateInfo
     {
         public Version Version { get; protected set; }
+        public ReleaseEntry CurrentRelease { get; protected set; }
         public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
 
-        protected UpdateInfo(ReleaseEntry latestRelease, IEnumerable<ReleaseEntry> releasesToApply)
+        protected UpdateInfo(ReleaseEntry currentRelease, IEnumerable<ReleaseEntry> releasesToApply)
         {
-            Version = latestRelease != null ? latestRelease.Version : null;
+            CurrentRelease = currentRelease;
+            Version = currentRelease != null ? currentRelease.Version : null;
             ReleasesToApply = releasesToApply;
         }
 
