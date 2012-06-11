@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -17,6 +17,10 @@ namespace NSync.Core
 
         protected ReleaseEntry(string sha1, string filename, long filesize, bool isDelta)
         {
+            Contract.Requires(sha1 != null && sha1.Length == 40);
+            Contract.Requires(filename != null);
+            Contract.Requires(filesize > 0);
+
             SHA1 = sha1; Filename = filename; Filesize = filesize; IsDelta = isDelta;
         }
 
@@ -58,6 +62,8 @@ namespace NSync.Core
         static readonly Regex entryRegex = new Regex(@"^([0-9a-fA-F]{40})\s+(\S+)\s+(\d+)[\r]*$");
         public static ReleaseEntry ParseReleaseEntry(string entry)
         {
+            Contract.Requires(entry != null);
+
             var m = entryRegex.Match(entry);
             if (!m.Success) {
                 throw new Exception("Invalid release entry: " + entry);
@@ -74,6 +80,8 @@ namespace NSync.Core
 
         public static IEnumerable<ReleaseEntry> ParseReleaseFile(string file)
         {
+            Contract.Requires(!String.IsNullOrEmpty(file));
+
             var ret = file.Split('\n')
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Select(ParseReleaseEntry)
@@ -84,6 +92,9 @@ namespace NSync.Core
 
         public static void WriteReleaseFile(IEnumerable<ReleaseEntry> releaseEntries, string path)
         {
+            Contract.Requires(releaseEntries != null && releaseEntries.Any());
+            Contract.Requires(!String.IsNullOrEmpty(path));
+
             File.WriteAllText(path, 
                 String.Join("\n", releaseEntries.Select(x => x.EntryAsString)), 
                 Encoding.UTF8);
@@ -91,6 +102,9 @@ namespace NSync.Core
 
         public static ReleaseEntry GenerateFromFile(Stream file, string filename)
         {
+            Contract.Requires(file != null && file.CanRead);
+            Contract.Requires(!String.IsNullOrEmpty(filename));
+
             var hash = Utility.CalculateStreamSHA1(file); 
             return new ReleaseEntry(hash, filename, file.Length, filenameIsDeltaFile(filename));
         }

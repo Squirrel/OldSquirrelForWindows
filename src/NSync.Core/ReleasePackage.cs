@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,8 @@ namespace NSync.Core
 
         public string CreateReleasePackage(string outputFile, string packagesRootDir = null)
         {
+            Contract.Requires(!String.IsNullOrEmpty(outputFile));
+
             if (ReleasePackageFile != null) {
                 return ReleasePackageFile;
             }
@@ -75,6 +78,9 @@ namespace NSync.Core
 
         public ReleasePackage CreateDeltaPackage(ReleasePackage baseFixture, string outputFile)
         {
+            Contract.Requires(baseFixture != null);
+            Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
+
             var baseTempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
             baseTempPath.Create();
 
@@ -134,6 +140,9 @@ namespace NSync.Core
 
         public ReleasePackage ApplyDeltaPackage(ReleasePackage deltaPackage, string outputFile)
         {
+            Contract.Requires(deltaPackage != null);
+            Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
+
             string workingPath;
             string deltaPath;
 

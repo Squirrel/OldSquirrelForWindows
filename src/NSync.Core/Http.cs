@@ -5,6 +5,7 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 namespace NSync.Core
 {
@@ -21,6 +22,8 @@ namespace NSync.Core
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(string url, Dictionary<string, string> headers = null)
         {
+            Contract.Requires(url != null);
+
             var ret = makeWebRequest(new Uri(url), headers)
                 .SelectMany(processAndCacheWebResponse)
                 .Multicast(new AsyncSubject<byte[]>());

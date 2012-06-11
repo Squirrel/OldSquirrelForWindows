@@ -26,12 +26,12 @@ namespace NSync.Core
         Action<string> deleteDirRecursive;
         Func<string, string, IObservable<Unit>> copyAsync;
 
-        public AnonFileSystem(Func<string, DirectoryInfoBase> getDirInfo, 
-            Func<string, FileInfoBase> getFileInfo, 
-            Func<string, FileBase> getFile,
-            Func<string, DirectoryInfoBase> createDirRecursive,
-            Action<string> deleteDirRecursive,
-            Func<string, string, IObservable<Unit>> copyAsync)
+        public AnonFileSystem(Func<string, DirectoryInfoBase> getDirInfo = null, 
+            Func<string, FileInfoBase> getFileInfo = null, 
+            Func<string, FileBase> getFile = null,
+            Func<string, DirectoryInfoBase> createDirRecursive = null,
+            Action<string> deleteDirRecursive = null,
+            Func<string, string, IObservable<Unit>> copyAsync = null)
         {
             this.getDirInfo = getDirInfo;
             this.getFileInfo = getFileInfo;
@@ -43,31 +43,37 @@ namespace NSync.Core
 
         public DirectoryInfoBase GetDirectoryInfo(string path)
         {
+            if (getDirInfo == null) throw new NotImplementedException();
             return getDirInfo(path);
         }
 
         public FileInfoBase GetFileInfo(string path)
         {
+            if (getFileInfo == null) throw new NotImplementedException();
             return getFileInfo(path);
         }
 
         public FileBase GetFile(string path)
         {
+            if (getFile == null) throw new NotImplementedException();
             return getFile(path);
         }
 
         public DirectoryInfoBase CreateDirectoryRecursive(string path)
         {
+            if (createDirRecursive == null)  throw new NotImplementedException();
             return createDirRecursive(path);
         }
 
         public void DeleteDirectoryRecursive(string path)
         {
+            if (deleteDirRecursive == null)  throw new NotImplementedException();
             deleteDirRecursive(path);
         }
 
         public IObservable<Unit> CopyAsync(string from, string to)
         {
+            if (copyAsync == null)  throw new NotImplementedException();
             return copyAsync(from, to);
         }
     }
