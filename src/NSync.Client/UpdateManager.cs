@@ -111,11 +111,7 @@ namespace NSync.Client
         public IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply)
         {
             Contract.Requires(updatesToApply != null);
-<<<<<<< HEAD
-=======
-
->>>>>>> Annotate UpdateManager
-            var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.CurrentRelease);
+            var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.LatestFullRelease);
 
             return fullPackageToApply.SelectMany(release => Observable.Start(() => {
                 var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
@@ -267,18 +263,22 @@ namespace NSync.Client
     public class UpdateInfo
     {
         public Version Version { get; protected set; }
-        public ReleaseEntry CurrentRelease { get; protected set; }
+        public ReleaseEntry LatestFullRelease { get; protected set; }
         public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
 
-        protected UpdateInfo(ReleaseEntry currentRelease, IEnumerable<ReleaseEntry> releasesToApply)
+        protected UpdateInfo(ReleaseEntry latestFullRelease, IEnumerable<ReleaseEntry> releasesToApply)
         {
-            CurrentRelease = currentRelease;
-            Version = currentRelease != null ? currentRelease.Version : null;
-            ReleasesToApply = releasesToApply;
+            Contract.Requires(latestFullRelease != null);
+
+            LatestFullRelease = latestFullRelease;
+            Version = latestFullRelease != null ? latestFullRelease.Version : null;
+            ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
         }
 
         public static UpdateInfo Create(ReleaseEntry currentVersion, IEnumerable<ReleaseEntry> availableReleases)
         {
+            Contract.Requires(availableReleases != null);
+
             var latestFull = availableReleases.MaxBy(x => x.Version).FirstOrDefault(x => !x.IsDelta);
 
             if (currentVersion == null) {
@@ -293,8 +293,8 @@ namespace NSync.Client
             }
 
             return (deltasSize > latestFull.Filesize)
-                ? new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray())
-                : new UpdateInfo(currentVersion, new[] { latestFull });
+                ? new UpdateInfo(latestFull, newerThanUs.Where(x => x.IsDelta).ToArray())
+                : new UpdateInfo(latestFull, new[] { latestFull });
         }
     }
 }

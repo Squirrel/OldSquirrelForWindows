@@ -292,6 +292,7 @@ namespace NSync.Tests.Client
             public void ApplyReleasesWithDeltaReleases()
             {
                 string tempDir;
+
                 using (Utility.WithTempDirectory(out tempDir)) {
                     Directory.CreateDirectory(Path.Combine(tempDir, "packages"));
 
