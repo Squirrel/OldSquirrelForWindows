@@ -298,7 +298,8 @@ namespace NSync.Tests.Client
 
                     new[] {
                         "NSync.Core.1.0.0.0-full.nupkg",
-                        "NSync.Core.1.1.0.0-delta.nupkg"
+                        "NSync.Core.1.1.0.0-delta.nupkg",
+                        "NSync.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
@@ -306,8 +307,11 @@ namespace NSync.Tests.Client
 
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.0.0.0-full.nupkg"));
                     var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
+                    var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-full.nupkg"));
 
-                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry });
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry });
+                    updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
+
                     fixture.ApplyReleases(updateInfo).First();
 
                     var filesToFind = new[] {

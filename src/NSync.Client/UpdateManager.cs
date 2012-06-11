@@ -280,9 +280,12 @@ namespace NSync.Client
             Contract.Requires(availableReleases != null);
 
             var latestFull = availableReleases.MaxBy(x => x.Version).FirstOrDefault(x => !x.IsDelta);
+            if (latestFull == null) {
+                throw new Exception("There should always be at least one full release");
+            }
 
             if (currentVersion == null) {
-                return new UpdateInfo(null, new[] { latestFull });
+                return new UpdateInfo(latestFull, new[] { latestFull });
             }
 
             var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
@@ -292,7 +295,7 @@ namespace NSync.Client
                 return new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray());
             }
 
-            return (deltasSize > latestFull.Filesize)
+            return (deltasSize < latestFull.Filesize)
                 ? new UpdateInfo(latestFull, newerThanUs.Where(x => x.IsDelta).ToArray())
                 : new UpdateInfo(latestFull, new[] { latestFull });
         }
