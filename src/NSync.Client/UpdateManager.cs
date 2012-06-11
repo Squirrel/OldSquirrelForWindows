@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -34,6 +35,9 @@ namespace NSync.Client
             IFileSystemFactory fileSystem = null,
             IUrlDownloader urlDownloader = null)
         {
+            Contract.Requires(!String.IsNullOrEmpty(urlOrPath));
+            Contract.Requires(!String.IsNullOrEmpty(applicationName));
+
             updateUrlOrPath = urlOrPath;
 
             rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
@@ -81,6 +85,8 @@ namespace NSync.Client
 
         public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
         {
+            Contract.Requires(releasesToDownload != null);
+
             IObservable<Unit> downloadResult;
 
             if (isHttpUrl(updateUrlOrPath)) {
@@ -103,6 +109,8 @@ namespace NSync.Client
 
         public IObservable<Unit> ApplyReleases(IEnumerable<ReleaseEntry> releasesToApply)
         {
+            Contract.Requires(releasesToApply != null);
+
             return Observable.Throw<Unit>(new NotImplementedException());
         }
 
