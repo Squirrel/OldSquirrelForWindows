@@ -118,11 +118,19 @@ namespace NSync.Client
                 var target = new DirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
                 target.Create();
 
+                // NB: We sort this list in order to guarantee that if a Net20
+                // and a Net40 version of a DLL get shipped, we always end up
+                // with the 4.0 version.
                 pkg.GetFiles()
                     .Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
+                    .OrderBy(x => x.Path)
                     .ForEach(x => {
                         var m = Regex.Match(x.Path, @".*\\([^\\]+)$");
                         var targetPath = Path.Combine(target.FullName, m.Groups[1].Value);
+
+                        if (File.Exists(targetPath)) {
+                            File.Delete(targetPath);
+                        }
 
                         using (var inf = x.GetStream())
                         using (var of = File.Open(targetPath, FileMode.CreateNew, FileAccess.Write)) {
