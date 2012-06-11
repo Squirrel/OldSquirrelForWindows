@@ -42,8 +42,8 @@ namespace NSync.Tests.Client
                 var result = fixture.CheckForUpdate().First();
 
                 Assert.NotNull(result);
-                Assert.Equal(1, result.Version.Major);
-                Assert.Equal(1, result.Version.Minor);
+                Assert.Equal(1, result.ReleasesToApply.Single().Version.Major);
+                Assert.Equal(1, result.ReleasesToApply.Single().Version.Minor);
             }
 
             [Fact]
@@ -285,7 +285,44 @@ namespace NSync.Tests.Client
             [Fact]
             public void ApplyReleasesWithOneReleaseFile()
             {
-                throw new NotImplementedException();
+                string tempDir;
+
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
+                    Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+
+                    new[] {
+                        "NSync.Core.1.0.0.0-full.nupkg",
+                        "NSync.Core.1.1.0.0-full.nupkg",
+                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+
+                    var urlDownloader = new Mock<IUrlDownloader>();
+                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+
+                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.0.0.0-full.nupkg"));
+                    var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-full.nupkg"));
+
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry });
+                    updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
+
+                    fixture.ApplyReleases(updateInfo).First();
+
+                    var filesToFind = new[] {
+                        new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
+                        new {Name = "NSync.Core.dll", Version = new Version("1.1.0.0")},
+                        new {Name = "Ionic.Zip.dll", Version = new Version("1.9.1.8")},
+                    };
+
+                    filesToFind.ForEach(x => {
+                        var path = Path.Combine(tempDir, "theApp", "app-1.1.0.0", x.Name);
+                        this.Log().Info("Looking for {0}", path);
+                        File.Exists(path).ShouldBeTrue();
+
+                        var vi = FileVersionInfo.GetVersionInfo(path);
+                        var verInfo = new Version(vi.FileVersion ?? "1.0.0.0");
+                        x.Version.ShouldEqual(verInfo);
+                    });
+                }
             }
 
             [Fact]
@@ -318,7 +355,7 @@ namespace NSync.Tests.Client
                     var filesToFind = new[] {
                         new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
                         new {Name = "NSync.Core.dll", Version = new Version("1.1.0.0")},
-                        new {Name = "Ionic.Zip.dll", Version = new Version("2.0.0.0")},
+                        new {Name = "Ionic.Zip.dll", Version = new Version("1.9.1.8")},
                     };
 
                     filesToFind.ForEach(x => {

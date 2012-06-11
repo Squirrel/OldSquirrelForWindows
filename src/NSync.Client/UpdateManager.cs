@@ -111,7 +111,7 @@ namespace NSync.Client
         public IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply)
         {
             Contract.Requires(updatesToApply != null);
-            var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.LatestFullRelease);
+            var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.CurrentlyInstalledVersion);
 
             return fullPackageToApply.SelectMany(release => Observable.Start(() => {
                 var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
@@ -271,15 +271,14 @@ namespace NSync.Client
     public class UpdateInfo
     {
         public Version Version { get; protected set; }
-        public ReleaseEntry LatestFullRelease { get; protected set; }
+        public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
         public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
 
-        protected UpdateInfo(ReleaseEntry latestFullRelease, IEnumerable<ReleaseEntry> releasesToApply)
+        protected UpdateInfo(ReleaseEntry currentlyInstalledVersion, IEnumerable<ReleaseEntry> releasesToApply)
         {
-            Contract.Requires(latestFullRelease != null);
-
-            LatestFullRelease = latestFullRelease;
-            Version = latestFullRelease != null ? latestFullRelease.Version : null;
+            // NB: When bootstrapping, CurrentlyInstalledVersion is null!
+            CurrentlyInstalledVersion = currentlyInstalledVersion;
+            Version = currentlyInstalledVersion != null ? currentlyInstalledVersion.Version : null;
             ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
         }
 
@@ -293,19 +292,15 @@ namespace NSync.Client
             }
 
             if (currentVersion == null) {
-                return new UpdateInfo(latestFull, new[] { latestFull });
+                return new UpdateInfo(currentVersion, new[] { latestFull });
             }
 
             var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
             var deltasSize = newerThanUs.Where(x => x.IsDelta).Sum(x => x.Filesize);
 
-            if (latestFull == null) {
-                return new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray());
-            }
-
-            return (deltasSize < latestFull.Filesize)
-                ? new UpdateInfo(latestFull, newerThanUs.Where(x => x.IsDelta).ToArray())
-                : new UpdateInfo(latestFull, new[] { latestFull });
+            return (deltasSize < latestFull.Filesize && deltasSize > 0)
+                ? new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray())
+                : new UpdateInfo(currentVersion, new[] { latestFull });
         }
     }
 }
