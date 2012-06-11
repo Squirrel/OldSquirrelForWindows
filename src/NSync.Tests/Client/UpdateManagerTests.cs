@@ -280,7 +280,7 @@ namespace NSync.Tests.Client
             }
         }
 
-        public class ApplyReleasesTests
+        public class ApplyReleasesTests : IEnableLogger
         {
             [Fact]
             public void ApplyReleasesWithOneReleaseFile()
@@ -294,20 +294,21 @@ namespace NSync.Tests.Client
                 string tempDir;
 
                 using (Utility.WithTempDirectory(out tempDir)) {
-                    Directory.CreateDirectory(Path.Combine(tempDir, "packages"));
+                    Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
+                    Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                     new[] {
                         "NSync.Core.1.0.0.0-full.nupkg",
                         "NSync.Core.1.1.0.0-delta.nupkg",
                         "NSync.Core.1.1.0.0-full.nupkg",
-                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "packages", x)));
+                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
                     var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
 
-                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.0.0.0-full.nupkg"));
-                    var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
-                    var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-full.nupkg"));
+                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.0.0.0-full.nupkg"));
+                    var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
+                    var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-full.nupkg"));
 
                     var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry });
                     updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
@@ -321,10 +322,12 @@ namespace NSync.Tests.Client
                     };
 
                     filesToFind.ForEach(x => {
-                        var path = Path.Combine(tempDir, "app-1.1.0.0", x.Name);
+                        var path = Path.Combine(tempDir, "theApp", "app-1.1.0.0", x.Name);
+                        this.Log().Info("Looking for {0}", path);
                         File.Exists(path).ShouldBeTrue();
 
-                        var verInfo = new Version(FileVersionInfo.GetVersionInfo(path).FileVersion);
+                        var vi = FileVersionInfo.GetVersionInfo(path);
+                        var verInfo = new Version(vi.FileVersion ?? "1.0.0.0");
                         x.Version.ShouldEqual(verInfo);
                     });
                 }
