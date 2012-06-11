@@ -167,16 +167,32 @@ namespace NSync.Tests.Core
                 fullPkg.Id.ShouldEqual(deltaPkg.Id);
                 fullPkg.Version.CompareTo(deltaPkg.Version).ShouldEqual(0);
 
+                deltaPkg.GetFiles().Count().ShouldBeGreaterThan(0);
+
+                this.Log().Info("Files in delta package:");
+                deltaPkg.GetFiles().ForEach(x => this.Log().Info(x.Path));
+
                 // v1.1 adds a dependency on DotNetZip
                 deltaPkg.GetFiles()
                     .Any(x => x.Path.ToLowerInvariant().Contains("ionic.zip"))
                     .ShouldBeTrue();
 
-                // All the other files should be diffs
+                // All the other files should be diffs and shasums
+                deltaPkg.GetFiles().Any(x => !x.Path.ToLowerInvariant().Contains("ionic.zip")).ShouldBeTrue();
                 deltaPkg.GetFiles()
                     .Where(x => !x.Path.ToLowerInvariant().Contains("ionic.zip"))
-                    .All(x => x.Path.ToLowerInvariant().EndsWith("diff"))
+                    .All(x => x.Path.ToLowerInvariant().EndsWith("diff") || x.Path.ToLowerInvariant().EndsWith("shasum"))
                     .ShouldBeTrue();
+
+                // Every .diff file should have a shasum file
+                deltaPkg.GetFiles().Any(x => x.Path.ToLowerInvariant().EndsWith(".diff")).ShouldBeTrue();
+                deltaPkg.GetFiles()
+                    .Where(x => x.Path.ToLowerInvariant().EndsWith(".diff"))
+                    .ForEach(x => {
+                        var lookingFor = x.Path.Replace(".diff", ".shasum");
+                        this.Log().Info("Looking for corresponding shasum file: {0}", lookingFor);
+                        deltaPkg.GetFiles().Any(y => y.Path == lookingFor).ShouldBeTrue();
+                    });
 
                 // Delta packages should be smaller than the original!
                 var fileInfos = tempFiles.Select(x => new FileInfo(x)).ToArray();
