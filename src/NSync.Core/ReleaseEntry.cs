@@ -30,7 +30,7 @@ namespace NSync.Core
 
         public Version Version {
             get {
-                var parts = Filename
+                var parts = (new FileInfo(Filename)).Name
                     .Replace(".nupkg", "").Replace("-delta", "")
                     .Split('.', '-').Reverse();
 
