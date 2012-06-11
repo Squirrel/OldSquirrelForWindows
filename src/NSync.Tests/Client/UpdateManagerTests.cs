@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -290,7 +291,38 @@ namespace NSync.Tests.Client
             [Fact]
             public void ApplyReleasesWithDeltaReleases()
             {
-                throw new NotImplementedException();
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    Directory.CreateDirectory(Path.Combine(tempDir, "packages"));
+
+                    new[] {
+                        "NSync.Core.1.0.0.0-full.nupkg",
+                        "NSync.Core.1.1.0.0-delta.nupkg"
+                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "packages", x)));
+
+                    var urlDownloader = new Mock<IUrlDownloader>();
+                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+
+                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.0.0.0-full.nupkg"));
+                    var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
+
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry });
+                    fixture.ApplyReleases(updateInfo).First();
+
+                    var filesToFind = new[] {
+                        new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
+                        new {Name = "NSync.Core.dll", Version = new Version("1.1.0.0")},
+                        new {Name = "Ionic.Zip.dll", Version = new Version("2.0.0.0")},
+                    };
+
+                    filesToFind.ForEach(x => {
+                        var path = Path.Combine(tempDir, "app-1.1.0.0", x.Name);
+                        File.Exists(path).ShouldBeTrue();
+
+                        var verInfo = new Version(FileVersionInfo.GetVersionInfo(path).FileVersion);
+                        x.Version.ShouldEqual(verInfo);
+                    });
+                }
             }
 
             [Fact]

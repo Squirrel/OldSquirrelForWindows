@@ -275,7 +275,7 @@ namespace NSync.Client
 
         public static UpdateInfo Create(ReleaseEntry currentVersion, IEnumerable<ReleaseEntry> availableReleases)
         {
-            var latestFull = availableReleases.MaxBy(x => x.Version).Single(x => !x.IsDelta);
+            var latestFull = availableReleases.MaxBy(x => x.Version).FirstOrDefault(x => !x.IsDelta);
 
             if (currentVersion == null) {
                 return new UpdateInfo(null, new[] { latestFull });
@@ -284,9 +284,13 @@ namespace NSync.Client
             var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
             var deltasSize = newerThanUs.Where(x => x.IsDelta).Sum(x => x.Filesize);
 
+            if (latestFull == null) {
+                return new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray());
+            }
+
             return (deltasSize > latestFull.Filesize)
-                ? new UpdateInfo(latestFull, newerThanUs.Where(x => x.IsDelta).ToArray())
-                : new UpdateInfo(latestFull, new[] { latestFull });
+                ? new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray())
+                : new UpdateInfo(currentVersion, new[] { latestFull });
         }
     }
 }
