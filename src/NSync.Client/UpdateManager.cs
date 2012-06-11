@@ -111,6 +111,10 @@ namespace NSync.Client
         public IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply)
         {
             Contract.Requires(updatesToApply != null);
+<<<<<<< HEAD
+=======
+
+>>>>>>> Annotate UpdateManager
             var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.CurrentRelease);
 
             return fullPackageToApply.SelectMany(release => Observable.Start(() => {
