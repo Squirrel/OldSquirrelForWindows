@@ -31,8 +31,9 @@ namespace NSync.Client
     {
         IEnumerable<ShortcutCreationRequest> GetAppShortcutList();
 
-        void OnAppVersionInstalled(Version versionBeingInstalled);
-        void OnAppVersionUninstalled(Version versionBeingUninstalled);
-        void OnAppCompleteUninstall();
+        void OnAppInstall();
+        void OnAppUninstall();
+        void OnVersionInstalled(Version versionBeingInstalled);
+        void OnVersionUninstalling(Version versionBeingUninstalled);
     }
 }
