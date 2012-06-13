@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Ionic.Zip;
@@ -125,6 +126,8 @@ namespace NSync.Core
                         libFile.Delete();
                     }
                 });
+
+                addDeltaFilesToContentTypes(tempPath.FullName);
 
                 using (var zf = new ZipFile(outputFile)) {
                     zf.AddDirectory(tempPath.FullName);
@@ -309,6 +312,37 @@ namespace NSync.Core
                 return true;
             });
         }
+
+        void addDeltaFilesToContentTypes(string rootDirectory)
+        {
+            var elements = new[] {
+                new { Extension = "diff", ContentType = "application/octet" },
+                new { Extension = "shasum", ContentType = "text/plain" },
+            };
+
+            var doc = new XmlDocument();
+            var path = Path.Combine(rootDirectory, "[Content_Types].xml");
+            doc.Load(path);
+
+            var typesElement = doc.FirstChild.NextSibling;
+            if (typesElement.Name.ToLowerInvariant() != "types") {
+                throw new Exception("Invalid ContentTypes file, expected root node should be 'Types'");
+            }
+
+            elements.Select(element => {
+                var ret = doc.CreateElement("Default", typesElement.NamespaceURI);
+                var ext = doc.CreateAttribute("Extension"); ext.Value = element.Extension;
+                var ct = doc.CreateAttribute("ContentType"); ct.Value = element.ContentType;
+                new[] { ext, ct }.ForEach(x => ret.Attributes.Append(x));
+
+                return ret;
+            }).ForEach(x => typesElement.AppendChild(x));
+
+            using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
+                doc.Save(sw);
+            }
+        }
+
 
         bool bytesAreIdentical(byte[] oldData, byte[] newData)
         {
