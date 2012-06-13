@@ -116,6 +116,7 @@ namespace NSync.Core
                     if (bytesAreIdentical(oldData, newData)) {
                         this.Log().Info("{0} hasn't changed, writing dummy file", relativePath);
                         File.Create(libFile.FullName + ".diff").Dispose();
+                        File.Create(libFile.FullName + ".shasum").Dispose();
                         libFile.Delete();
                         return;
                     }
@@ -123,6 +124,9 @@ namespace NSync.Core
                     this.Log().Info("Delta patching {0} => {1}", baseLibFiles[relativePath], libFile.FullName);
                     using (var of = File.Create(libFile.FullName + ".diff")) {
                         BinaryPatchUtility.Create(oldData, newData, of);
+
+                        var rl = ReleaseEntry.GenerateFromFile(new MemoryStream(newData), libFile.Name + ".shasum");
+                        File.WriteAllText(libFile.FullName + ".shasum", rl.EntryAsString, Encoding.UTF8);
                         libFile.Delete();
                     }
                 });
