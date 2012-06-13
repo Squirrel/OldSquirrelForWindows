@@ -397,6 +397,24 @@ namespace NSync.Tests.Client
                     zp.Version.ToString().ShouldEqual("1.1.0.0");
                 }
             }
+
+            [Fact]
+            public void ShouldCallAppUninstallOnTheOldVersion()
+            {
+                throw new NotImplementedException();
+            }
+
+            [Fact]
+            public void CallAppInstallOnTheJustInstalledVersion()
+            {
+                throw new NotImplementedException();
+            }
+
+            [Fact]
+            public void ShouldCreateAppShortcutsBasedOnClientExe()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
