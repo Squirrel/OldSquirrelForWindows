@@ -184,7 +184,7 @@ namespace NSync.Core
                                 BinaryPatchUtility.Apply(inf, () => File.OpenRead(inputFile), of);
                             }
 
-                            var shaFile = Regex.Replace(file, @"\.diff$", ".shasum");
+                            var shaFile = Regex.Replace(inputFile, @"\.diff$", ".shasum");
                             var expectedRl = ReleaseEntry.ParseReleaseEntry(File.ReadAllText(shaFile, Encoding.UTF8));
                             var actualRl = ReleaseEntry.GenerateFromFile(outPath);
 
