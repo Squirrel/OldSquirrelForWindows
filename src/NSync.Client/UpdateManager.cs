@@ -19,7 +19,7 @@ namespace NSync.Client
 {
     public interface IUpdateManager
     {
-        IObservable<UpdateInfo> CheckForUpdate();
+        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates);
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
         IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply);
     }
@@ -54,7 +54,7 @@ namespace NSync.Client
             this.urlDownloader = urlDownloader;
         }
 
-        public IObservable<UpdateInfo> CheckForUpdate()
+        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates)
         {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
 
@@ -78,7 +78,7 @@ namespace NSync.Client
 
             var ret =  releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
-                .SelectMany(releases => determineUpdateInfo(localReleases, releases))
+                .SelectMany(releases => determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates))
                 .Multicast(new AsyncSubject<UpdateInfo>());
 
             ret.Connect();
@@ -150,7 +150,7 @@ namespace NSync.Client
             fileSystem.CreateDirectoryRecursive(pkgDir);
         }
 
-        IObservable<UpdateInfo> determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases)
+        IObservable<UpdateInfo> determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases, bool ignoreDeltaUpdates)
         {
             localReleases = localReleases ?? Enumerable.Empty<ReleaseEntry>();
 
@@ -162,6 +162,10 @@ namespace NSync.Client
             if (localReleases.Count() == remoteReleases.Count()) {
                 this.Log().Info("No updates, remote and local are the same");
                 return Observable.Return<UpdateInfo>(null);
+            }
+
+            if (ignoreDeltaUpdates) {
+                remoteReleases = remoteReleases.Where(x => !x.IsDelta);
             }
 
             if (localReleases.IsEmpty()) {
