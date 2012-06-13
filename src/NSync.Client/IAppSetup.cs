@@ -17,6 +17,7 @@ namespace NSync.Client
     {
         // Shortcut Details
         public string Title { get; set; }
+        public string Description { get; set; }
         public string TargetPath { get; set; }
         public string Arguments { get; set; }
         public string WorkingDirectory { get; set; }
