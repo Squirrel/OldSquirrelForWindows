@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -176,11 +177,27 @@ namespace NSync.Core
                             return;
                         }
 
-                        if (file.EndsWith(".diff")) {
+                        if (file.EndsWith(".diff", StringComparison.InvariantCultureIgnoreCase)) {
                             using (var of = File.OpenWrite(outPath))
                             using (var inf = File.OpenRead(finalTarget)) {
                                 this.Log().Info("Applying Diff to {0}", file);
                                 BinaryPatchUtility.Apply(inf, () => File.OpenRead(inputFile), of);
+                            }
+
+                            var shaFile = Regex.Replace(file, @"\.diff$", ".shasum");
+                            var expectedRl = ReleaseEntry.ParseReleaseEntry(File.ReadAllText(shaFile, Encoding.UTF8));
+                            var actualRl = ReleaseEntry.GenerateFromFile(outPath);
+
+                            if (expectedRl.Filesize != actualRl.Filesize) {
+                                this.Log().Warn("Patched file {0} has incorrect size, expected {1}, got {2}",
+                                    file, expectedRl.Filesize, actualRl.Filesize);
+                                throw new ChecksumFailedException() {Filename = file};
+                            }
+
+                            if (expectedRl.SHA1 != actualRl.SHA1) {
+                                this.Log().Warn("Patched file {0} has incorrect SHA1, expected {1}, got {2}",
+                                    file, expectedRl.SHA1, actualRl.SHA1);
+                                throw new ChecksumFailedException() {Filename = file};
                             }
                         } else {
                             using (var of = File.OpenWrite(outPath))
@@ -365,6 +382,10 @@ namespace NSync.Core
 
             return true;
         }
+    }
 
+    public class ChecksumFailedException : Exception
+    {
+        public string Filename { get; set; }
     }
 }
