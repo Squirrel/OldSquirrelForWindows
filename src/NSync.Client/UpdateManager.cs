@@ -21,7 +21,7 @@ namespace NSync.Client
     {
         IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
-        IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply);
+        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
     }
 
     public class UpdateManager : IEnableLogger, IUpdateManager
@@ -108,10 +108,11 @@ namespace NSync.Client
             return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
         }
 
-        public IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply)
+        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo)
         {
-            Contract.Requires(updatesToApply != null);
-            var fullPackageToApply = createFullPackagesFromDeltas(updatesToApply.ReleasesToApply, updatesToApply.CurrentlyInstalledVersion);
+            Contract.Requires(updateInfo != null);
+
+            var fullPackageToApply = createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion);
 
             return fullPackageToApply.SelectMany(release => Observable.Start(() => {
                 var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
@@ -138,6 +139,11 @@ namespace NSync.Client
                             inf.CopyTo(of);
                         }
                     });
+
+                var newCurrentVersion = updateInfo.ReleasesToApply.MaxBy(x => x.Version).First().Version;
+
+                cleanUpOldVersions(newCurrentVersion);
+                runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion, newCurrentVersion);
             }));
         }
 
@@ -269,6 +275,16 @@ namespace NSync.Client
 
             return ret.SelectMany(x =>
                 createFullPackagesFromDeltas(releasesToApply.Skip(1), ReleaseEntry.GenerateFromFile(File.OpenRead(x.InputPackageFile), x.InputPackageFile)));
+        }
+
+        void cleanUpOldVersions(Version newCurrentVersion)
+        {
+            throw new NotImplementedException();
+        }
+
+        void runPostInstallOnDirectory(string fullName, ReleaseEntry currentlyInstalledVersion, Version newCurrentVersion)
+        {
+            throw new NotImplementedException();
         }
     }
 
