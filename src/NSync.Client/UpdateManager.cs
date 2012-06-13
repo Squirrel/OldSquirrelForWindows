@@ -19,7 +19,7 @@ namespace NSync.Client
 {
     public interface IUpdateManager
     {
-        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates);
+        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
         IObservable<Unit> ApplyReleases(UpdateInfo updatesToApply);
     }
@@ -54,7 +54,7 @@ namespace NSync.Client
             this.urlDownloader = urlDownloader;
         }
 
-        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates)
+        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false)
         {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
 
