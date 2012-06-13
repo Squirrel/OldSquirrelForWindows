@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -28,6 +29,7 @@ namespace NSync.Client
     {
         readonly IFileSystemFactory fileSystem;
         readonly string rootAppDirectory;
+        readonly string applicationName;
         readonly IUrlDownloader urlDownloader;
         readonly string updateUrlOrPath;
 
@@ -41,6 +43,7 @@ namespace NSync.Client
             Contract.Requires(!String.IsNullOrEmpty(applicationName));
 
             updateUrlOrPath = urlOrPath;
+            this.applicationName = applicationName;
 
             rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
             this.fileSystem = fileSystem ?? new AnonFileSystem(
@@ -142,8 +145,8 @@ namespace NSync.Client
 
                 var newCurrentVersion = updateInfo.ReleasesToApply.MaxBy(x => x.Version).First().Version;
 
-                cleanUpOldVersions(newCurrentVersion);
-                runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion, newCurrentVersion);
+                var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
+                runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion == null, newCurrentVersion, shortcutsToIgnore);
             }));
         }
 
@@ -277,14 +280,59 @@ namespace NSync.Client
                 createFullPackagesFromDeltas(releasesToApply.Skip(1), ReleaseEntry.GenerateFromFile(File.OpenRead(x.InputPackageFile), x.InputPackageFile)));
         }
 
-        void cleanUpOldVersions(Version newCurrentVersion)
+        IEnumerable<ShortcutCreationRequest> cleanUpOldVersions(Version newCurrentVersion)
         {
             throw new NotImplementedException();
         }
 
-        void runPostInstallOnDirectory(string fullName, ReleaseEntry currentlyInstalledVersion, Version newCurrentVersion)
+        void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
-            throw new NotImplementedException();
+            findAppSetupsToRun(newAppDirectoryRoot)
+                .ForEach(app => {
+                    if (isFirstInstall)  app.OnAppInstall();
+                    app.OnVersionInstalled(newCurrentVersion);
+
+                    app.GetAppShortcutList()
+                        .Where(x => !shortcutRequestsToIgnore.Contains(x))
+                        .ForEach(x => {
+                            var sl = new ShellLink(x.GetLinkTarget(applicationName, true)) {
+                                Target = x.TargetPath,
+                                IconPath = x.IconLibrary,
+                                IconIndex = x.IconIndex,
+                                Arguments = x.Arguments,
+                                WorkingDirectory = x.WorkingDirectory,
+                                Description = x.Description
+                            };
+
+                            sl.Save();
+                        });
+                });
+        }
+
+        IEnumerable<IAppSetup> findAppSetupsToRun(string rootDirectory)
+        {
+            return fileSystem.GetDirectoryInfo(rootDirectory).GetFiles("*.exe")
+                .Select(x => {
+                    try {
+                        var ret = Assembly.LoadFile(x.FullName);
+                        return ret;
+                    } catch (Exception ex) {
+                        this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
+                        return null;
+                    }
+                })
+                .SelectMany(x => x.GetModules())
+                .SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                .Select(x => {
+                    try {
+                        return (IAppSetup)Activator.CreateInstance(x);
+                    } catch (Exception ex) {
+                        this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
+                        return null;
+                    }
+                })
+                .Where(x => x != null)
+                .ToArray();
         }
     }
 
