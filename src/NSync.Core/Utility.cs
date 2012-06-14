@@ -6,7 +6,10 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Threading;
 using ReactiveUI;
 
@@ -140,7 +143,47 @@ namespace NSync.Core
 
             return acc;
         }
+    }
 
+    public sealed class SingleGlobalInstance : IDisposable
+    {
+        readonly bool HasHandle = false;
+        Mutex mutex;
 
+        public SingleGlobalInstance(string key, int timeOut)
+        {
+            initMutex(key);
+            try
+            {
+                if (timeOut <= 0)
+                    HasHandle = mutex.WaitOne(Timeout.Infinite, false);
+                else
+                    HasHandle = mutex.WaitOne(timeOut, false);
+
+                if (HasHandle == false)
+                    throw new TimeoutException("Timeout waiting for exclusive access on SingleInstance");
+            }
+            catch (AbandonedMutexException)
+            {
+                HasHandle = true;
+            }
+        }
+
+        private void initMutex(string key)
+        {
+            string mutexId = string.Format("Global\\{{{0}}}", key);
+            mutex = new Mutex(false, mutexId);
+
+            var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow);
+            var securitySettings = new MutexSecurity();
+            securitySettings.AddAccessRule(allowEveryoneRule);
+            mutex.SetAccessControl(securitySettings);
+        }
+
+        public void Dispose()
+        {
+            if (HasHandle && mutex != null)
+                mutex.ReleaseMutex();
+        }
     }
 }

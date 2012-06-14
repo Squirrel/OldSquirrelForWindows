@@ -39,7 +39,11 @@ namespace NSync.Tests.Client
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
-                var result = fixture.CheckForUpdate().First();
+                var result = default(UpdateInfo);
+
+                using (fixture.AcquireUpdateLock()) {
+                    result = fixture.CheckForUpdate().First();
+                }
 
                 Assert.NotNull(result);
                 Assert.Equal(1, result.ReleasesToApply.Single().Version.Major);
@@ -70,7 +74,9 @@ namespace NSync.Tests.Client
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
-                fixture.CheckForUpdate().First();
+                using (fixture.AcquireUpdateLock()) {
+                    fixture.CheckForUpdate().First();
+                }
 
                 fs.Verify(x => x.CreateDirectoryRecursive(localPackagesDir), Times.Once());
                 fs.Verify(x => x.DeleteDirectoryRecursive(localPackagesDir), Times.Once());
@@ -99,7 +105,9 @@ namespace NSync.Tests.Client
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
-                fixture.CheckForUpdate().First();
+                using (fixture.AcquireUpdateLock()) {
+                    fixture.CheckForUpdate().First();
+                }
 
                 fs.Verify(x => x.CreateDirectoryRecursive(localPackagesDir), Times.Once());
             }
@@ -130,7 +138,9 @@ namespace NSync.Tests.Client
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
-                fixture.CheckForUpdate().First();
+                using (fixture.AcquireUpdateLock()) {
+                    fixture.CheckForUpdate().First();
+                }
 
                 fs.Verify(x => x.CreateDirectoryRecursive(localPackagesDir), Times.Once());
                 fs.Verify(x => x.DeleteDirectoryRecursive(localPackagesDir), Times.Once());
@@ -305,7 +315,9 @@ namespace NSync.Tests.Client
                     var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry });
                     updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
-                    fixture.ApplyReleases(updateInfo).First();
+                    using (fixture.AcquireUpdateLock()) {
+                        fixture.ApplyReleases(updateInfo).First();
+                    }
 
                     var filesToFind = new[] {
                         new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
@@ -350,7 +362,9 @@ namespace NSync.Tests.Client
                     var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry });
                     updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
-                    fixture.ApplyReleases(updateInfo).First();
+                    using (fixture.AcquireUpdateLock()) {
+                        fixture.ApplyReleases(updateInfo).First();
+                    }
 
                     var filesToFind = new[] {
                         new {Name = "NLog.dll", Version = new Version("2.0.0.0")},

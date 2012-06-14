@@ -5,12 +5,14 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using NSync.Core;
 using NuGet;
 using ReactiveUI;
@@ -20,6 +22,7 @@ namespace NSync.Client
 {
     public interface IUpdateManager
     {
+        IDisposable AcquireUpdateLock();
         IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
         IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
@@ -32,6 +35,8 @@ namespace NSync.Client
         readonly string applicationName;
         readonly IUrlDownloader urlDownloader;
         readonly string updateUrlOrPath;
+
+        bool hasUpdateLock;
 
         public UpdateManager(string urlOrPath, 
             string applicationName,
@@ -60,6 +65,10 @@ namespace NSync.Client
         public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false)
         {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
+
+            if (!hasUpdateLock) {
+                return Observable.Throw<UpdateInfo>(new Exception("Call AcquireUpdateLock before using this method"));
+            }
 
             try {
                 var fi = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES"));
@@ -92,6 +101,10 @@ namespace NSync.Client
         {
             Contract.Requires(releasesToDownload != null);
 
+            if (!hasUpdateLock) {
+                return Observable.Throw<Unit>(new Exception("Call AcquireUpdateLock before using this method"));
+            }
+
             IObservable<Unit> downloadResult;
 
             if (isHttpUrl(updateUrlOrPath)) {
@@ -114,6 +127,10 @@ namespace NSync.Client
         public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo)
         {
             Contract.Requires(updateInfo != null);
+
+            if (!hasUpdateLock) {
+                return Observable.Throw<Unit>(new Exception("Call AcquireUpdateLock before using this method"));
+            }
 
             var fullPackageToApply = createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion);
 
@@ -148,6 +165,18 @@ namespace NSync.Client
                 var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
                 runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion == null, newCurrentVersion, shortcutsToIgnore);
             }));
+        }
+
+        public IDisposable AcquireUpdateLock()
+        {
+            var key = Utility.CalculateStreamSHA1(new MemoryStream(Encoding.UTF8.GetBytes(rootAppDirectory)));
+            var ret = new SingleGlobalInstance(key, 500);
+
+            hasUpdateLock = true;
+            return Disposable.Create(() => {
+                ret.Dispose();
+                hasUpdateLock = false;
+            });
         }
 
         void initializeClientAppDirectory()
