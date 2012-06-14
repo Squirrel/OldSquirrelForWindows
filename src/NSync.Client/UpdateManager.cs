@@ -282,11 +282,39 @@ namespace NSync.Client
 
         IEnumerable<ShortcutCreationRequest> cleanUpOldVersions(Version newCurrentVersion)
         {
-            throw new NotImplementedException();
+            // XXX: Make sure we don't blow up if their IAppSetup sucks
+            return fileSystem.GetDirectoryInfo(rootAppDirectory).GetDirectories()
+                .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
+                .Where(x => x.Name != "app-" + newCurrentVersion)
+                .SelectMany(dir => {
+                    var apps = findAppSetupsToRun(dir.FullName);
+                    var ver = new Version(dir.Name.Replace("app-", ""));
+
+                    var ret = apps.SelectMany(app => {
+                        app.OnVersionUninstalling(ver);
+
+                        var shortcuts = app.GetAppShortcutList();
+                        return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
+                            var path = x.GetLinkTarget(applicationName, false);
+
+                            if (File.Exists(path)) {
+                                File.Delete(path);
+                            } else {
+                                acc.Add(x);
+                            }
+                            return acc;
+                        });
+                    
+                    });
+                        
+                    Utility.DeleteDirectory(dir.FullName);
+                    return ret;
+                });
         }
 
         void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
+            // XXX: Make sure we don't blow up if their IAppSetup sucks
             findAppSetupsToRun(newAppDirectoryRoot)
                 .ForEach(app => {
                     if (isFirstInstall)  app.OnAppInstall();
@@ -309,9 +337,9 @@ namespace NSync.Client
                 });
         }
 
-        IEnumerable<IAppSetup> findAppSetupsToRun(string rootDirectory)
+        IEnumerable<IAppSetup> findAppSetupsToRun(string appDirectory)
         {
-            return fileSystem.GetDirectoryInfo(rootDirectory).GetFiles("*.exe")
+            return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
                 .Select(x => {
                     try {
                         var ret = Assembly.LoadFile(x.FullName);
