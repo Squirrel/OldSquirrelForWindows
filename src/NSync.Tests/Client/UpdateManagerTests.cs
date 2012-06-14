@@ -415,6 +415,12 @@ namespace NSync.Tests.Client
             {
                 throw new NotImplementedException();
             }
+
+            [Fact]
+            public void DeletedShortcutsShouldntBeRecreatedOnUpgrade()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
