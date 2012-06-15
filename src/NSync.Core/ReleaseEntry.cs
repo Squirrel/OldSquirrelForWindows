@@ -11,14 +11,22 @@ namespace NSync.Core
     public class ReleaseEntry : IEnableLogger
     {
         public string SHA1 { get; protected set; }
-        public string Filename { get; protected set; }
         public long Filesize { get; protected set; }
         public bool IsDelta { get; protected set; }
+
+        string _Filename;
+        public string Filename {
+            get {
+                return _Filename;
+            }
+            set { _Filename = value;  }
+        }
 
         protected ReleaseEntry(string sha1, string filename, long filesize, bool isDelta)
         {
             Contract.Requires(sha1 != null && sha1.Length == 40);
             Contract.Requires(filename != null);
+            Contract.Requires(filename.Contains(Path.DirectorySeparatorChar) == false);
             Contract.Requires(filesize > 0);
 
             SHA1 = sha1; Filename = filename; Filesize = filesize; IsDelta = isDelta;
@@ -106,13 +114,13 @@ namespace NSync.Core
             Contract.Requires(!String.IsNullOrEmpty(filename));
 
             var hash = Utility.CalculateStreamSHA1(file); 
-            return new ReleaseEntry(hash, Path.GetFileName(filename), file.Length, filenameIsDeltaFile(filename));
+            return new ReleaseEntry(hash, filename, file.Length, filenameIsDeltaFile(filename));
         }
 
-        public static ReleaseEntry GenerateFromFile(string filename)
+        public static ReleaseEntry GenerateFromFile(string path)
         {
-            using (var inf = File.OpenRead(filename)) {
-                return GenerateFromFile(inf, filename);
+            using (var inf = File.OpenRead(path)) {
+                return GenerateFromFile(inf, Path.GetFileName(path));
             }
         }
 

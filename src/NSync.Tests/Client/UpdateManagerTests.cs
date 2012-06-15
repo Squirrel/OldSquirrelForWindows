@@ -389,24 +389,24 @@ namespace NSync.Tests.Client
             {
                 string tempDir;
                 using (Utility.WithTempDirectory(out tempDir)) {
-                    Directory.CreateDirectory(Path.Combine(tempDir, "packages"));
+                    Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                     new[] {
                         "NSync.Core.1.0.0.0-full.nupkg",
                         "NSync.Core.1.1.0.0-delta.nupkg"
-                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "packages", x)));
+                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
                     var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
 
-                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.0.0.0-full.nupkg"));
-                    var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
+                    var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.0.0.0-full.nupkg"));
+                    var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
 
                     var resultObs = (IObservable<ReleaseEntry>)fixture.GetType().GetMethod("createFullPackagesFromDeltas", BindingFlags.NonPublic | BindingFlags.Instance)
                         .Invoke(fixture, new object[] { new[] {deltaEntry}, baseEntry });
 
                     var result = resultObs.First();
-                    var zp = new ZipPackage(Path.Combine(tempDir, "packages", result.Filename));
+                    var zp = new ZipPackage(Path.Combine(tempDir, "theApp", "packages", result.Filename));
 
                     zp.Version.ToString().ShouldEqual("1.1.0.0");
                 }
