@@ -11,16 +11,9 @@ namespace NSync.Core
     public class ReleaseEntry : IEnableLogger
     {
         public string SHA1 { get; protected set; }
+        public string Filename { get; set; }
         public long Filesize { get; protected set; }
         public bool IsDelta { get; protected set; }
-
-        string _Filename;
-        public string Filename {
-            get {
-                return _Filename;
-            }
-            set { _Filename = value;  }
-        }
 
         protected ReleaseEntry(string sha1, string filename, long filesize, bool isDelta)
         {
