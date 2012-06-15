@@ -282,8 +282,10 @@ namespace NSync.Core
             xdoc.Load(specPath);
 
             var metadata = xdoc.DocumentElement.FirstChild;
-            metadata.RemoveChild(
-                metadata.ChildNodes.OfType<XmlElement>().First(x => x.Name.ToLowerInvariant() == "dependencies"));
+            var dependenciesNode = metadata.ChildNodes.OfType<XmlElement>().FirstOrDefault(x => x.Name.ToLowerInvariant() == "dependencies");
+            if (dependenciesNode != null) {
+                metadata.RemoveChild(dependenciesNode);
+            }
 
             xdoc.Save(specPath);
         }
