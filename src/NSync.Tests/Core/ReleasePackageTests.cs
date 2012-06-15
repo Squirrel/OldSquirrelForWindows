@@ -70,6 +70,21 @@ namespace NSync.Tests.Core
         }
 
         [Fact]
+        public void CanLoadPackageWhichHasNoDependencies()
+        {
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.NoDependencies.1.0.0.0.nupkg");
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+            var fixture = new ReleasePackage(inputPackage);
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            try {
+                fixture.CreateReleasePackage(outputPackage, sourceDir);
+            }
+            finally {
+                File.Delete(outputPackage);
+            }
+        }
+
+        [Fact]
         public void SpecFileMarkdownRenderingTest()
         {
             var dontcare = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nupkg");
