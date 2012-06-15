@@ -106,7 +106,7 @@ namespace NSync.Core
             Contract.Requires(!String.IsNullOrEmpty(filename));
 
             var hash = Utility.CalculateStreamSHA1(file); 
-            return new ReleaseEntry(hash, filename, file.Length, filenameIsDeltaFile(filename));
+            return new ReleaseEntry(hash, Path.GetFileName(filename), file.Length, filenameIsDeltaFile(filename));
         }
 
         public static ReleaseEntry GenerateFromFile(string filename)

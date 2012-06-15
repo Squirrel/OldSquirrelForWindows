@@ -48,5 +48,13 @@ namespace NSync.Tests.Core
             Assert.Equal(expectedMajor, fixture.Version.Major);
             Assert.Equal(expectedMinor, fixture.Version.Minor);
         }
+
+        [Fact]
+        public void CanParseGeneratedReleaseEntryAsString()
+        {
+            var path = IntegrationTestHelper.GetPath("fixtures", "NSync.Core.1.1.0.0.nupkg");
+            var entryAsString = ReleaseEntry.GenerateFromFile(path).EntryAsString;
+            ReleaseEntry.ParseReleaseEntry(entryAsString);
+        }
     }
 }
