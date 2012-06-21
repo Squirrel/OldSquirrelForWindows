@@ -234,7 +234,7 @@ namespace NSync.Client
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
-            runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion == null, newCurrentVersion, shortcutsToIgnore);
+            runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
 
         void initializeClientAppDirectory()

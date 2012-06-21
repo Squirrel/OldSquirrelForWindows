@@ -12,6 +12,10 @@ namespace NSync.Client
         public ReleaseEntry FutureReleaseEntry { get; protected set; }
         public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
 
+        public bool IsBootstrapping {
+            get { return CurrentlyInstalledVersion == null;  }
+        }
+
         readonly string packageDirectory;
 
         protected UpdateInfo(ReleaseEntry currentlyInstalledVersion, IEnumerable<ReleaseEntry> releasesToApply, string packageDirectory)
