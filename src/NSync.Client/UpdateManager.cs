@@ -197,45 +197,13 @@ namespace NSync.Client
             return null;
         }
 
-        void installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
+        static string getLocalAppDataDirectory()
         {
-            var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
-            var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
-
-            // NB: This might happen if we got killed partially through applying the release
-            if (target.Exists) {
-                Utility.DeleteDirectory(target.FullName);
-            }
-            target.Create();
-
-            // Copy all of the files out of the lib/ dirs in the NuGet package
-            // into our target App directory.
-            //
-            // NB: We sort this list in order to guarantee that if a Net20
-            // and a Net40 version of a DLL get shipped, we always end up
-            // with the 4.0 version.
-            pkg.GetFiles().Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)).OrderBy(x => x.Path)
-                .ForEach(x => {
-                    var targetPath = Path.Combine(target.FullName, Path.GetFileName(x.Path));
-
-                    var fi = fileSystem.GetFileInfo(targetPath);
-                    if (fi.Exists) fi.Delete();
-
-                    using (var inf = x.GetStream())
-                    using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
-                        this.Log().Info("Writing {0} to app directory", targetPath);
-                        inf.CopyTo(of);
-                    }
-                });
-
-            var newCurrentVersion = updateInfo.FutureReleaseEntry.Version;
-
-            // Perform post-install; clean up the previous version by asking it
-            // which shortcuts to install, and nuking them. Then, run the app's
-            // post install and set up shortcuts.
-            var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
-            runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
+            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
+        //
+        // CheckForUpdate methods
+        //
 
         void initializeClientAppDirectory()
         {
@@ -292,10 +260,9 @@ namespace NSync.Client
             return localReleases.MaxBy(x => x.Version).SingleOrDefault(x => !x.IsDelta);
         }
 
-        static string getLocalAppDataDirectory()
-        {
-            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        }
+        //
+        // DownloadReleases methods
+        //
         
         static bool isHttpUrl(string urlOrPath)
         {
@@ -338,6 +305,51 @@ namespace NSync.Client
                     throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
                 }
             }
+        }
+
+
+        //
+        // ApplyReleases methods
+        //
+
+        void installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
+        {
+            var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
+            var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
+
+            // NB: This might happen if we got killed partially through applying the release
+            if (target.Exists) {
+                Utility.DeleteDirectory(target.FullName);
+            }
+            target.Create();
+
+            // Copy all of the files out of the lib/ dirs in the NuGet package
+            // into our target App directory.
+            //
+            // NB: We sort this list in order to guarantee that if a Net20
+            // and a Net40 version of a DLL get shipped, we always end up
+            // with the 4.0 version.
+            pkg.GetFiles().Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)).OrderBy(x => x.Path)
+                .ForEach(x => {
+                    var targetPath = Path.Combine(target.FullName, Path.GetFileName(x.Path));
+
+                    var fi = fileSystem.GetFileInfo(targetPath);
+                    if (fi.Exists) fi.Delete();
+
+                    using (var inf = x.GetStream())
+                    using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
+                        this.Log().Info("Writing {0} to app directory", targetPath);
+                        inf.CopyTo(of);
+                    }
+                });
+
+            var newCurrentVersion = updateInfo.FutureReleaseEntry.Version;
+
+            // Perform post-install; clean up the previous version by asking it
+            // which shortcuts to install, and nuking them. Then, run the app's
+            // post install and set up shortcuts.
+            var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
+            runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
 
         IObservable<ReleaseEntry> createFullPackagesFromDeltas(IEnumerable<ReleaseEntry> releasesToApply, ReleaseEntry currentVersion)
