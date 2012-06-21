@@ -8,10 +8,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using NSync.Core;
 using NuGet;
 using ReactiveUI;
@@ -34,7 +32,6 @@ namespace NSync.Client
         IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
         IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
-        IObservable<Unit> UpdateLocalReleasesFile();
     }
 
     public class UpdateManager : IEnableLogger, IUpdateManager
@@ -182,7 +179,7 @@ namespace NSync.Client
 
                 var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
                 runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion == null, newCurrentVersion, shortcutsToIgnore);
-            }));
+            })).SelectMany(_ => UpdateLocalReleasesFile());
         }
 
         public IDisposable AcquireUpdateLock()
