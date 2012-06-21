@@ -448,23 +448,24 @@ namespace NSync.Client
 
     public static class UpdateManagerMixins
     {
-        public static IObservable<Unit> UpdateApp(this IUpdateManager This)
+        public static IObservable<ReleaseEntry> UpdateApp(this IUpdateManager This)
         {
             IDisposable theLock;
 
             try {
                 theLock = This.AcquireUpdateLock();
             } catch (TimeoutException _) {
-                return Observable.Return(Unit.Default);
+                // TODO: Bad Programmer!
+                return Observable.Return(default(ReleaseEntry));
             } catch (Exception ex) {
-                return Observable.Throw<Unit>(ex);
+                return Observable.Throw<ReleaseEntry>(ex);
             }
 
             var ret = This.CheckForUpdate()
                 .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).Select(_ => x))
-                .SelectMany(x => This.ApplyReleases(x))
+                .SelectMany(x => This.ApplyReleases(x).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).FirstOrDefault()))
                 .Finally(() => theLock.Dispose())
-                .Multicast(new AsyncSubject<Unit>());
+                .Multicast(new AsyncSubject<ReleaseEntry>());
 
             ret.Connect();
             return ret;
