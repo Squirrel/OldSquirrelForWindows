@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using NSync.Core;
 
@@ -89,13 +90,50 @@ namespace NSync.Client
         #endregion
     }
 
+    /// <summary>
+    /// This interface is implemented by every EXE in your application in order
+    /// to perform setup routines, as well as to get the list of shortcuts that
+    /// an EXE should have.
+    ///
+    /// The easiest way to implement this interface is by using the abstract
+    /// base class AppSetup.
+    /// </summary>
     public interface IAppSetup
     {
+        /// <summary>
+        /// Get the list of shortcuts the EXE should install. Usually you would
+        /// return a shortcut at least for the currently executing assembly (i.e.
+        /// your own EXE).
+        /// </summary>
+        /// <returns>A list of shortcuts to install, or Enumerable.Empty if no
+        /// shortcuts should be installed. Do *not* return 'null'</returns>
         IEnumerable<ShortcutCreationRequest> GetAppShortcutList();
 
+        /// <summary>
+        /// Called by setup when the application is initially installed.
+        /// </summary>
         void OnAppInstall();
+
+        /// <summary>
+        /// Called by setup when the application is about to be completely
+        /// uninstalled.
+        /// </summary>
         void OnAppUninstall();
+
+        /// <summary>
+        /// Called by UpdateManager when a new version of the app is about to
+        /// be installed. Note that this will still be called even on initial
+        /// install.
+        /// </summary>
+        /// <param name="versionBeingInstalled">The version being installed.</param>
         void OnVersionInstalled(Version versionBeingInstalled);
+
+        /// <summary>
+        /// Called by UpdateManager when a new version of the app is about to
+        /// be uninstalled. Note that this will still be called even on app
+        /// uninstall.
+        /// </summary>
+        /// <param name="versionBeingInstalled">The version being installed.</param>
         void OnVersionUninstalling(Version versionBeingUninstalled);
     }
 }
