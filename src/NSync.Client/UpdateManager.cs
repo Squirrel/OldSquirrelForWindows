@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -16,7 +15,16 @@ using System.Threading;
 using NSync.Core;
 using NuGet;
 using ReactiveUI;
+
 using IEnableLogger = NSync.Core.IEnableLogger;
+
+// NB: These are whitelisted types from System.IO, so that we always end up 
+// using fileSystem instead.
+using Path = System.IO.Path;
+using StreamReader = System.IO.StreamReader;
+using MemoryStream = System.IO.MemoryStream;
+using FileMode = System.IO.FileMode;
+using FileAccess = System.IO.FileAccess;
 
 namespace NSync.Client
 {
@@ -86,9 +94,16 @@ namespace NSync.Client
                 initializeClientAppDirectory();
             }
 
-            var releaseFile = isHttpUrl(updateUrlOrPath) ?
-                urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES")) :
-                Observable.Return(File.ReadAllText(Path.Combine(updateUrlOrPath, "RELEASES")));
+            IObservable<string> releaseFile;
+            if (isHttpUrl(updateUrlOrPath)) {
+                releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"));
+            } else {
+                var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
+                using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
+                    var text = sr.ReadToEnd();
+                    releaseFile = Observable.Return(text);
+                }
+            }
 
             var ret =  releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
@@ -138,7 +153,7 @@ namespace NSync.Client
 
             return fullPackageToApply.SelectMany(release => Observable.Start(() => {
                 var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
-                var target = new DirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
+                var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
                 target.Create();
 
                 // NB: We sort this list in order to guarantee that if a Net20
@@ -151,12 +166,13 @@ namespace NSync.Client
                         var m = Regex.Match(x.Path, @".*\\([^\\]+)$");
                         var targetPath = Path.Combine(target.FullName, m.Groups[1].Value);
 
-                        if (File.Exists(targetPath)) {
-                            File.Delete(targetPath);
+                        var fi = fileSystem.GetFileInfo(targetPath);
+                        if (fi.Exists) {
+                            fi.Delete();
                         }
 
                         using (var inf = x.GetStream())
-                        using (var of = File.Open(targetPath, FileMode.CreateNew, FileAccess.Write)) {
+                        using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
                             this.Log().Info("Writing {0} to app directory", targetPath);
                             inf.CopyTo(of);
                         }
@@ -332,8 +348,12 @@ namespace NSync.Client
                 return ret.Select(x => ReleaseEntry.GenerateFromFile(x.InputPackageFile));
             }
 
-            return ret.SelectMany(x =>
-                createFullPackagesFromDeltas(releasesToApply.Skip(1), ReleaseEntry.GenerateFromFile(File.OpenRead(x.InputPackageFile), x.InputPackageFile)));
+            return ret.SelectMany(x => {
+                var fi = fileSystem.GetFileInfo(x.InputPackageFile);
+                var entry = ReleaseEntry.GenerateFromFile(fi.OpenRead(), x.InputPackageFile);
+
+                return createFullPackagesFromDeltas(releasesToApply.Skip(1), entry);
+            });
         }
 
         IEnumerable<ShortcutCreationRequest> cleanUpOldVersions(Version newCurrentVersion)
@@ -353,8 +373,9 @@ namespace NSync.Client
                         return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
                             var path = x.GetLinkTarget(applicationName, false);
 
-                            if (File.Exists(path)) {
-                                File.Delete(path);
+                            var fi = fileSystem.GetFileInfo(path);
+                            if (fi.Exists) {
+                                fi.Delete();
                             } else {
                                 acc.Add(x);
                             }
@@ -380,8 +401,10 @@ namespace NSync.Client
                         .Where(x => !shortcutRequestsToIgnore.Contains(x))
                         .ForEach(x => {
                             var shortcut = x.GetLinkTarget(applicationName, true);
-                            if (File.Exists(shortcut)) {
-                                File.Delete(shortcut);
+
+                            var fi = fileSystem.GetFileInfo(shortcut);
+                            if (fi.Exists) {
+                                fi.Delete();
                             }
 
                             var sl = new ShellLink() {
