@@ -105,8 +105,6 @@ namespace NSync.Client
 
         public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
         {
-            Contract.Requires(releasesToDownload != null);
-
             if (!hasUpdateLock) {
                 return Observable.Throw<Unit>(new Exception("Call AcquireUpdateLock before using this method"));
             }
@@ -132,8 +130,6 @@ namespace NSync.Client
 
         public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo)
         {
-            Contract.Requires(updateInfo != null);
-
             if (!hasUpdateLock) {
                 return Observable.Throw<Unit>(new Exception("Call AcquireUpdateLock before using this method"));
             }
