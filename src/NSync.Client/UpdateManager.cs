@@ -26,6 +26,7 @@ namespace NSync.Client
         IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
         IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
+        IObservable<Unit> UpdateLocalReleasesFile();
     }
 
     public class UpdateManager : IEnableLogger, IUpdateManager
@@ -177,6 +178,11 @@ namespace NSync.Client
                 ret.Dispose();
                 hasUpdateLock = false;
             });
+        }
+
+        public IObservable<Unit> UpdateLocalReleasesFile()
+        {
+            return Observable.Throw<Unit>(new NotImplementedException());
         }
 
         void initializeClientAppDirectory()

@@ -436,5 +436,36 @@ namespace NSync.Tests.Client
                 throw new NotImplementedException();
             }
         }
+
+        public class UpdateLocalReleasesTests
+        {
+            [Fact]
+            public void UpdateLocalReleasesSmokeTest()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    var packageDir = Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+
+                    new[] {
+                        "NSync.Core.1.0.0.0-full.nupkg",
+                        "NSync.Core.1.1.0.0-delta.nupkg",
+                        "NSync.Core.1.1.0.0-full.nupkg",
+                    }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+
+                    var urlDownloader = new Mock<IUrlDownloader>();
+                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+
+                    using (fixture.AcquireUpdateLock()) {
+                        fixture.UpdateLocalReleasesFile().First();
+                    }
+
+                    var releasePath = Path.Combine(packageDir.FullName, "RELEASES");
+                    File.Exists(releasePath).ShouldBeTrue();
+
+                    var entries = ReleaseEntry.ParseReleaseFile(releasePath);
+                    entries.Count().ShouldEqual(3);
+                }
+            }
+        }
     }
 }
