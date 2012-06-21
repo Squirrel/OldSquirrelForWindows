@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -15,6 +16,7 @@ namespace NSync.Core
         DirectoryInfoBase CreateDirectoryRecursive(string path);
         void DeleteDirectoryRecursive(string path);
         IObservable<Unit> CopyAsync(string from, string to);
+        Tuple<string, Stream> CreateTempFile();
     }
 
     public class AnonFileSystem : IFileSystemFactory
@@ -25,13 +27,15 @@ namespace NSync.Core
         Func<string, DirectoryInfoBase> createDirRecursive;
         Action<string> deleteDirRecursive;
         Func<string, string, IObservable<Unit>> copyAsync;
+        Func<Tuple<string, Stream>> createTempFile;
 
         public AnonFileSystem(Func<string, DirectoryInfoBase> getDirInfo = null, 
             Func<string, FileInfoBase> getFileInfo = null, 
             Func<string, FileBase> getFile = null,
             Func<string, DirectoryInfoBase> createDirRecursive = null,
             Action<string> deleteDirRecursive = null,
-            Func<string, string, IObservable<Unit>> copyAsync = null)
+            Func<string, string, IObservable<Unit>> copyAsync = null,
+            Func<Tuple<string, Stream>> createTempFile = null)
         {
             this.getDirInfo = getDirInfo;
             this.getFileInfo = getFileInfo;
@@ -39,6 +43,7 @@ namespace NSync.Core
             this.createDirRecursive = createDirRecursive;
             this.deleteDirRecursive = deleteDirRecursive;
             this.copyAsync = copyAsync;
+            this.createTempFile = createTempFile;
         }
 
         public DirectoryInfoBase GetDirectoryInfo(string path)
@@ -75,6 +80,12 @@ namespace NSync.Core
         {
             if (copyAsync == null)  throw new NotImplementedException();
             return copyAsync(from, to);
+        }
+
+        public Tuple<string, Stream> CreateTempFile()
+        {
+            if (createTempFile == null) throw new NotImplementedException();
+            return createTempFile();
         }
     }
 }

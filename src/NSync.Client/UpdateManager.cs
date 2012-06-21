@@ -53,12 +53,13 @@ namespace NSync.Client
 
             rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
             this.fileSystem = fileSystem ?? new AnonFileSystem(
-                s => new DirectoryInfoWrapper(new DirectoryInfo(s)),
-                s => new FileInfoWrapper(new FileInfo(s)),
+                s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s)),
+                s => new FileInfoWrapper(new System.IO.FileInfo(s)),
                 s => new FileWrapper(),
-                s => new DirectoryInfoWrapper(new DirectoryInfo(s).CreateRecursive()),
-                s => new DirectoryInfo(s).Delete(true),
-                Utility.CopyToAsync);
+                s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s).CreateRecursive()),
+                s => new System.IO.DirectoryInfo(s).Delete(true),
+                Utility.CopyToAsync,
+                Utility.CreateTempFile);
 
             this.urlDownloader = urlDownloader;
         }

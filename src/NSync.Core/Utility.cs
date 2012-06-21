@@ -132,6 +132,12 @@ namespace NSync.Core
             Directory.Delete(directoryPath, false);
         }
 
+        public static Tuple<string, Stream> CreateTempFile()
+        {
+            var path = Path.GetTempFileName();
+            return Tuple.Create(path, (Stream) File.OpenWrite(path));
+        }
+
         static TAcc scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)
         {
             TAcc acc = initialValue;
