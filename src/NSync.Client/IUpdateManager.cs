@@ -12,9 +12,46 @@ namespace NSync.Client
     [ContractClass(typeof(UpdateManagerContracts))]
     public interface IUpdateManager
     {
+        /// <summary>
+        /// Acquire the global lock to start updating. Call this method before
+        /// calling any of the other methods in this interface. Note that this
+        /// lock should be *global* (i.e. it should be a named Mutex that spans
+        /// processes), so that multiple instances don't try to operate on the
+        /// packages directory concurrently.
+        /// </summary>
+        /// <returns>A Disposable that will release the lock, or the method throws
+        /// if the lock cannot be acquired.</returns>
         IDisposable AcquireUpdateLock();
+
+        /// <summary>
+        /// Fetch the remote store for updates and compare against the current 
+        /// version to determine what updates to download.
+        /// </summary>
+        /// <param name="ignoreDeltaUpdates">Set this flag if applying a release
+        /// fails to fall back to a full release, which takes longer to download
+        /// but is less error-prone.</param>
+        /// <returns>An UpdateInfo object representing the updates to install.
+        /// </returns>
         IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
+
+        /// <summary>
+        /// Download a list of releases into the local package directory.
+        /// </summary>
+        /// <param name="releasesToDownload">The list of releases to download, 
+        /// almost always from UpdateInfo.ReleasesToApply.</param>
+        /// <returns>A completion Observable - will either return a single 
+        /// Unit.Default or Throws.</returns>
         IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
+
+        /// <summary>
+        /// Take an already downloaded set of releases and apply them, 
+        /// copying in the new files from the NuGet package and rewriting 
+        /// the application shortcuts.
+        /// </summary>
+        /// <param name="updateInfo">The UpdateInfo instance acquired from 
+        /// CheckForUpdate</param>
+        /// <returns>A completion Observable - will either return a single 
+        /// Unit.Default or Throws.</returns>
         IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
     }
 
