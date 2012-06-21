@@ -26,14 +26,6 @@ using FileAccess = System.IO.FileAccess;
 
 namespace NSync.Client
 {
-    public interface IUpdateManager
-    {
-        IDisposable AcquireUpdateLock();
-        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
-        IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
-        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
-    }
-
     public class UpdateManager : IEnableLogger, IUpdateManager
     {
         readonly IFileSystemFactory fileSystem;
@@ -443,79 +435,6 @@ namespace NSync.Client
                 })
                 .Where(x => x != null)
                 .ToArray();
-        }
-    }
-
-    public static class UpdateManagerMixins
-    {
-        public static IObservable<ReleaseEntry> UpdateApp(this IUpdateManager This)
-        {
-            IDisposable theLock;
-
-            try {
-                theLock = This.AcquireUpdateLock();
-            } catch (TimeoutException _) {
-                // TODO: Bad Programmer!
-                return Observable.Return(default(ReleaseEntry));
-            } catch (Exception ex) {
-                return Observable.Throw<ReleaseEntry>(ex);
-            }
-
-            var ret = This.CheckForUpdate()
-                .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).Select(_ => x))
-                .SelectMany(x => This.ApplyReleases(x).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).FirstOrDefault()))
-                .Finally(() => theLock.Dispose())
-                .Multicast(new AsyncSubject<ReleaseEntry>());
-
-            ret.Connect();
-            return ret;
-        }
-    }
-
-    public class UpdateInfo
-    {
-        public Version Version { get; protected set; }
-        public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
-        public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
-        string packageDirectory;
-
-        protected UpdateInfo(ReleaseEntry currentlyInstalledVersion, IEnumerable<ReleaseEntry> releasesToApply, string packageDirectory)
-        {
-            // NB: When bootstrapping, CurrentlyInstalledVersion is null!
-            CurrentlyInstalledVersion = currentlyInstalledVersion;
-            Version = currentlyInstalledVersion != null ? currentlyInstalledVersion.Version : null;
-            ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
-
-            this.packageDirectory = packageDirectory;
-        }
-
-        public Dictionary<ReleaseEntry, string> FetchReleaseNotes()
-        {
-            return ReleasesToApply
-                .Select(x => new { Entry = x, Readme = x.GetReleaseNotes(packageDirectory) })
-                .ToDictionary(k => k.Entry, v => v.Readme);
-        }
-
-        public static UpdateInfo Create(ReleaseEntry currentVersion, IEnumerable<ReleaseEntry> availableReleases, string packageDirectory)
-        {
-            Contract.Requires(availableReleases != null);
-            Contract.Requires(!String.IsNullOrEmpty(packageDirectory));
-
-            var latestFull = availableReleases.MaxBy(x => x.Version).FirstOrDefault(x => !x.IsDelta);
-            if (latestFull == null) {
-                throw new Exception("There should always be at least one full release");
-            }
-
-            if (currentVersion == null) {
-                return new UpdateInfo(currentVersion, new[] { latestFull }, packageDirectory);
-            }
-
-            var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
-            var deltasSize = newerThanUs.Where(x => x.IsDelta).Sum(x => x.Filesize);
-
-            return (deltasSize < latestFull.Filesize && deltasSize > 0)
-                ? new UpdateInfo(currentVersion, newerThanUs.Where(x => x.IsDelta).ToArray(), packageDirectory)
-                : new UpdateInfo(currentVersion, new[] { latestFull }, packageDirectory);
         }
     }
 }
