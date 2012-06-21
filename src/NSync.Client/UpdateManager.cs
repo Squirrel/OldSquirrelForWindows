@@ -445,6 +445,31 @@ namespace NSync.Client
         }
     }
 
+    public static class UpdateManagerMixins
+    {
+        public static IObservable<Unit> UpdateApp(this IUpdateManager This)
+        {
+            IDisposable theLock;
+
+            try {
+                theLock = This.AcquireUpdateLock();
+            } catch (TimeoutException _) {
+                return Observable.Return(Unit.Default);
+            } catch (Exception ex) {
+                return Observable.Throw<Unit>(ex);
+            }
+
+            var ret = This.CheckForUpdate()
+                .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).Select(_ => x))
+                .SelectMany(x => This.ApplyReleases(x))
+                .Finally(() => theLock.Dispose())
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
+        }
+    }
+
     public class UpdateInfo
     {
         public Version Version { get; protected set; }
