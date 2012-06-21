@@ -95,7 +95,7 @@ namespace NSync.Client
     /// to perform setup routines, as well as to get the list of shortcuts that
     /// an EXE should have.
     ///
-    /// The easiest way to implement this interface is by using the abstract
+    /// The easiest way to implement this interface is by using the abstract 
     /// base class AppSetup.
     /// </summary>
     public interface IAppSetup
@@ -115,7 +115,7 @@ namespace NSync.Client
         void OnAppInstall();
 
         /// <summary>
-        /// Called by setup when the application is about to be completely
+        /// Called by setup when the application is about to be completely 
         /// uninstalled.
         /// </summary>
         void OnAppUninstall();
@@ -135,5 +135,64 @@ namespace NSync.Client
         /// </summary>
         /// <param name="versionBeingInstalled">The version being installed.</param>
         void OnVersionUninstalling(Version versionBeingUninstalled);
+    }
+
+    public abstract class AppSetup : IAppSetup
+    {
+        /// <summary>
+        /// The name of the shortcut that will show up on the Desktop. Typically
+        /// this is the application name.
+        /// </summary>
+        public abstract string ShortcutName { get; }
+
+        /// <summary>
+        /// The Description field that can be seen in the Properties page of a
+        /// shortcut.
+        /// </summary>
+        public virtual string AppDescription {
+            get {
+                return "";
+            }
+        }
+
+        public virtual IEnumerable<ShortcutCreationRequest> GetAppShortcutList()
+        {
+            // XXX: Make sure this trick actually works; we want the derived 
+            // type's assembly
+            var target = this.GetType().Assembly.Location;
+
+            return new[] {
+                new ShortcutCreationRequest() {
+                    CreationLocation = ShortcutCreationLocation.Desktop,
+                    Title = ShortcutName,
+                    Description =  AppDescription,
+                    IconLibrary = target,
+                    IconIndex = 0,
+                },
+                new ShortcutCreationRequest() {
+                    CreationLocation = ShortcutCreationLocation.StartMenu,
+                    Title = ShortcutName,
+                    Description =  AppDescription,
+                    IconLibrary = target,
+                    IconIndex = 0,
+                }
+            };
+        }
+
+        public virtual void OnAppInstall()
+        {
+        }
+
+        public virtual void OnAppUninstall()
+        {
+        }
+
+        public virtual void OnVersionInstalled(Version versionBeingInstalled)
+        {
+        }
+
+        public virtual void OnVersionUninstalling(Version versionBeingUninstalled)
+        {
+        }
     }
 }
