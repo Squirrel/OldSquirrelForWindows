@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using NuGet;
 
 namespace NSync.Core
 {
@@ -58,6 +59,12 @@ namespace NSync.Core
 
                 return null;
             } 
+        }
+
+        public string GetReleaseNotes(string packageDirectory)
+        {
+            var zp = new ZipPackage(Path.Combine(packageDirectory, Filename));
+            return zp.ReleaseNotes;
         }
 
         static readonly Regex entryRegex = new Regex(@"^([0-9a-fA-F]{40})\s+(\S+)\s+(\d+)[\r]*$");

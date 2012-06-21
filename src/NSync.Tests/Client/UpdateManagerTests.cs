@@ -312,7 +312,7 @@ namespace NSync.Tests.Client
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.0.0.0-full.nupkg"));
                     var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-full.nupkg"));
 
-                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry });
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare");
                     updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                     using (fixture.AcquireUpdateLock()) {
@@ -343,7 +343,6 @@ namespace NSync.Tests.Client
                 string tempDir;
 
                 using (Utility.WithTempDirectory(out tempDir)) {
-                    Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
                     Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                     new[] {
@@ -359,7 +358,7 @@ namespace NSync.Tests.Client
                     var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-delta.nupkg"));
                     var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "NSync.Core.1.1.0.0-full.nupkg"));
 
-                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry });
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, "dontcare");
                     updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
                     using (fixture.AcquireUpdateLock()) {
