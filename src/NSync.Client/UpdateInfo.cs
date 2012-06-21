@@ -10,8 +10,10 @@ namespace NSync.Client
     {
         public Version Version { get; protected set; }
         public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
+        public ReleaseEntry FutureReleaseEntry { get; protected set; }
         public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
-        string packageDirectory;
+
+        readonly string packageDirectory;
 
         protected UpdateInfo(ReleaseEntry currentlyInstalledVersion, IEnumerable<ReleaseEntry> releasesToApply, string packageDirectory)
         {
@@ -19,6 +21,7 @@ namespace NSync.Client
             CurrentlyInstalledVersion = currentlyInstalledVersion;
             Version = currentlyInstalledVersion != null ? currentlyInstalledVersion.Version : null;
             ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
+            FutureReleaseEntry = ReleasesToApply.MaxBy(x => x.Version).FirstOrDefault();
 
             this.packageDirectory = packageDirectory;
         }

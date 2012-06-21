@@ -211,8 +211,7 @@ namespace NSync.Tests.Client
                 var fixture = ExposedObject.From(
                     new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
 
-                IObservable<Unit> result = fixture.checksumPackage(entry);
-                result.First();
+                fixture.checksumPackage(entry);
             }
 
             [Fact]
@@ -237,8 +236,16 @@ namespace NSync.Tests.Client
                 var fixture = ExposedObject.From(
                     new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
 
-                IObservable<Unit> result = fixture.checksumPackage(entry);
-                Assert.Throws<Exception>(() => result.First());
+                bool shouldDie = true;
+                try {
+                    // NB: We can't use Assert.Throws here because the binder
+                    // will try to pick the wrong method
+                    fixture.checksumPackage(entry);
+                } catch (Exception ex) {
+                    shouldDie = false;
+                }
+
+                shouldDie.ShouldBeFalse();
             }
 
             [Fact]
@@ -266,9 +273,8 @@ namespace NSync.Tests.Client
                     new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
 
                 bool shouldDie = true;
-                IObservable<Unit> result = fixture.checksumPackage(entry);
                 try {
-                    result.First();
+                    fixture.checksumPackage(entry);
                 } catch (Exception ex) {
                     shouldDie = false;
                 }

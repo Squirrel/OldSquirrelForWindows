@@ -87,5 +87,18 @@ namespace NSync.Core
             if (createTempFile == null) throw new NotImplementedException();
             return createTempFile();
         }
+
+        public static AnonFileSystem Default { 
+            get {
+                return new AnonFileSystem(
+                    s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s)),
+                    s => new FileInfoWrapper(new System.IO.FileInfo(s)),
+                    s => new FileWrapper(),
+                    s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s).CreateRecursive()),
+                    s => new System.IO.DirectoryInfo(s).Delete(true),
+                    Utility.CopyToAsync,
+                    Utility.CreateTempFile);
+            }
+        }
     }
 }

@@ -48,30 +48,29 @@ namespace NSync.Client
             updateUrlOrPath = urlOrPath;
             this.applicationName = applicationName;
 
-            rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
-            this.fileSystem = fileSystem ?? new AnonFileSystem(
-                s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s)),
-                s => new FileInfoWrapper(new System.IO.FileInfo(s)),
-                s => new FileWrapper(),
-                s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s).CreateRecursive()),
-                s => new System.IO.DirectoryInfo(s).Delete(true),
-                Utility.CopyToAsync,
-                Utility.CreateTempFile);
+            this.rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
+            this.fileSystem = fileSystem ?? AnonFileSystem.Default;
 
             this.urlDownloader = urlDownloader;
+        }
+
+        public string PackageDirectory {
+            get { return Path.Combine(rootAppDirectory, "packages"); }
+        }
+
+        public string LocalReleaseFile {
+            get { return Path.Combine(PackageDirectory, "RELEASES"); }
         }
 
         public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false)
         {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
 
-            if (!hasUpdateLock) {
-                return Observable.Throw<UpdateInfo>(new Exception("Call AcquireUpdateLock before using this method"));
-            }
+            var noLock = checkForLock<UpdateInfo>();
+            if (noLock != null) return noLock;
 
             try {
-                var fi = fileSystem.GetFileInfo(Path.Combine(rootAppDirectory, "packages", "RELEASES"));
-                var file = fi.OpenRead();
+                var file = fileSystem.GetFileInfo(LocalReleaseFile).OpenRead();
 
                 // NB: sr disposes file
                 using (var sr = new StreamReader(file, Encoding.UTF8)) {
@@ -84,10 +83,14 @@ namespace NSync.Client
             }
 
             IObservable<string> releaseFile;
+
+            // Fetch the remote RELEASES file, whether it's a local dir or an 
+            // HTTP URL
             if (isHttpUrl(updateUrlOrPath)) {
                 releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"));
             } else {
                 var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
+
                 using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
                     var text = sr.ReadToEnd();
                     releaseFile = Observable.Return(text);
@@ -105,9 +108,8 @@ namespace NSync.Client
 
         public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
         {
-            if (!hasUpdateLock) {
-                return Observable.Throw<Unit>(new Exception("Call AcquireUpdateLock before using this method"));
-            }
+            var noLock = checkForLock<Unit>();
+            if (noLock != null) return noLock;
 
             IObservable<Unit> downloadResult;
 
@@ -117,12 +119,12 @@ namespace NSync.Client
 
                 downloadResult = urlDownloader.QueueBackgroundDownloads(urls, paths);
             } else {
-                downloadResult = releasesToDownload.ToObservable()
-                    .Select(x => Observable.Defer(() =>
-                        fileSystem.CopyAsync(
-                            Path.Combine(updateUrlOrPath, x.Filename),
-                            Path.Combine(rootAppDirectory, "packages", x.Filename))))
-                    .Merge(2);
+                // Do a parallel copy from the remote directory to the local
+                downloadResult = releasesToDownload
+                    .MapReduce(x => fileSystem.CopyAsync(
+                        Path.Combine(updateUrlOrPath, x.Filename),
+                        Path.Combine(rootAppDirectory, "packages", x.Filename)))
+                    .Select(_ => Unit.Default);
             }
 
             return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
@@ -130,44 +132,17 @@ namespace NSync.Client
 
         public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo)
         {
-            if (!hasUpdateLock) {
-                return Observable.Throw<Unit>(new Exception("Call AcquireUpdateLock before using this method"));
-            }
+            var noLock = checkForLock<Unit>();
+            if (noLock != null) return noLock;
 
-            var fullPackageToApply = createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion);
-
-            return fullPackageToApply.SelectMany(release => Observable.Start(() => {
-                var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
-                var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
-                target.Create();
-
-                // NB: We sort this list in order to guarantee that if a Net20
-                // and a Net40 version of a DLL get shipped, we always end up
-                // with the 4.0 version.
-                pkg.GetFiles()
-                    .Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
-                    .OrderBy(x => x.Path)
-                    .ForEach(x => {
-                        var m = Regex.Match(x.Path, @".*\\([^\\]+)$");
-                        var targetPath = Path.Combine(target.FullName, m.Groups[1].Value);
-
-                        var fi = fileSystem.GetFileInfo(targetPath);
-                        if (fi.Exists) {
-                            fi.Delete();
-                        }
-
-                        using (var inf = x.GetStream())
-                        using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
-                            this.Log().Info("Writing {0} to app directory", targetPath);
-                            inf.CopyTo(of);
-                        }
-                    });
-
-                var newCurrentVersion = updateInfo.ReleasesToApply.MaxBy(x => x.Version).First().Version;
-
-                var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
-                runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion == null, newCurrentVersion, shortcutsToIgnore);
-            })).SelectMany(_ => UpdateLocalReleasesFile());
+            // NB: It's important that we update the local releases file *only* 
+            // once the entire operation has completed, even though we technically
+            // could do it after DownloadUpdates finishes. We do this so that if
+            // we get interrupted / killed during this operation, we'll start over
+            return createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion)
+                .SelectMany(release => 
+                    Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
+                .SelectMany(_ => UpdateLocalReleasesFile());
         }
 
         public IDisposable AcquireUpdateLock()
@@ -184,19 +159,25 @@ namespace NSync.Client
 
         public IObservable<Unit> UpdateLocalReleasesFile()
         {
-            return Observable.Start(() => {
-                var packagesDir = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "packages"));
+            var noLock = checkForLock<Unit>();
+            if (noLock != null) return noLock;
 
+            return Observable.Start(() => {
+                var packagesDir = fileSystem.GetDirectoryInfo(PackageDirectory);
+
+                // Generate release entries for all of the local packages
                 var entries = packagesDir.GetFiles("*.nupkg")
-                    .Select(x => {
+                    .MapReduce(x => Observable.Start(() => {
                         using (var file = x.OpenRead()) {
                             return ReleaseEntry.GenerateFromFile(file, x.Name);
                         }
-                    }).ToArray();
+                    }, RxApp.TaskpoolScheduler)).First();
 
+                // Write the new RELEASES file to a temp file then move it into
+                // place
                 var tempFile = fileSystem.CreateTempFile();
                 try {
-                    if (entries.Length > 0) {
+                    if (entries.Count > 0) {
                         ReleaseEntry.WriteReleaseFile(entries, tempFile.Item2);
                     }
                 } finally {
@@ -207,18 +188,68 @@ namespace NSync.Client
             }, RxApp.TaskpoolScheduler);
         }
 
+        IObservable<TRet> checkForLock<TRet>()
+        {
+            if (!hasUpdateLock) {
+                return Observable.Throw<TRet>(new Exception("Call AcquireUpdateLock before using this method"));
+            }
+
+            return null;
+        }
+
+        void installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
+        {
+            var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
+            var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
+
+            // NB: This might happen if we got killed partially through applying the release
+            if (target.Exists) {
+                Utility.DeleteDirectory(target.FullName);
+            }
+            target.Create();
+
+            // Copy all of the files out of the lib/ dirs in the NuGet package
+            // into our target App directory.
+            //
+            // NB: We sort this list in order to guarantee that if a Net20
+            // and a Net40 version of a DLL get shipped, we always end up
+            // with the 4.0 version.
+            pkg.GetFiles().Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)).OrderBy(x => x.Path)
+                .ForEach(x => {
+                    var targetPath = Path.Combine(target.FullName, Path.GetFileName(x.Path));
+
+                    var fi = fileSystem.GetFileInfo(targetPath);
+                    if (fi.Exists) fi.Delete();
+
+                    using (var inf = x.GetStream())
+                    using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
+                        this.Log().Info("Writing {0} to app directory", targetPath);
+                        inf.CopyTo(of);
+                    }
+                });
+
+            var newCurrentVersion = updateInfo.FutureReleaseEntry.Version;
+
+            // Perform post-install; clean up the previous version by asking it
+            // which shortcuts to install, and nuking them. Then, run the app's
+            // post install and set up shortcuts.
+            var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
+            runPostInstallOnDirectory(target.FullName, updateInfo.CurrentlyInstalledVersion == null, newCurrentVersion, shortcutsToIgnore);
+        }
+
         void initializeClientAppDirectory()
         {
+            // On bootstrap, we won't have any of our directories, create them
             var pkgDir = Path.Combine(rootAppDirectory, "packages");
             if (fileSystem.GetDirectoryInfo(pkgDir).Exists) {
                 fileSystem.DeleteDirectoryRecursive(pkgDir);
             }
+
             fileSystem.CreateDirectoryRecursive(pkgDir);
         }
 
         IObservable<UpdateInfo> determineUpdateInfo(IEnumerable<ReleaseEntry> localReleases, IEnumerable<ReleaseEntry> remoteReleases, bool ignoreDeltaUpdates)
         {
-            var pkgDir = Path.Combine(rootAppDirectory, "packages");
             localReleases = localReleases ?? Enumerable.Empty<ReleaseEntry>();
 
             if (remoteReleases == null) {
@@ -239,17 +270,17 @@ namespace NSync.Client
                 this.Log().Warn("First run or local directory is corrupt, starting from scratch");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
-                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, pkgDir));
+                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory));
             }
 
             if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
                 this.Log().Warn("hwhat, local version is greater than remote version");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
-                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, pkgDir));
+                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory));
             }
 
-            return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases, pkgDir));
+            return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases, PackageDirectory));
         }
 
         ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
@@ -278,50 +309,51 @@ namespace NSync.Client
 
         IObservable<Unit> checksumAllPackages(IEnumerable<ReleaseEntry> releasesDownloaded)
         {
-            return releasesDownloaded.ToObservable()
-                .Select(x => Observable.Defer(() => checksumPackage(x)))
-                .Merge(3)
-                .Aggregate(Unit.Default, (acc, _) => acc);
+            return releasesDownloaded
+                .MapReduce(x => Observable.Start(() => checksumPackage(x)))
+                .Select(_ => Unit.Default);
         }
 
-        IObservable<Unit> checksumPackage(ReleaseEntry downloadedRelease)
+        void checksumPackage(ReleaseEntry downloadedRelease)
         {
-            return Observable.Start(() => {
-                var targetPackage = fileSystem.GetFileInfo(
-                    Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
+            var targetPackage = fileSystem.GetFileInfo(
+                Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
 
-                if (!targetPackage.Exists) {
-                    this.Log().Error("File should exist but doesn't", targetPackage.FullName);
-                    throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
-                }
+            if (!targetPackage.Exists) {
+                this.Log().Error("File should exist but doesn't", targetPackage.FullName);
+                throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
+            }
 
-                if (targetPackage.Length != downloadedRelease.Filesize) {
-                    this.Log().Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
+            if (targetPackage.Length != downloadedRelease.Filesize) {
+                this.Log().Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
+                targetPackage.Delete();
+                throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
+            } 
+
+            using (var file = targetPackage.OpenRead()) {
+                var hash = Utility.CalculateStreamSHA1(file);
+                if (hash != downloadedRelease.SHA1) {
+                    this.Log().Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
                     targetPackage.Delete();
-                    throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
-                } 
-
-                using (var file = targetPackage.OpenRead()) {
-                    var hash = Utility.CalculateStreamSHA1(file);
-                    if (hash != downloadedRelease.SHA1) {
-                        this.Log().Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
-                        targetPackage.Delete();
-                        throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
-                    }
+                    throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
                 }
-            }, RxApp.TaskpoolScheduler);
+            }
         }
 
         IObservable<ReleaseEntry> createFullPackagesFromDeltas(IEnumerable<ReleaseEntry> releasesToApply, ReleaseEntry currentVersion)
         {
+            Contract.Requires(releasesToApply != null);
+
+            // If there are no deltas in our list, we're already done
             if (!releasesToApply.Any() || releasesToApply.All(x => !x.IsDelta)) {
                 return Observable.Return(releasesToApply.MaxBy(x => x.Version).First());
             }
 
-            if (!releasesToApply.Any(x => x.IsDelta)) {
+            if (!releasesToApply.All(x => x.IsDelta)) {
                 return Observable.Throw<ReleaseEntry>(new Exception("Cannot apply combinations of delta and full packages"));
             }
 
+            // Smash together our base full package and the nearest delta
             var ret = Observable.Start(() => {
                 var basePkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", currentVersion.Filename));
                 var deltaPkg = new ReleasePackage(Path.Combine(rootAppDirectory, "packages", releasesToApply.First().Filename));
@@ -338,72 +370,100 @@ namespace NSync.Client
                 var fi = fileSystem.GetFileInfo(x.InputPackageFile);
                 var entry = ReleaseEntry.GenerateFromFile(fi.OpenRead(), x.InputPackageFile);
 
+                // Recursively combine the rest of them
                 return createFullPackagesFromDeltas(releasesToApply.Skip(1), entry);
             });
         }
 
         IEnumerable<ShortcutCreationRequest> cleanUpOldVersions(Version newCurrentVersion)
         {
-            // XXX: Make sure we don't blow up if their IAppSetup sucks
             return fileSystem.GetDirectoryInfo(rootAppDirectory).GetDirectories()
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
+                .OrderBy(x => x.Name)
                 .SelectMany(dir => {
                     var apps = findAppSetupsToRun(dir.FullName);
                     var ver = new Version(dir.Name.Replace("app-", ""));
 
-                    var ret = apps.SelectMany(app => {
-                        app.OnVersionUninstalling(ver);
-
-                        var shortcuts = app.GetAppShortcutList();
-                        return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
-                            var path = x.GetLinkTarget(applicationName, false);
-
-                            var fi = fileSystem.GetFileInfo(path);
-                            if (fi.Exists) {
-                                fi.Delete();
-                            } else {
-                                acc.Add(x);
-                            }
-                            return acc;
-                        });
-                    
-                    });
+                    var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
                         
                     Utility.DeleteDirectory(dir.FullName);
                     return ret;
                 });
         }
 
+        IEnumerable<ShortcutCreationRequest> uninstallAppVersion(IAppSetup app, Version ver)
+        {
+            try {
+                app.OnVersionUninstalling(ver);
+            } catch (Exception ex) {
+                this.Log().ErrorException("App threw exception on uninstall:  " + app.GetType().FullName, ex);
+            }
+
+            var shortcuts = Enumerable.Empty<ShortcutCreationRequest>();
+            try {
+                shortcuts = app.GetAppShortcutList();
+            } catch (Exception ex) {
+                this.Log().ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+            }
+
+            // Get the list of shortcuts that *should've* been there, but aren't;
+            // this means that the user deleted them by hand and that they should 
+            // stay dead
+            return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
+                var path = x.GetLinkTarget(applicationName);
+
+                var fi = fileSystem.GetFileInfo(path);
+                if (fi.Exists) {
+                    fi.Delete();
+                } else {
+                    acc.Add(x);
+                }
+
+                return acc;
+            });
+        }
+
         void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
-            // XXX: Make sure we don't blow up if their IAppSetup sucks
             findAppSetupsToRun(newAppDirectoryRoot)
-                .ForEach(app => {
-                    if (isFirstInstall)  app.OnAppInstall();
-                    app.OnVersionInstalled(newCurrentVersion);
+                .ForEach(app => installAppVersion(app, newCurrentVersion, shortcutRequestsToIgnore, isFirstInstall));
+        }
 
-                    app.GetAppShortcutList()
-                        .Where(x => !shortcutRequestsToIgnore.Contains(x))
-                        .ForEach(x => {
-                            var shortcut = x.GetLinkTarget(applicationName, true);
+        void installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
+        {
+            try {
+                if (isFirstInstall) app.OnAppInstall();
+                app.OnVersionInstalled(newCurrentVersion);
+            } catch (Exception ex) {
+                this.Log().ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
+            }
 
-                            var fi = fileSystem.GetFileInfo(shortcut);
-                            if (fi.Exists) {
-                                fi.Delete();
-                            }
+            var shortcutList = Enumerable.Empty<ShortcutCreationRequest>();
+            try {
+                shortcutList = app.GetAppShortcutList();
+            } catch (Exception ex) {
+                this.Log().ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+            }
 
-                            var sl = new ShellLink() {
-                                Target = x.TargetPath,
-                                IconPath = x.IconLibrary,
-                                IconIndex = x.IconIndex,
-                                Arguments = x.Arguments,
-                                WorkingDirectory = x.WorkingDirectory,
-                                Description = x.Description
-                            };
+            shortcutList
+                .Where(x => !shortcutRequestsToIgnore.Contains(x))
+                .ForEach(x => {
+                    var shortcut = x.GetLinkTarget(applicationName, true);
 
-                            sl.Save(shortcut);
-                        });
+                    var fi = fileSystem.GetFileInfo(shortcut);
+                    if (fi.Exists) fi.Delete();
+
+                    var sl = new ShellLink() {
+                        Target = x.TargetPath,
+                        IconPath = x.IconLibrary,
+                        IconIndex = x.IconIndex,
+                        Arguments = x.Arguments,
+                        WorkingDirectory = x.WorkingDirectory,
+                        Description = x.Description
+                    };
+
+                    sl.Save(shortcut);
                 });
         }
 
@@ -419,8 +479,8 @@ namespace NSync.Client
                         return null;
                     }
                 })
-                .SelectMany(x => x.GetModules())
-                .SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                .Where(x => x != null)
+                .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
                 .Select(x => {
                     try {
                         return (IAppSetup)Activator.CreateInstance(x);

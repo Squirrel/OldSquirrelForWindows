@@ -96,6 +96,16 @@ namespace NSync.Core
             }
         }
 
+        public static IObservable<IList<TRet>> MapReduce<T, TRet>(this IObservable<T> This, Func<T, IObservable<TRet>> selector, int degreeOfParallelism = 4)
+        {
+            return This.Select(x => Observable.Defer(() => selector(x))).Merge(degreeOfParallelism).ToList();
+        }
+
+        public static IObservable<IList<TRet>> MapReduce<T, TRet>(this IEnumerable<T> This, Func<T, IObservable<TRet>> selector, int degreeOfParallelism = 4)
+        {
+            return This.ToObservable().Select(x => Observable.Defer(() => selector(x))).Merge(degreeOfParallelism).ToList();
+        }
+
         public static IDisposable WithTempDirectory(out string path)
         {
             var di = new DirectoryInfo(Environment.GetEnvironmentVariable("TEMP"));
