@@ -183,7 +183,27 @@ namespace NSync.Client
 
         public IObservable<Unit> UpdateLocalReleasesFile()
         {
-            return Observable.Throw<Unit>(new NotImplementedException());
+            return Observable.Start(() => {
+                var packagesDir = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "packages"));
+
+                var entries = packagesDir.GetFiles("*.nupkg")
+                    .Select(x => {
+                        using (var file = x.OpenRead()) {
+                            return ReleaseEntry.GenerateFromFile(file, x.Name);
+                        }
+                    }).ToArray();
+
+                var tempFile = fileSystem.CreateTempFile();
+                try {
+                    if (entries.Length > 0) {
+                        ReleaseEntry.WriteReleaseFile(entries, tempFile.Item2);
+                    }
+                } finally {
+                    tempFile.Item2.Dispose();
+                }
+
+                fileSystem.GetFileInfo(tempFile.Item1).MoveTo(Path.Combine(packagesDir.FullName, "RELEASES"));
+            }, RxApp.TaskpoolScheduler);
         }
 
         void initializeClientAppDirectory()

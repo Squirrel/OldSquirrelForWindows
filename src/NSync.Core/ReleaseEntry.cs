@@ -79,11 +79,11 @@ namespace NSync.Core
             return new ReleaseEntry(m.Groups[1].Value, m.Groups[2].Value, size, isDelta);
         }
 
-        public static IEnumerable<ReleaseEntry> ParseReleaseFile(string file)
+        public static IEnumerable<ReleaseEntry> ParseReleaseFile(string fileContents)
         {
-            Contract.Requires(!String.IsNullOrEmpty(file));
+            Contract.Requires(!String.IsNullOrEmpty(fileContents));
 
-            var ret = file.Split('\n')
+            var ret = fileContents.Split('\n')
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Select(ParseReleaseEntry)
                 .ToArray();
@@ -91,14 +91,24 @@ namespace NSync.Core
             return ret.Any(x => x == null) ? null : ret;
         }
 
+        public static void WriteReleaseFile(IEnumerable<ReleaseEntry> releaseEntries, Stream stream)
+        {
+            Contract.Requires(releaseEntries != null && releaseEntries.Any());
+            Contract.Requires(stream != null);
+
+            using (var sw = new StreamWriter(stream, Encoding.UTF8)) {
+                sw.Write(String.Join("\n", releaseEntries.Select(x => x.EntryAsString)));
+            }
+        }
+
         public static void WriteReleaseFile(IEnumerable<ReleaseEntry> releaseEntries, string path)
         {
             Contract.Requires(releaseEntries != null && releaseEntries.Any());
             Contract.Requires(!String.IsNullOrEmpty(path));
 
-            File.WriteAllText(path, 
-                String.Join("\n", releaseEntries.Select(x => x.EntryAsString)), 
-                Encoding.UTF8);
+            using (var f = File.OpenWrite(path)) {
+                WriteReleaseFile(releaseEntries, f);
+            }
         }
 
         public static ReleaseEntry GenerateFromFile(Stream file, string filename)

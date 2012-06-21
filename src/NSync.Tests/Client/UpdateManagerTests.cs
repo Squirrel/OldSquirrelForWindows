@@ -462,7 +462,7 @@ namespace NSync.Tests.Client
                     var releasePath = Path.Combine(packageDir.FullName, "RELEASES");
                     File.Exists(releasePath).ShouldBeTrue();
 
-                    var entries = ReleaseEntry.ParseReleaseFile(releasePath);
+                    var entries = ReleaseEntry.ParseReleaseFile(File.ReadAllText(releasePath, Encoding.UTF8));
                     entries.Count().ShouldEqual(3);
                 }
             }
