@@ -8,7 +8,6 @@ namespace NSync.Client
 {
     public class UpdateInfo
     {
-        public Version Version { get; protected set; }
         public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
         public ReleaseEntry FutureReleaseEntry { get; protected set; }
         public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
@@ -19,7 +18,6 @@ namespace NSync.Client
         {
             // NB: When bootstrapping, CurrentlyInstalledVersion is null!
             CurrentlyInstalledVersion = currentlyInstalledVersion;
-            Version = currentlyInstalledVersion != null ? currentlyInstalledVersion.Version : null;
             ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
             FutureReleaseEntry = ReleasesToApply.MaxBy(x => x.Version).FirstOrDefault();
 
