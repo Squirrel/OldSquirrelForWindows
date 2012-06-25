@@ -32,49 +32,37 @@ namespace NSync.Core
                 return ReleasePackageFile;
             }
 
+            // Recursively walk the dependency tree and extract all of the 
+            // dependent packages into the a temporary directory.
             var package = new ZipPackage(InputPackageFile);
             var dependencies = findAllDependentPackages(package, packagesRootDir);
 
-            var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-            tempPath.Create();
+            string tempPath = null;
 
-            try {
+            using (Utility.WithTempDirectory(out tempPath)) {
+                var tempDir = new DirectoryInfo(tempPath);
+
                 using(var zf = new ZipFile(InputPackageFile)) {
-                    zf.ExtractAll(tempPath.FullName);
+                    zf.ExtractAll(tempPath);
                 }
     
-                dependencies.ForEach(pkg => {
-                    this.Log().Info("Scanning {0}", pkg.Id);
+                extractDependentPackages(dependencies, tempDir);
 
-                    pkg.GetFiles()
-                        .Where(x => x.Path.StartsWith("lib", true, CultureInfo.InvariantCulture))
-                        .ForEach(file => {
-                            var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
+                var specPath = tempDir.GetFiles("*.nuspec").First().FullName;
 
-                            outPath.Directory.CreateRecursive();
-
-                            using (var of = File.Create(outPath.FullName)) {
-                                this.Log().Info("Writing {0} to {1}", file.Path, outPath);
-                                file.GetStream().CopyTo(of);
-                            }
-                        });
-                });
-
-                var specPath = tempPath.GetFiles("*.nuspec").First().FullName;
                 removeDependenciesFromPackageSpec(specPath);
-                removeSilverlightAssemblies(tempPath);
-                removeDeveloperDocumentation(tempPath);
+                removeSilverlightAssemblies(tempDir);
+                removeDeveloperDocumentation(tempDir);
+
                 renderReleaseNotesMarkdown(specPath);
 
                 using (var zf = new ZipFile(outputFile)) {
-                    zf.AddDirectory(tempPath.FullName);
+                    zf.AddDirectory(tempPath);
                     zf.Save();
                 }
 
                 ReleasePackageFile = outputFile;
                 return ReleasePackageFile;
-            } finally {
-                tempPath.Delete(true);
             }
         }
 
@@ -83,28 +71,43 @@ namespace NSync.Core
             Contract.Requires(baseFixture != null);
             Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
 
-            var baseTempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-            baseTempPath.Create();
+            string baseTempPath = null;
+            string tempPath = null;
 
-            var tempPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-            tempPath.Create();
+            using (Utility.WithTempDirectory(out baseTempPath))
+            using (Utility.WithTempDirectory(out tempPath)) {
+                var baseTempInfo = new DirectoryInfo(baseTempPath);
+                var tempInfo = new DirectoryInfo(tempPath);
 
-            try {
                 using (var zf = new ZipFile(baseFixture.ReleasePackageFile)) {
-                    zf.ExtractAll(baseTempPath.FullName);
+                    zf.ExtractAll(baseTempInfo.FullName);
                 }
                 
                 using (var zf = new ZipFile(ReleasePackageFile)) {
-                    zf.ExtractAll(tempPath.FullName);
+                    zf.ExtractAll(tempInfo.FullName);
                 }
 
-                var baseLibFiles = baseTempPath.GetAllFilesRecursively()
+                // Collect a list of relative paths under 'lib' and map them 
+                // to their full name. We'll use this later to determine in
+                // the new version of the package whether the file exists or 
+                // not.
+                var baseLibFiles = baseTempInfo.GetAllFilesRecursively()
                     .Where(x => x.FullName.ToLowerInvariant().Contains("lib" + Path.DirectorySeparatorChar))
-                    .ToDictionary(k => k.FullName.Replace(baseTempPath.FullName, ""), v => v.FullName);
+                    .ToDictionary(k => k.FullName.Replace(baseTempInfo.FullName, ""), v => v.FullName);
 
-                var libDir = tempPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
-                libDir.GetAllFilesRecursively().ForEach(libFile => {
-                    var relativePath = libFile.FullName.Replace(tempPath.FullName, "");
+                var newLibDir = tempInfo.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
+
+                // NB: There are three cases here that we'll handle:
+                //
+                // 1. Exists only in new => leave it alone, we'll use it directly.
+                // 2. Exists in both old and new => write a dummy file so we know 
+                //    to keep it.
+                // 3. Exists in old but changed in new => create a delta file
+                //
+                // The fourth case of "Exists only in old => delete it in new" 
+                // is handled when we apply the delta package
+                newLibDir.GetAllFilesRecursively().ForEach(libFile => {
+                    var relativePath = libFile.FullName.Replace(tempInfo.FullName, "");
 
                     if (!baseLibFiles.ContainsKey(relativePath)) {
                         this.Log().Info("{0} not found in base package, marking as new", relativePath);
@@ -116,6 +119,7 @@ namespace NSync.Core
 
                     if (bytesAreIdentical(oldData, newData)) {
                         this.Log().Info("{0} hasn't changed, writing dummy file", relativePath);
+
                         File.Create(libFile.FullName + ".diff").Dispose();
                         File.Create(libFile.FullName + ".shasum").Dispose();
                         libFile.Delete();
@@ -132,15 +136,12 @@ namespace NSync.Core
                     }
                 });
 
-                addDeltaFilesToContentTypes(tempPath.FullName);
+                addDeltaFilesToContentTypes(tempInfo.FullName);
 
                 using (var zf = new ZipFile(outputFile)) {
-                    zf.AddDirectory(tempPath.FullName);
+                    zf.AddDirectory(tempInfo.FullName);
                     zf.Save();
                 }
-            } finally {
-                baseTempPath.Delete(true);
-                tempPath.Delete(true);
             }
 
             return new ReleasePackage(outputFile);
@@ -162,55 +163,21 @@ namespace NSync.Core
                 baseZip.ExtractAll(workingPath);
 
                 var pathsVisited = new List<string>();
-                new DirectoryInfo(deltaPath).GetAllFilesRecursively()
+
+                var deltaPathRelativePaths = new DirectoryInfo(deltaPath).GetAllFilesRecursively()
                     .Select(x => x.FullName.Replace(deltaPath + Path.DirectorySeparatorChar, ""))
+                    .ToArray();
+
+                // Apply all of the .diff files
+                deltaPathRelativePaths
                     .Where(x => x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
                     .ForEach(file => {
-                        var inputFile = Path.Combine(deltaPath, file);
-                        var finalTarget = Path.Combine(workingPath, Regex.Replace(file, @".diff$", ""));
-                        var outPath = Path.GetTempFileName();
-
                         pathsVisited.Add(Regex.Replace(file, @".diff$", "").ToLowerInvariant());
-
-                        if (new FileInfo(inputFile).Length == 0) {
-                            this.Log().Info("{0} exists unchanged, skipping", file);
-                            return;
-                        }
-
-                        if (file.EndsWith(".diff", StringComparison.InvariantCultureIgnoreCase)) {
-                            using (var of = File.OpenWrite(outPath))
-                            using (var inf = File.OpenRead(finalTarget)) {
-                                this.Log().Info("Applying Diff to {0}", file);
-                                BinaryPatchUtility.Apply(inf, () => File.OpenRead(inputFile), of);
-                            }
-
-                            var shaFile = Regex.Replace(inputFile, @"\.diff$", ".shasum");
-                            var expectedRl = ReleaseEntry.ParseReleaseEntry(File.ReadAllText(shaFile, Encoding.UTF8));
-                            var actualRl = ReleaseEntry.GenerateFromFile(outPath);
-
-                            if (expectedRl.Filesize != actualRl.Filesize) {
-                                this.Log().Warn("Patched file {0} has incorrect size, expected {1}, got {2}",
-                                    file, expectedRl.Filesize, actualRl.Filesize);
-                                throw new ChecksumFailedException() {Filename = file};
-                            }
-
-                            if (expectedRl.SHA1 != actualRl.SHA1) {
-                                this.Log().Warn("Patched file {0} has incorrect SHA1, expected {1}, got {2}",
-                                    file, expectedRl.SHA1, actualRl.SHA1);
-                                throw new ChecksumFailedException() {Filename = file};
-                            }
-                        } else {
-                            using (var of = File.OpenWrite(outPath))
-                            using (var inf = File.OpenRead(inputFile)) {
-                                this.Log().Info("Adding new file: {0}", file);
-                                inf.CopyTo(of);
-                            }
-                        }
-
-                        File.Delete(finalTarget);
-                        File.Move(outPath, finalTarget);
+                        applyDiffToFile(deltaPath, file, workingPath);
                     });
 
+                // Delete all of the files that were in the old package but 
+                // not in the new one.
                 new DirectoryInfo(workingPath).GetAllFilesRecursively()
                     .Select(x => x.FullName.Replace(workingPath + Path.DirectorySeparatorChar, "").ToLowerInvariant())
                     .Where(x => x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase) && !pathsVisited.Contains(x))
@@ -219,8 +186,9 @@ namespace NSync.Core
                         File.Delete(Path.Combine(workingPath, x));
                     });
 
-                new DirectoryInfo(deltaPath).GetAllFilesRecursively()
-                    .Select(x => x.FullName.Replace(deltaPath + Path.DirectorySeparatorChar, ""))
+                // Update all the files that aren't in 'lib' with the delta 
+                // package's versions (i.e. the nuspec file, etc etc).
+                deltaPathRelativePaths
                     .Where(x => !x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase))
                     .ForEach(x => {
                         this.Log().Info("Updating metadata file: {0}", x);
@@ -234,6 +202,81 @@ namespace NSync.Core
             }
 
             return new ReleasePackage(outputFile);
+        }
+
+        void applyDiffToFile(string deltaPath, string relativeFilePath, string workingDirectory)
+        {
+            var inputFile = Path.Combine(deltaPath, relativeFilePath);
+            var finalTarget = Path.Combine(workingDirectory, Regex.Replace(relativeFilePath, @".diff$", ""));
+
+            var tempTargetFile = Path.GetTempFileName();
+
+            // NB: Zero-length diffs indicate the file hasn't actually changed
+            if (new FileInfo(inputFile).Length == 0) {
+                this.Log().Info("{0} exists unchanged, skipping", relativeFilePath);
+                return;
+            }
+
+            if (relativeFilePath.EndsWith(".diff", StringComparison.InvariantCultureIgnoreCase)) {
+                using (var of = File.OpenWrite(tempTargetFile))
+                using (var inf = File.OpenRead(finalTarget)) {
+                    this.Log().Info("Applying Diff to {0}", relativeFilePath);
+                    BinaryPatchUtility.Apply(inf, () => File.OpenRead(inputFile), of);
+                }
+
+                try {
+                    verifyPatchedFile(relativeFilePath, inputFile, tempTargetFile);
+                } catch (Exception) {
+                    File.Delete(tempTargetFile);
+                    throw;
+                }
+            } else {
+                using (var of = File.OpenWrite(tempTargetFile))
+                using (var inf = File.OpenRead(inputFile)) {
+                    this.Log().Info("Adding new file: {0}", relativeFilePath);
+                    inf.CopyTo(of);
+                }
+            }
+
+            File.Delete(finalTarget);
+            File.Move(tempTargetFile, finalTarget);
+        }
+
+        void verifyPatchedFile(string relativeFilePath, string inputFile, string tempTargetFile)
+        {
+            var shaFile = Regex.Replace(inputFile, @"\.diff$", ".shasum");
+            var expectedReleaseEntry = ReleaseEntry.ParseReleaseEntry(File.ReadAllText(shaFile, Encoding.UTF8));
+            var actualReleaseEntry = ReleaseEntry.GenerateFromFile(tempTargetFile);
+
+            if (expectedReleaseEntry.Filesize != actualReleaseEntry.Filesize) {
+                this.Log().Warn("Patched file {0} has incorrect size, expected {1}, got {2}", relativeFilePath,
+                    expectedReleaseEntry.Filesize, actualReleaseEntry.Filesize);
+                throw new ChecksumFailedException() {Filename = relativeFilePath};
+            }
+
+            if (expectedReleaseEntry.SHA1 != actualReleaseEntry.SHA1) {
+                this.Log().Warn("Patched file {0} has incorrect SHA1, expected {1}, got {2}", relativeFilePath,
+                    expectedReleaseEntry.SHA1, actualReleaseEntry.SHA1);
+                throw new ChecksumFailedException() {Filename = relativeFilePath};
+            }
+        }
+
+        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath)
+        {
+            dependencies.ForEach(pkg => {
+                this.Log().Info("Scanning {0}", pkg.Id);
+
+                pkg.GetFiles().Where(x => x.Path.StartsWith("lib", true, CultureInfo.InvariantCulture)).ForEach(file => {
+                    var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
+
+                    outPath.Directory.CreateRecursive();
+
+                    using (var of = File.Create(outPath.FullName)) {
+                        this.Log().Info("Writing {0} to {1}", file.Path, outPath);
+                        file.GetStream().CopyTo(of);
+                    }
+                });
+            });
         }
 
         void removeDeveloperDocumentation(DirectoryInfo expandedRepoPath)
@@ -262,8 +305,13 @@ namespace NSync.Core
             doc.Load(specPath);
 
             // XXX: This code looks full tart
-            var metadata = doc.DocumentElement.ChildNodes.OfType<XmlElement>().First(x => x.Name.ToLowerInvariant() == "metadata");
-            var releaseNotes = metadata.ChildNodes.OfType<XmlElement>().FirstOrDefault(x => x.Name.ToLowerInvariant() == "releasenotes");
+            var metadata = doc.DocumentElement.ChildNodes
+                .OfType<XmlElement>()
+                .First(x => x.Name.ToLowerInvariant() == "metadata");
+
+            var releaseNotes = metadata.ChildNodes
+                .OfType<XmlElement>()
+                .FirstOrDefault(x => x.Name.ToLowerInvariant() == "releasenotes");
 
             if (releaseNotes == null) {
                 this.Log().Info("No release notes found in {0}", specPath);
@@ -294,13 +342,13 @@ namespace NSync.Core
         {
             package = package ?? new ZipPackage(InputPackageFile);
 
-            return package.Dependencies.SelectMany(x => {
-                var ret = findPackageFromName(x.Id, x.VersionSpec, packagesRootDir);
+            return package.Dependencies.SelectMany(dependency => {
+                var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
                 if (ret == null) {
                     return Enumerable.Empty<IPackage>();
                 }
 
-                return findAllDependentPackages(ret).StartWith(ret);
+                return findAllDependentPackages(ret).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
             });
         }
 
@@ -321,6 +369,8 @@ namespace NSync.Core
 
         IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
         {
+            // Apply a VersionSpec to a specific Version (this code is nicked 
+            // from NuGet)
             return packageList.Where(x => x.Id == id).ToArray().FirstOrDefault(x => {
                 if (((versionSpec != null) && (versionSpec.MinVersion != null)) && (versionSpec.MaxVersion != null)) {
                     if ((!versionSpec.IsMaxInclusive || !versionSpec.IsMinInclusive) && (versionSpec.MaxVersion == versionSpec.MinVersion)) {
