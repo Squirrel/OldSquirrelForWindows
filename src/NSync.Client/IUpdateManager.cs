@@ -56,7 +56,7 @@ namespace NSync.Client
     }
 
     [ContractClassFor(typeof(IUpdateManager))]
-    public class UpdateManagerContracts : IUpdateManager
+    public abstract class UpdateManagerContracts : IUpdateManager
     {
         public IDisposable AcquireUpdateLock()
         {
