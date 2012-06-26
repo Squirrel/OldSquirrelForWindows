@@ -52,9 +52,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NSync.Core\NSync.Core.csproj">
+    <ProjectReference Include="..\Shimmer.Core\Shimmer.Core.csproj">
       <Project>{3d17d46a-a411-4922-b932-9ebe2aae0ed7}</Project>
-      <Name>NSync.Core</Name>
+      <Name>Shimmer.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

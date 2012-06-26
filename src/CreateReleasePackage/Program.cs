@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Mono.Options;
-using NSync.Core;
+using Shimmer.Core;
 
 namespace CreateReleasePackage
 {
@@ -15,7 +15,7 @@ namespace CreateReleasePackage
             var optParams = parseOptions(args);
             if (optParams == null) {
                 optParams = new Dictionary<string, string>();
-                optParams["target"] = @"C:\Users\Administrator\Documents\GitHub\nsync\src\CreateReleasePackage\Releases";
+                optParams["target"] = @"C:\Users\Administrator\Documents\GitHub\Shimmer\src\CreateReleasePackage\Releases";
                 optParams["input"] = @"Z:\Dropbox\ReactiveUI_Build_DontFuckingDeleteThisAgain\NuGet\reactiveui-core.3.1.1.nupkg";
                 optParams["pkgdir"] = @" Z:\Dropbox\ReactiveUI_External\Packages";
             }

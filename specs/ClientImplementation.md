@@ -34,7 +34,7 @@ solution is, "Only support per-user installs".
 
 ### Syncing the packages directory
 
-The first thing that the NSync client will do to start the updates process, is
+The first thing that the Shimmer client will do to start the updates process, is
 download the remote version of "Releases". Comparing this file to the Releases
 file on disk will tell us whether an update is available.
 
@@ -69,7 +69,7 @@ doesn't actually exist, we'll download the latest full release and set up the
 app.
 
 ### Client-side API
-Referencing NSync.dll, `UpdateManager` is all the app dev needs to use.
+Referencing Shimmer.dll, `UpdateManager` is all the app dev needs to use.
 
 	UpdateManager
 		UpdateInformation CheckForUpdates()
