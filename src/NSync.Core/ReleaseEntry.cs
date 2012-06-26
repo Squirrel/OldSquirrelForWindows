@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NuGet;
+using ReactiveUI;
 
 namespace NSync.Core
 {
@@ -132,6 +134,35 @@ namespace NSync.Core
             using (var inf = File.OpenRead(path)) {
                 return GenerateFromFile(inf, Path.GetFileName(path));
             }
+        }
+
+        public static void BuildReleasesFile(string releasePackagesDir, IFileSystemFactory fileSystemFactory = null)
+        {
+            fileSystemFactory = fileSystemFactory ?? AnonFileSystem.Default;
+            var packagesDir = fileSystemFactory.GetDirectoryInfo(releasePackagesDir);
+
+            // Generate release entries for all of the local packages
+            var entries = packagesDir.GetFiles("*.nupkg").MapReduce(x => Observable.Start(() => {
+                using (var file = x.OpenRead()) {
+                    return GenerateFromFile(file, x.Name);
+                }
+            }, RxApp.TaskpoolScheduler)).First();
+
+            // Write the new RELEASES file to a temp file then move it into
+            // place
+            var tempFile = fileSystemFactory.CreateTempFile();
+            try {
+                if (entries.Count > 0) WriteReleaseFile(entries, tempFile.Item2);
+            } finally {
+                tempFile.Item2.Dispose();
+            }
+
+            var target = Path.Combine(packagesDir.FullName, "RELEASES");
+            if (File.Exists(target)) {
+                File.Delete(target);
+            }
+
+            fileSystemFactory.GetFileInfo(tempFile.Item1).MoveTo(target);
         }
 
         static bool filenameIsDeltaFile(string filename)

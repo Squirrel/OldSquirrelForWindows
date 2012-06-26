@@ -162,30 +162,8 @@ namespace NSync.Client
             var noLock = checkForLock<Unit>();
             if (noLock != null) return noLock;
 
-            return Observable.Start(() => {
-                var packagesDir = fileSystem.GetDirectoryInfo(PackageDirectory);
-
-                // Generate release entries for all of the local packages
-                var entries = packagesDir.GetFiles("*.nupkg")
-                    .MapReduce(x => Observable.Start(() => {
-                        using (var file = x.OpenRead()) {
-                            return ReleaseEntry.GenerateFromFile(file, x.Name);
-                        }
-                    }, RxApp.TaskpoolScheduler)).First();
-
-                // Write the new RELEASES file to a temp file then move it into
-                // place
-                var tempFile = fileSystem.CreateTempFile();
-                try {
-                    if (entries.Count > 0) {
-                        ReleaseEntry.WriteReleaseFile(entries, tempFile.Item2);
-                    }
-                } finally {
-                    tempFile.Item2.Dispose();
-                }
-
-                fileSystem.GetFileInfo(tempFile.Item1).MoveTo(Path.Combine(packagesDir.FullName, "RELEASES"));
-            }, RxApp.TaskpoolScheduler);
+            return Observable.Start(() => 
+                ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler);
         }
 
         IObservable<TRet> checkForLock<TRet>()

@@ -16,13 +16,24 @@ namespace NSync.Core
 {
     public class ReleasePackage : IEnableLogger
     {
-        public ReleasePackage(string inputPackageFile)
+        public ReleasePackage(string inputPackageFile, bool isReleasePackage = false)
         {
             InputPackageFile = inputPackageFile;
+
+            if (isReleasePackage) {
+                ReleasePackageFile = inputPackageFile;
+            }
         }
 
         public string InputPackageFile { get; protected set; }
         public string ReleasePackageFile { get; protected set; }
+
+        public string SuggestedReleaseFileName {
+            get {
+                var zp = new ZipPackage(InputPackageFile);
+                return String.Format("{0}-{1}-full.nupkg", zp.Id, zp.Version);
+            }
+        }
 
         public string CreateReleasePackage(string outputFile, string packagesRootDir = null)
         {
@@ -68,7 +79,7 @@ namespace NSync.Core
 
         public ReleasePackage CreateDeltaPackage(ReleasePackage baseFixture, string outputFile)
         {
-            Contract.Requires(baseFixture != null);
+            Contract.Requires(baseFixture != null && baseFixture.ReleasePackageFile != null);
             Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
 
             string baseTempPath = null;
