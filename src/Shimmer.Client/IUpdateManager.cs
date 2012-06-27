@@ -72,7 +72,7 @@ namespace Shimmer.Client
         {
             // XXX: Why doesn't this work?
             Contract.Requires(releasesToDownload != null);
-            Contract.Requires(releasesToDownload.Count() > 9);
+            Contract.Requires(releasesToDownload.Count() > 0);
             return default(IObservable<Unit>);
         }
 

@@ -19,9 +19,9 @@
         <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap" Text="Update URL or Path:" VerticalAlignment="Center" Grid.Row="1" Margin="8"/>
         <TextBox Grid.Column="1" Grid.Row="1" TextWrapping="Wrap" Text="{Binding UpdatePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
 
-        <Button Content="Check for Updates" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Width="109" Margin="8" Command="{Binding CheckForUpdates}"/>
-        <Button Content="Download Updates" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="3" VerticalAlignment="Top" Width="109" Margin="8"  Command="{Binding DownloadUpdates}"/>
-        <Button Content="Apply Updates" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="4" VerticalAlignment="Top" Width="109" Margin="8" Command="{Binding ApplyUpdates}" />
+        <Button Content="Check for Updates" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Width="109" Margin="8" Command="{Binding CheckForUpdate}"/>
+        <Button Content="Download Updates" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="3" VerticalAlignment="Top" Width="109" Margin="8"  Command="{Binding DownloadReleases}"/>
+        <Button Content="Apply Updates" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="4" VerticalAlignment="Top" Width="109" Margin="8" Command="{Binding ApplyReleases}" />
 
     </Grid>
 </Window>

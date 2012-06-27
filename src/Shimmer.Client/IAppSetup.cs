@@ -168,6 +168,7 @@ namespace Shimmer.Client
                     Description =  AppDescription,
                     IconLibrary = target,
                     IconIndex = 0,
+                    TargetPath = target,
                 },
                 new ShortcutCreationRequest() {
                     CreationLocation = ShortcutCreationLocation.StartMenu,
@@ -175,6 +176,7 @@ namespace Shimmer.Client
                     Description =  AppDescription,
                     IconLibrary = target,
                     IconIndex = 0,
+                    TargetPath = target,
                 }
             };
         }

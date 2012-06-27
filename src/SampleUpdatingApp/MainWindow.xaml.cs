@@ -61,14 +61,8 @@ namespace SampleUpdatingApp
             var noneInFlight = new BehaviorSubject<bool>(false);
             var updateManager = default(UpdateManager);
 
-            Observable.CombineLatest(
-                CheckForUpdate.ItemsInflight,
-                DownloadReleases.ItemsInflight,
-                ApplyReleases.ItemsInflight,
-                (a, b, c) => a + b + c
-            ).Select(x => x == 0 && UpdatePath != null).Multicast(noneInFlight).Connect();
-
             this.WhenAny(x => x.UpdatePath, x => x.Value)
+                .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Throttle(TimeSpan.FromMilliseconds(700), RxApp.DeferredScheduler)
                 .Subscribe(x => updateManager = new UpdateManager(UpdatePath, "SampleUpdatingApp"));
 
@@ -92,6 +86,14 @@ namespace SampleUpdatingApp
                     return updateManager.ApplyReleases(DownloadedUpdateInfo).First();
                 }
             });
+
+            Observable.CombineLatest(
+                CheckForUpdate.ItemsInflight.StartWith(0),
+                DownloadReleases.ItemsInflight.StartWith(0),
+                ApplyReleases.ItemsInflight.StartWith(0),
+                this.WhenAny(x => x.UpdatePath, _ => 0),
+                (a, b, c, _) => a + b + c
+            ).Select(x => x == 0 && UpdatePath != null).Multicast(noneInFlight).Connect();
         }
     }
 }
