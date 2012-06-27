@@ -51,7 +51,7 @@ namespace Shimmer.Client
             this.rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
 
-            this.urlDownloader = urlDownloader;
+            this.urlDownloader = urlDownloader ?? new DirectUrlDownloader(fileSystem);
         }
 
         public string PackageDirectory {

@@ -7,8 +7,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
+using ReactiveUI;
 using Shimmer.Core;
 using SharpBits.Base;
+using IEnableLogger = Shimmer.Core.IEnableLogger;
 
 namespace Shimmer.Client
 {
@@ -16,6 +18,41 @@ namespace Shimmer.Client
     {
         IObservable<string> DownloadUrl(string url);
         IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths);
+    }
+
+    public sealed class DirectUrlDownloader : IUrlDownloader, IDisposable
+    {
+        readonly IFileSystemFactory fileSystem;
+
+        public DirectUrlDownloader(IFileSystemFactory fileSystem)
+        {
+            this.fileSystem = fileSystem ?? AnonFileSystem.Default;
+        }
+
+        public IObservable<string> DownloadUrl(string url)
+        {
+            return Http.DownloadUrl(url).Select(x => Encoding.UTF8.GetString(x));
+        }
+
+        public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+        {
+            return urls.Zip(localPaths, (u, p) => new { Url = u, Path = p })
+                .ToObservable()
+                .Select(x => Http.DownloadUrl(x.Url).Select(Content => new { x.Url, x.Path, Content })).Merge(4)
+                .SelectMany(x => Observable.Start(() => {
+                    var fi = fileSystem.GetFileInfo(x.Path);
+                    if (fi.Exists) fi.Delete();
+
+                    using (var of = fi.OpenWrite()) {
+                        of.Write(x.Content, 0, x.Content.Length);
+                    }
+                }, RxApp.TaskpoolScheduler))
+                .Aggregate(Unit.Default, (acc, x) => acc);
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     public class BitsException : Exception
