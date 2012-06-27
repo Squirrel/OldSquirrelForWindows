@@ -14,8 +14,6 @@ using Shimmer.Core;
 using NuGet;
 using ReactiveUI;
 
-using IEnableLogger = Shimmer.Core.IEnableLogger;
-
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
 using Path = System.IO.Path;

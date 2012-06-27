@@ -11,6 +11,7 @@ using System.Xml;
 using Ionic.Zip;
 using MarkdownSharp;
 using NuGet;
+using ReactiveUI;
 
 namespace Shimmer.Core
 {

@@ -10,7 +10,6 @@ using System.Threading;
 using ReactiveUI;
 using Shimmer.Core;
 using SharpBits.Base;
-using IEnableLogger = Shimmer.Core.IEnableLogger;
 
 namespace Shimmer.Client
 {

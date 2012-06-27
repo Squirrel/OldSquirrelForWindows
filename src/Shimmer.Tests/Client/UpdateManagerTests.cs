@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using Moq;
+using ReactiveUI;
 using Shimmer.Client;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;

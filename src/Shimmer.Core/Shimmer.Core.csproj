@@ -83,8 +83,9 @@
     <Reference Include="NuGetPackageExplorer.Types">
       <HintPath>..\..\ext\NuGetPackageExplorer.Types.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.2.5.2.0\lib\Net4\ReactiveUI.dll</HintPath>
+    <Reference Include="ReactiveUI, Version=3.1.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-core.3.1.3\lib\Net4\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -107,7 +108,6 @@
     <Compile Include="BinaryPatchUtility.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="IFileSystemFactory.cs" />
-    <Compile Include="NLogHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleaseEntry.cs" />
     <Compile Include="ReleasePackage.cs" />
