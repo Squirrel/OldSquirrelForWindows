@@ -14,10 +14,7 @@ namespace CreateReleasePackage
         {
             var optParams = parseOptions(args);
             if (optParams == null) {
-                optParams = new Dictionary<string, string>();
-                optParams["target"] = @"C:\Users\Administrator\Documents\GitHub\Shimmer\src\CreateReleasePackage\Releases";
-                optParams["input"] = @"Z:\Dropbox\ReactiveUI_Build_DontFuckingDeleteThisAgain\NuGet\reactiveui-core.3.1.1.nupkg";
-                optParams["pkgdir"] = @" Z:\Dropbox\ReactiveUI_External\Packages";
+                return -1;
             }
 
             var targetDir = optParams["target"];
