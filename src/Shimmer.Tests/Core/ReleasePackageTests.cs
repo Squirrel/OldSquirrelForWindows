@@ -118,7 +118,7 @@ namespace Shimmer.Tests.Core
 
                 filesToLookFor.ForEach(name => {
                     this.Log().Info("Looking for {0}", name);
-                    pkg.GetFiles().Any(y => y.Path.ToLowerInvariant().Contains(name)).ShouldBeTrue();
+                    pkg.GetFiles().Any(y => y.Path.ToLowerInvariant().Contains(name.ToLowerInvariant())).ShouldBeTrue();
                 });
             } finally {
                 File.Delete(outputPackage);
