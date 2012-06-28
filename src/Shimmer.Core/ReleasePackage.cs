@@ -313,7 +313,7 @@ namespace Shimmer.Core
             var bannedFrameworks = new[] {"sl", "winrt", "netcore", };
 
             libPath.GetDirectories()
-                .Where(x => bannedFrameworks.Any(y => x.Name.ToLowerInvariant().StartsWith(y)))
+                .Where(x => bannedFrameworks.Any(y => x.Name.ToLowerInvariant().StartsWith(y, StringComparison.InvariantCultureIgnoreCase)))
                 .Do(x => this.Log().Info("Deleting {0}", x.Name))
                 .ForEach(x => x.Delete(true));
         }
