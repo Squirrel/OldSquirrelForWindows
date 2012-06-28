@@ -130,6 +130,7 @@
   <ItemGroup>
     <Compile Include="Client\BitsManagerTests.cs" />
     <Compile Include="Client\UpdateManagerTests.cs" />
+    <Compile Include="Core\AppDomainHelperTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -105,12 +105,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppDomainHelper.cs" />
     <Compile Include="BinaryPatchUtility.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="IFileSystemFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleaseEntry.cs" />
     <Compile Include="ReleasePackage.cs" />
+    <Compile Include="MethodRunner.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
