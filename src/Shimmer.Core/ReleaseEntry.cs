@@ -70,9 +70,15 @@ namespace Shimmer.Core
         }
 
         static readonly Regex entryRegex = new Regex(@"^([0-9a-fA-F]{40})\s+(\S+)\s+(\d+)[\r]*$");
+        static readonly Regex commentRegex = new Regex(@"#.*$");
         public static ReleaseEntry ParseReleaseEntry(string entry)
         {
             Contract.Requires(entry != null);
+
+            entry = commentRegex.Replace(entry, "");
+            if (String.IsNullOrWhiteSpace(entry)) {
+                return null;
+            }
 
             var m = entryRegex.Match(entry);
             if (!m.Success) {
@@ -95,6 +101,7 @@ namespace Shimmer.Core
             var ret = fileContents.Split('\n')
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Select(ParseReleaseEntry)
+                .Where(x => x != null)
                 .ToArray();
 
             return ret.Any(x => x == null) ? null : ret;
