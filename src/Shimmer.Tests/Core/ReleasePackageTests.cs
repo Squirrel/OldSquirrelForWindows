@@ -87,6 +87,45 @@ namespace Shimmer.Tests.Core
         }
 
         [Fact]
+        public void CanResolveMultipleLevelsOfDependencies()
+        {
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "SampleUpdatingApp.1.0.0.0.nupkg");
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+
+            var fixture = new ReleasePackage(inputPackage);
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            try {
+                fixture.CreateReleasePackage(outputPackage, sourceDir);
+
+                this.Log().Info("Resulting package is at {0}", outputPackage);
+                var pkg = new ZipPackage(outputPackage);
+
+                int refs = pkg.References.Count();
+                this.Log().Info("Found {0} refs", refs);
+                refs.ShouldEqual(0);
+
+                this.Log().Info("Files in release package:");
+                pkg.GetFiles().ForEach(x => this.Log().Info(x.Path));
+
+                var filesToLookFor = new[] {
+                    "System.Reactive.dll",
+                    "ReactiveUI.dll",
+                    "Ionic.Zip.dll",
+                    "SampleUpdatingApp.exe",
+                };
+
+                filesToLookFor.ForEach(name => {
+                    this.Log().Info("Looking for {0}", name);
+                    pkg.GetFiles().Any(y => y.Path.ToLowerInvariant().Contains(name)).ShouldBeTrue();
+                });
+            } finally {
+                File.Delete(outputPackage);
+            }
+        }
+
+        [Fact]
         public void SpecFileMarkdownRenderingTest()
         {
             var dontcare = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
@@ -216,7 +255,7 @@ namespace Shimmer.Tests.Core
                 Enumerable.Zip(
                     expected.GetFiles().Select(x => x.Path).OrderBy(x => x),
                     result.GetFiles().Select(x => x.Path).OrderBy(x => x),
-                    (e, a) => e == a
+                    (e, a) => e == a 
                 ).All(x => x).ShouldBeTrue();
             } finally {
                 if (File.Exists(outFile)) {
