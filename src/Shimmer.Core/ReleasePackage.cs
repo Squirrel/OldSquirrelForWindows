@@ -68,6 +68,8 @@ namespace Shimmer.Core
 
                 renderReleaseNotesMarkdown(specPath);
 
+                addDeltaFilesToContentTypes(tempDir.FullName);
+
                 using (var zf = new ZipFile(outputFile)) {
                     zf.AddDirectory(tempPath);
                     zf.Save();
@@ -404,6 +406,8 @@ namespace Shimmer.Core
         {
             var elements = new[] {
                 new { Extension = "diff", ContentType = "application/octet" },
+                new { Extension = "exe", ContentType = "application/octet" },
+                new { Extension = "dll", ContentType = "application/octet" },
                 new { Extension = "shasum", ContentType = "text/plain" },
             };
 
@@ -416,14 +420,19 @@ namespace Shimmer.Core
                 throw new Exception("Invalid ContentTypes file, expected root node should be 'Types'");
             }
 
-            elements.Select(element => {
-                var ret = doc.CreateElement("Default", typesElement.NamespaceURI);
-                var ext = doc.CreateAttribute("Extension"); ext.Value = element.Extension;
-                var ct = doc.CreateAttribute("ContentType"); ct.Value = element.ContentType;
-                new[] { ext, ct }.ForEach(x => ret.Attributes.Append(x));
+            var existingTypes = typesElement.ChildNodes.OfType<XmlElement>()
+                .ToDictionary(k => k.GetAttribute("Extension").ToLowerInvariant(), k => k.GetAttribute("ContentType").ToLowerInvariant());
 
-                return ret;
-            }).ForEach(x => typesElement.AppendChild(x));
+            elements
+                .Where(x => !existingTypes.ContainsKey(x.Extension.ToLowerInvariant()))
+                .Select(element => {
+                    var ret = doc.CreateElement("Default", typesElement.NamespaceURI);
+                    var ext = doc.CreateAttribute("Extension"); ext.Value = element.Extension;
+                    var ct = doc.CreateAttribute("ContentType"); ct.Value = element.ContentType;
+                    new[] { ext, ct }.ForEach(x => ret.Attributes.Append(x));
+
+                    return ret;
+                }).ForEach(x => typesElement.AppendChild(x));
 
             using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
                 doc.Save(sw);

@@ -442,6 +442,8 @@ namespace Shimmer.Client
                     var fi = fileSystem.GetFileInfo(shortcut);
                     if (fi.Exists) fi.Delete();
 
+                    fileSystem.CreateDirectoryRecursive(fi.Directory.FullName);
+
                     var sl = new ShellLink() {
                         Target = x.TargetPath,
                         IconPath = x.IconLibrary,
