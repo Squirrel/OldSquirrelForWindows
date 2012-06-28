@@ -112,6 +112,7 @@
     <Compile Include="BitsManager.cs" />
     <Compile Include="IAppSetup.cs" />
     <Compile Include="IUpdateManager.cs" />
+    <Compile Include="PostInstallInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShellFile.cs" />
     <Compile Include="UpdateInfo.cs" />

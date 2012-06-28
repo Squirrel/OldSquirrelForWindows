@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using Shimmer.Core;
 
 namespace Shimmer.Client
@@ -14,6 +11,7 @@ namespace Shimmer.Client
         Custom,
     }
 
+    [Serializable]
     public sealed class ShortcutCreationRequest : IEquatable<ShortcutCreationRequest>
     {
         // Shortcut Details

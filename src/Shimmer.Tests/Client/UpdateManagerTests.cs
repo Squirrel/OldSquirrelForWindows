@@ -9,11 +9,11 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using Moq;
+using NuGet;
 using ReactiveUI;
 using Shimmer.Client;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;
-using NuGet;
 using Xunit;
 
 namespace Shimmer.Tests.Client
@@ -299,6 +299,20 @@ namespace Shimmer.Tests.Client
 
         public class ApplyReleasesTests : IEnableLogger
         {
+            [Serializable]
+            public class FakeUrlDownloader : IUrlDownloader
+            {
+                public IObservable<string> DownloadUrl(string url)
+                {
+                    return Observable.Empty<string>();
+                }
+
+                public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+                {
+                    return Observable.Empty<Unit>();
+                }
+            }
+
             [Fact]
             public void ApplyReleasesWithOneReleaseFile()
             {
@@ -313,8 +327,7 @@ namespace Shimmer.Tests.Client
                         "Shimmer.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
-                    var urlDownloader = new Mock<IUrlDownloader>();
-                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
+                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
                     var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
@@ -358,8 +371,7 @@ namespace Shimmer.Tests.Client
                         "Shimmer.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
-                    var urlDownloader = new Mock<IUrlDownloader>();
-                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
+                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
                     var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-delta.nupkg"));

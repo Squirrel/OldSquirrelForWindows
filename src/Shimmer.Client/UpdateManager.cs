@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -10,20 +11,20 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using Shimmer.Core;
 using NuGet;
 using ReactiveUI;
-
+using Shimmer.Core;
+using FileAccess = System.IO.FileAccess;
+using FileMode = System.IO.FileMode;
+using MemoryStream = System.IO.MemoryStream;
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
 using Path = System.IO.Path;
 using StreamReader = System.IO.StreamReader;
-using MemoryStream = System.IO.MemoryStream;
-using FileMode = System.IO.FileMode;
-using FileAccess = System.IO.FileAccess;
 
 namespace Shimmer.Client
 {
+    [Serializable]
     public class UpdateManager : IEnableLogger, IUpdateManager
     {
         readonly IFileSystemFactory fileSystem;
@@ -327,6 +328,7 @@ namespace Shimmer.Client
             // Perform post-install; clean up the previous version by asking it
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
+            this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
@@ -389,15 +391,18 @@ namespace Shimmer.Client
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
                 .OrderBy(x => x.Name)
-                .SelectMany(dir => {
-                    var apps = findAppSetupsToRun(dir.FullName);
-                    var ver = new Version(dir.Name.Replace("app-", ""));
+                .SelectMany(x => AppDomainHelper.ExecuteInNewAppDomain(x, runAppSetupCleanups));
+        }
 
-                    var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
-                        
-                    Utility.DeleteDirectory(dir.FullName);
-                    return ret;
-                });
+        IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(DirectoryInfoBase dir)
+        {
+            var apps = findAppSetupsToRun(dir.FullName);
+            var ver = new Version(dir.Name.Replace("app-", ""));
+
+            var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
+
+            Utility.DeleteDirectory(dir.FullName);
+            return ret;
         }
 
         IEnumerable<ShortcutCreationRequest> uninstallAppVersion(IAppSetup app, Version ver)
@@ -434,8 +439,18 @@ namespace Shimmer.Client
 
         void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
-            findAppSetupsToRun(newAppDirectoryRoot)
-                .ForEach(app => installAppVersion(app, newCurrentVersion, shortcutRequestsToIgnore, isFirstInstall));
+            var postInstallInfo = new PostInstallInfo
+                    {
+                        NewAppDirectoryRoot = newAppDirectoryRoot,
+                        IsFirstInstall = isFirstInstall,
+                        NewCurrentVersion = newCurrentVersion,
+                        ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
+                    };
+
+            AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, 
+                info => findAppSetupsToRun(info.NewAppDirectoryRoot).ForEach(app => 
+                    installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall)));
+
         }
 
         void installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
