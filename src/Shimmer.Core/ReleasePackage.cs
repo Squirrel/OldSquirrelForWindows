@@ -356,11 +356,13 @@ namespace Shimmer.Core
 
             return package.Dependencies.SelectMany(dependency => {
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
+
                 if (ret == null) {
+                    this.Log().Error("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
                     return Enumerable.Empty<IPackage>();
                 }
 
-                return findAllDependentPackages(ret).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
+                return findAllDependentPackages(ret, packagesRootDir).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
             });
         }
 
