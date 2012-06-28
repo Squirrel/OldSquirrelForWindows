@@ -19,8 +19,9 @@ namespace Shimmer.Tests.Core
         {
             var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
             var outputPackage = Path.GetTempFileName() + ".nupkg";
-            var fixture = new ReleasePackage(inputPackage);
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+
+            var fixture = new ReleasePackage(inputPackage);
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
             try {
@@ -114,40 +115,6 @@ namespace Shimmer.Tests.Core
                 File.Delete(targetFile);
             }
         }
-
-        [Fact]
-        public void ApplyDeltaPackageTest()
-        {
-            var basePackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0-full.nupkg"));
-            var deltaPackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0-delta.nupkg"));
-            var expectedPackageFile = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0-full.nupkg");
-            var outFile = Path.GetTempFileName() + ".nupkg";
-
-            try {
-                basePackage.ApplyDeltaPackage(deltaPackage, outFile);
-                var result = new ZipPackage(outFile);
-                var expected = new ZipPackage(expectedPackageFile);
-
-                result.Id.ShouldEqual(expected.Id);
-                result.Version.ShouldEqual(expected.Version);
-
-                this.Log().Info("Expected file list:");
-                expected.GetFiles().Select(x => x.Path).OrderBy(x => x).ForEach(x => this.Log().Info(x));
-
-                this.Log().Info("Actual file list:");
-                result.GetFiles().Select(x => x.Path).OrderBy(x => x).ForEach(x => this.Log().Info(x));
-
-                Enumerable.Zip(
-                    expected.GetFiles().Select(x => x.Path).OrderBy(x => x),
-                    result.GetFiles().Select(x => x.Path).OrderBy(x => x),
-                    (e, a) => e == a 
-                ).All(x => x).ShouldBeTrue();
-            } finally {
-                if (File.Exists(outFile)) {
-                    File.Delete(outFile);
-                }
-            }
-        }
     }
 
     public class CreateDeltaPackageTests : IEnableLogger
@@ -218,6 +185,43 @@ namespace Shimmer.Tests.Core
                 (fileInfos[2].Length - fileInfos[1].Length).ShouldBeLessThan(0);
             } finally {
                 tempFiles.ForEach(File.Delete);
+            }
+        }
+    }
+
+    public class ApplyDeltaPackageTests : IEnableLogger
+    {
+        [Fact]
+        public void ApplyDeltaPackageSmokeTest()
+        {
+            var basePackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0-full.nupkg"));
+            var deltaPackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0-delta.nupkg"));
+            var expectedPackageFile = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0-full.nupkg");
+            var outFile = Path.GetTempFileName() + ".nupkg";
+
+            try {
+                basePackage.ApplyDeltaPackage(deltaPackage, outFile);
+                var result = new ZipPackage(outFile);
+                var expected = new ZipPackage(expectedPackageFile);
+
+                result.Id.ShouldEqual(expected.Id);
+                result.Version.ShouldEqual(expected.Version);
+
+                this.Log().Info("Expected file list:");
+                expected.GetFiles().Select(x => x.Path).OrderBy(x => x).ForEach(x => this.Log().Info(x));
+
+                this.Log().Info("Actual file list:");
+                result.GetFiles().Select(x => x.Path).OrderBy(x => x).ForEach(x => this.Log().Info(x));
+
+                Enumerable.Zip(
+                    expected.GetFiles().Select(x => x.Path).OrderBy(x => x),
+                    result.GetFiles().Select(x => x.Path).OrderBy(x => x),
+                    (e, a) => e == a
+                ).All(x => x).ShouldBeTrue();
+            } finally {
+                if (File.Exists(outFile)) {
+                    File.Delete(outFile);
+                }
             }
         }
     }
