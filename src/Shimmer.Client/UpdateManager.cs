@@ -31,11 +31,13 @@ namespace Shimmer.Client
         readonly string applicationName;
         readonly IUrlDownloader urlDownloader;
         readonly string updateUrlOrPath;
+        readonly FrameworkVersion appFrameworkVersion;
 
         bool hasUpdateLock;
 
         public UpdateManager(string urlOrPath, 
             string applicationName,
+            FrameworkVersion appFrameworkVersion,
             string rootDirectory = null,
             IFileSystemFactory fileSystem = null,
             IUrlDownloader urlDownloader = null)
@@ -45,6 +47,7 @@ namespace Shimmer.Client
 
             updateUrlOrPath = urlOrPath;
             this.applicationName = applicationName;
+            this.appFrameworkVersion = appFrameworkVersion;
 
             this.rootAppDirectory = Path.Combine(rootDirectory ?? getLocalAppDataDirectory(), applicationName);
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
@@ -214,17 +217,17 @@ namespace Shimmer.Client
                 this.Log().Warn("First run or local directory is corrupt, starting from scratch");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
-                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory));
+                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory, appFrameworkVersion));
             }
 
             if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
                 this.Log().Warn("hwhat, local version is greater than remote version");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
-                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory));
+                return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory, appFrameworkVersion));
             }
 
-            return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases, PackageDirectory));
+            return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases, PackageDirectory, appFrameworkVersion));
         }
 
         ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
@@ -305,7 +308,7 @@ namespace Shimmer.Client
             // NB: We sort this list in order to guarantee that if a Net20
             // and a Net40 version of a DLL get shipped, we always end up
             // with the 4.0 version.
-            pkg.GetFiles().Where(x => x.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)).OrderBy(x => x.Path)
+            pkg.GetFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion)).OrderBy(x => x.Path)
                 .ForEach(x => {
                     var targetPath = Path.Combine(target.FullName, Path.GetFileName(x.Path));
 
@@ -326,6 +329,23 @@ namespace Shimmer.Client
             // post install and set up shortcuts.
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
+        }
+
+        static bool pathIsInFrameworkProfile(IPackageFile packageFile, FrameworkVersion appFrameworkVersion)
+        {
+            if (!packageFile.Path.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)) {
+                return false;
+            }
+
+            if (appFrameworkVersion == FrameworkVersion.Net40 && packageFile.Path.StartsWith("lib\\net45", StringComparison.InvariantCultureIgnoreCase)) {
+                return false;
+            }
+
+            if (packageFile.Path.StartsWith("lib\\winrt45", StringComparison.InvariantCultureIgnoreCase)) {
+                return false;
+            }
+
+            return true;
         }
 
         IObservable<ReleaseEntry> createFullPackagesFromDeltas(IEnumerable<ReleaseEntry> releasesToApply, ReleaseEntry currentVersion)

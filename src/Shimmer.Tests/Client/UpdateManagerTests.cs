@@ -39,7 +39,7 @@ namespace Shimmer.Tests.Client
                 urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
-                var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
                 var result = default(UpdateInfo);
 
                 using (fixture.AcquireUpdateLock()) {
@@ -54,7 +54,7 @@ namespace Shimmer.Tests.Client
             [Fact]
             public void NoLocalReleasesFileMeansWeStartFromScratch()
             {
-                string localPackagesDir = Path.Combine(".", "theApp", "packages");
+                string localPackagesDir = Path.Combine(".", "theApp",  "packages");
                 string localReleasesFile = Path.Combine(localPackagesDir, "RELEASES");
 
                 var fileInfo = new Mock<FileInfoBase>();
@@ -74,7 +74,7 @@ namespace Shimmer.Tests.Client
                 urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
-                var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
                 using (fixture.AcquireUpdateLock()) {
                     fixture.CheckForUpdate().First();
                 }
@@ -105,7 +105,7 @@ namespace Shimmer.Tests.Client
                 urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
-                var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
                 using (fixture.AcquireUpdateLock()) {
                     fixture.CheckForUpdate().First();
                 }
@@ -138,7 +138,7 @@ namespace Shimmer.Tests.Client
                 urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
                     .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
-                var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
                 using (fixture.AcquireUpdateLock()) {
                     fixture.CheckForUpdate().First();
                 }
@@ -169,7 +169,7 @@ namespace Shimmer.Tests.Client
                 urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
                     .Returns(Observable.Return("lol this isn't right"));
 
-                var fixture = new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object);
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
 
                 Assert.Throws<Exception>(() => fixture.CheckForUpdate().First());
             }
@@ -210,7 +210,7 @@ namespace Shimmer.Tests.Client
                 fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
 
                 var fixture = ExposedObject.From(
-                    new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
+                    new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object));
 
                 fixture.checksumPackage(entry);
             }
@@ -235,7 +235,7 @@ namespace Shimmer.Tests.Client
                 fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
 
                 var fixture = ExposedObject.From(
-                    new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
+                    new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object));
 
                 bool shouldDie = true;
                 try {
@@ -271,7 +271,7 @@ namespace Shimmer.Tests.Client
                 fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
 
                 var fixture = ExposedObject.From(
-                    new UpdateManager("http://lol", "theApp", ".", fs.Object, urlDownloader.Object));
+                    new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object));
 
                 bool shouldDie = true;
                 try {
@@ -314,12 +314,12 @@ namespace Shimmer.Tests.Client
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
-                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
                     var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
 
-                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare");
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                     updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                     using (fixture.AcquireUpdateLock()) {
@@ -359,13 +359,13 @@ namespace Shimmer.Tests.Client
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
-                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
                     var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-delta.nupkg"));
                     var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
 
-                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, "dontcare");
+                    var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                     updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
                     using (fixture.AcquireUpdateLock()) {
@@ -403,7 +403,7 @@ namespace Shimmer.Tests.Client
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
-                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
                     var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
                     var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-delta.nupkg"));
@@ -459,7 +459,7 @@ namespace Shimmer.Tests.Client
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
-                    var fixture = new UpdateManager("http://lol", "theApp", tempDir, null, urlDownloader.Object);
+                    var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
                     using (fixture.AcquireUpdateLock()) {
                         fixture.UpdateLocalReleasesFile().First();

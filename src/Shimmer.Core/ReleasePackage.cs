@@ -304,13 +304,18 @@ namespace Shimmer.Core
 
         void removeSilverlightAssemblies(DirectoryInfo expandedRepoPath)
         {
-            // NB: Nuke Silverlight. We can't tell as easily if other
-            // profiles can be removed because you can load net20 DLLs
-            // inside .NET 4.0 apps
+            // NB: Nuke Silverlight and WinRT. We can't tell as easily if other
+            // profiles can be removed because you can load net20 DLLs inside 
+            // .NET 4.0 apps
             var libPath = expandedRepoPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
             this.Log().Debug(libPath.FullName);
-            libPath.GetDirectories().Where(x => x.Name.ToLowerInvariant().StartsWith("sl")).Do(
-                x => this.Log().Info("Deleting {0}", x.Name)).ForEach(x => x.Delete(true));
+
+            var bannedFrameworks = new[] {"sl", "winrt", "netcore", };
+
+            libPath.GetDirectories()
+                .Where(x => bannedFrameworks.Any(y => x.Name.ToLowerInvariant().StartsWith(y)))
+                .Do(x => this.Log().Info("Deleting {0}", x.Name))
+                .ForEach(x => x.Delete(true));
         }
 
         void renderReleaseNotesMarkdown(string specPath)

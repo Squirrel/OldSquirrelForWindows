@@ -64,7 +64,7 @@ namespace SampleUpdatingApp
             this.WhenAny(x => x.UpdatePath, x => x.Value)
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Throttle(TimeSpan.FromMilliseconds(700), RxApp.DeferredScheduler)
-                .Subscribe(x => updateManager = new UpdateManager(UpdatePath, "SampleUpdatingApp"));
+                .Subscribe(x => updateManager = new UpdateManager(UpdatePath, "SampleUpdatingApp", FrameworkVersion.Net40));
 
             CheckForUpdate = new ReactiveAsyncCommand(noneInFlight);
             CheckForUpdate.RegisterAsyncFunction(_ => {
