@@ -460,6 +460,7 @@ namespace Shimmer.Client
                 app.OnVersionInstalled(newCurrentVersion);
             } catch (Exception ex) {
                 this.Log().ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
+                throw;
             }
 
             var shortcutList = Enumerable.Empty<ShortcutCreationRequest>();
@@ -467,6 +468,7 @@ namespace Shimmer.Client
                 shortcutList = app.GetAppShortcutList();
             } catch (Exception ex) {
                 this.Log().ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+                throw;
             }
 
             shortcutList

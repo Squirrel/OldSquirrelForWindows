@@ -453,6 +453,12 @@ namespace Shimmer.Tests.Client
             {
                 throw new NotImplementedException();
             }
+
+            [Fact]
+            public void IfAppSetupThrowsWeFailTheInstall()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public class UpdateLocalReleasesTests
