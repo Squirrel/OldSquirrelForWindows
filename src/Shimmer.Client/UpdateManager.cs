@@ -14,11 +14,12 @@ using System.Text.RegularExpressions;
 using NuGet;
 using ReactiveUI;
 using Shimmer.Core;
+
+// NB: These are whitelisted types from System.IO, so that we always end up 
+// using fileSystem instead.
 using FileAccess = System.IO.FileAccess;
 using FileMode = System.IO.FileMode;
 using MemoryStream = System.IO.MemoryStream;
-// NB: These are whitelisted types from System.IO, so that we always end up 
-// using fileSystem instead.
 using Path = System.IO.Path;
 using StreamReader = System.IO.StreamReader;
 
@@ -439,18 +440,17 @@ namespace Shimmer.Client
 
         void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
-            var postInstallInfo = new PostInstallInfo
-                    {
-                        NewAppDirectoryRoot = newAppDirectoryRoot,
-                        IsFirstInstall = isFirstInstall,
-                        NewCurrentVersion = newCurrentVersion,
-                        ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
-                    };
+            var postInstallInfo = new PostInstallInfo {
+                NewAppDirectoryRoot = newAppDirectoryRoot,
+                IsFirstInstall = isFirstInstall,
+                NewCurrentVersion = newCurrentVersion,
+                ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
+            };
 
-            AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, 
-                info => findAppSetupsToRun(info.NewAppDirectoryRoot).ForEach(app => 
-                    installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall)));
-
+            AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, info => {
+                findAppSetupsToRun(info.NewAppDirectoryRoot).ForEach(app =>
+                    installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall));
+            });
         }
 
         void installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
