@@ -4,8 +4,30 @@ using ReactiveUI;
 using ReactiveUI.Routing;
 using TinyIoC;
 
-namespace Shimmer.ViewModels.WiXUi
+namespace Shimmer.WiXUi.ViewModels
 {
+    public interface IWiXEvents
+    {
+        IObservable<DetectBeginEventArgs> DetectBeginObs { get; }
+        IObservable<DetectPackageCompleteEventArgs> DetectPackageCompleteObs { get; } 
+        IObservable<DetectRelatedBundleEventArgs> DetectRelatedBundleObs { get; }
+
+        IObservable<PlanPackageBeginEventArgs> PlanPackageBeginObs { get; }
+        IObservable<PlanCompleteEventArgs> PlanCompleteObs { get; }
+
+        IObservable<ApplyBeginEventArgs> ApplyBeginObs { get; }
+        IObservable<ApplyCompleteEventArgs> ApplyCompleteObs { get; }
+
+        IObservable<ResolveSourceEventArgs> ResolveSourceObs { get; }
+        IObservable<ErrorEventArgs> ErrorObs { get; }
+
+        IObservable<ExecuteMsiMessageEventArgs> ExecuteMsiMessageObs { get; }
+        IObservable<ExecuteProgressEventArgs> ExecuteProgressObs { get; }
+        IObservable<ProgressEventArgs> ProgressObs { get; }
+        IObservable<CacheAcquireBeginEventArgs> CacheAcquireBeginObs { get; }
+        IObservable<CacheCompleteEventArgs> CacheCompleteObs { get; }
+    }
+
     public interface IAppBootstrapper : IScreen { }
 
     public class AppBootstrapper : ReactiveObject, IAppBootstrapper
@@ -13,11 +35,12 @@ namespace Shimmer.ViewModels.WiXUi
         public IRoutingState Router { get; protected set; }
         public static TinyIoCContainer Kernel { get; protected set; }
 
-        public AppBootstrapper(TinyIoCContainer testKernel = null, IRoutingState router = null)
+        public AppBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
             Kernel.Register<IAppBootstrapper>(this).AsSingleton();
             Kernel.Register<IScreen>(this);
+            Kernel.Register(wixEvents);
 
             Router = router ?? new RoutingState();
 
@@ -29,29 +52,6 @@ namespace Shimmer.ViewModels.WiXUi
         TinyIoCContainer createDefaultKernel()
         {
             var ret = new TinyIoCContainer();
-
-#if 0
-            ret.Bind<IWelcomeViewModel>().To<WelcomeViewModel>();
-            ret.Bind<IPlayViewModel>().To<PlayViewModel>();
-            ret.Bind<IBackgroundTaskHostViewModel>().To<PlayViewModel>();
-            ret.Bind<ISearchViewModel>().To<SearchViewModel>();
-            ret.Bind<IViewForViewModel<WelcomeViewModel>>().To<WelcomeView>();
-            ret.Bind<IViewForViewModel<PlayViewModel>>().To<PlayView>();
-            ret.Bind<IViewForViewModel<SearchViewModel>>().To<SearchView>();
-            ret.Bind<IViewForViewModel<SongTileViewModel>>().To<SongTileView>().InTransientScope();
-
-#if DEBUG
-            var testBlobCache = new TestBlobCache();
-            ret.Bind<IBlobCache>().ToConstant(testBlobCache).Named("LocalMachine");
-            ret.Bind<IBlobCache>().ToConstant(testBlobCache).Named("UserAccount");
-            ret.Bind<ISecureBlobCache>().ToConstant(testBlobCache);
-#else
-            ret.Bind<ISecureBlobCache>().ToConstant(BlobCache.Secure);
-            ret.Bind<IBlobCache>().ToConstant(BlobCache.LocalMachine).Named("LocalMachine");
-            ret.Bind<IBlobCache>().ToConstant(BlobCache.UserAccount).Named("UserAccount");
-#endif
-#endif
-
             return ret;
         }
     }
