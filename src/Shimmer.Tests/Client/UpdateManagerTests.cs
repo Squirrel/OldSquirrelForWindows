@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Net;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -187,7 +188,7 @@ namespace Shimmer.Tests.Client
             }
         }
 
-        public class DownloadReleasesTests
+        public class DownloadReleasesTests : IEnableLogger
         {
             [Fact]
             public void ChecksumShouldPassOnValidPackages()
@@ -277,6 +278,7 @@ namespace Shimmer.Tests.Client
                 try {
                     fixture.checksumPackage(entry);
                 } catch (Exception ex) {
+                    this.Log().InfoException("Checksum failure", ex);
                     shouldDie = false;
                 }
 
@@ -287,13 +289,74 @@ namespace Shimmer.Tests.Client
             [Fact]
             public void DownloadReleasesFromHttpServerIntegrationTest()
             {
-                throw new NotImplementedException();
+                string tempDir = null;
+
+                var updateDir = new DirectoryInfo(IntegrationTestHelper.GetPath("..", "SampleUpdatingApp", "SampleReleasesFolder"));
+
+                var httpServer = new StaticHttpServer(30405, updateDir.FullName);
+
+                var entriesToDownload = updateDir.GetFiles("*.nupkg")
+                    .Select(x => ReleaseEntry.GenerateFromFile(x.FullName))
+                    .ToArray();
+
+                entriesToDownload.Count().ShouldBeGreaterThan(0);
+
+                using (httpServer.Start())
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    // NB: This is normally done by CheckForUpdates, but since 
+                    // we're skipping that in the test we have to do it ourselves
+                    (new DirectoryInfo(Path.Combine(tempDir, "SampleUpdatingApp", "packages"))).CreateRecursive();
+
+                    var fixture = new UpdateManager("http://localhost:30405", "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
+                    using (fixture.AcquireUpdateLock()) {
+                        fixture.DownloadReleases(entriesToDownload).First();
+                    }
+
+                    entriesToDownload.ForEach(x => {
+                        this.Log().Info("Looking for {0}", x.Filename);
+                        var actualFile = Path.Combine(tempDir, "SampleUpdatingApp", "packages", x.Filename);
+                        File.Exists(actualFile).ShouldBeTrue();
+
+                        var actualEntry = ReleaseEntry.GenerateFromFile(actualFile);
+                        actualEntry.SHA1.ShouldEqual(x.SHA1);
+                        actualEntry.Version.ShouldEqual(x.Version);
+                    });
+                }
             }
 
             [Fact]
             public void DownloadReleasesFromFileDirectoryIntegrationTest()
             {
-                throw new NotImplementedException();
+                string tempDir = null;
+
+                var updateDir = new DirectoryInfo(IntegrationTestHelper.GetPath("..", "SampleUpdatingApp", "SampleReleasesFolder"));
+
+                var entriesToDownload = updateDir.GetFiles("*.nupkg")
+                    .Select(x => ReleaseEntry.GenerateFromFile(x.FullName))
+                    .ToArray();
+
+                entriesToDownload.Count().ShouldBeGreaterThan(0);
+
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    // NB: This is normally done by CheckForUpdates, but since 
+                    // we're skipping that in the test we have to do it ourselves
+                    (new DirectoryInfo(Path.Combine(tempDir, "SampleUpdatingApp", "packages"))).CreateRecursive();
+
+                    var fixture = new UpdateManager(updateDir.FullName, "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
+                    using (fixture.AcquireUpdateLock()) {
+                        fixture.DownloadReleases(entriesToDownload).First();
+                    }
+
+                    entriesToDownload.ForEach(x => {
+                        this.Log().Info("Looking for {0}", x.Filename);
+                        var actualFile = Path.Combine(tempDir, "SampleUpdatingApp", "packages", x.Filename);
+                        File.Exists(actualFile).ShouldBeTrue();
+
+                        var actualEntry = ReleaseEntry.GenerateFromFile(actualFile);
+                        actualEntry.SHA1.ShouldEqual(x.SHA1);
+                        actualEntry.Version.ShouldEqual(x.Version);
+                    });
+                }
             }
         }
 
