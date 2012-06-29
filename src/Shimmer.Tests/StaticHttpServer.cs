@@ -35,49 +35,33 @@ namespace Shimmer.Tests
 
             var listener = Observable.Defer(() => Observable.FromAsyncPattern<HttpListenerContext>(server.BeginGetContext, server.EndGetContext)())
                 .Repeat()
-                .Subscribe(x => {
-                    if (x.Request.HttpMethod != "GET") {
-                        x.Response.StatusCode = 400;
-                        using (var sw = new StreamWriter(x.Response.OutputStream, Encoding.UTF8)) {
-                            sw.WriteLine("GETs only");
-                        }
-                        x.Response.Close();
+                .Subscribe(ctx => {
+                    if (ctx.Request.HttpMethod != "GET") {
+                        closeResponseWith(ctx, 400, "GETs only");
                         return;
                     }
 
-                    var target = Path.Combine(RootPath, x.Request.Url.AbsolutePath.Replace('/', Path.DirectorySeparatorChar).Substring(1));
+                    var target = Path.Combine(RootPath, ctx.Request.Url.AbsolutePath.Replace('/', Path.DirectorySeparatorChar).Substring(1));
                     var fi = new FileInfo(target);
 
                     if (!fi.FullName.StartsWith(RootPath)) {
-                        x.Response.StatusCode = 401;
-                        using (var sw = new StreamWriter(x.Response.OutputStream, Encoding.UTF8)) {
-                            sw.WriteLine("Not Authorized");
-                        }
-                        x.Response.Close();
+                        closeResponseWith(ctx, 401, "Not authorized");
                         return;
                     }
 
                     if (!fi.Exists) {
-                        x.Response.StatusCode = 404;
-                        using (var sw = new StreamWriter(x.Response.OutputStream, Encoding.UTF8)) {
-                            sw.WriteLine("Not Found");
-                        }
-                        x.Response.Close();
+                        closeResponseWith(ctx, 404, "Not found");
                         return;
                     }
 
                     try {
                         using (var input = File.OpenRead(target)) {
-                            x.Response.StatusCode = 200;
-                            input.CopyTo(x.Response.OutputStream);
-                            x.Response.Close();
+                            ctx.Response.StatusCode = 200;
+                            input.CopyTo(ctx.Response.OutputStream);
+                            ctx.Response.Close();
                         }
                     } catch (Exception ex) {
-                        x.Response.StatusCode = 500;
-                        using (var sw = new StreamWriter(x.Response.OutputStream, Encoding.UTF8)) {
-                            sw.WriteLine(ex);
-                        }
-                        x.Response.Close();
+                        closeResponseWith(ctx, 500, ex.ToString());
                     }
                 });
 
@@ -89,6 +73,15 @@ namespace Shimmer.Tests
 
             inner = ret;
             return ret;
+        }
+
+        static void closeResponseWith(HttpListenerContext ctx, int statusCode, string message)
+        {
+            ctx.Response.StatusCode = statusCode;
+            using (var sw = new StreamWriter(ctx.Response.OutputStream, Encoding.UTF8)) {
+                sw.WriteLine(message);
+            }
+            ctx.Response.Close();
         }
 
         public void Dispose()
