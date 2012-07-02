@@ -166,7 +166,23 @@ namespace Shimmer.Tests.Client
         [Fact]
         public void ShouldCreateAppShortcutsBasedOnClientExe()
         {
-            throw new NotImplementedException();
+            string tempDir;
+            using (acquireEnvVarLock())
+            using (Utility.WithTempDirectory(out tempDir)) 
+            using (setEnvVar("ShortcutDir", tempDir)) {
+                var di = new DirectoryInfo(Path.Combine(tempDir, "theApp", "app-1.1.0.0"));
+                di.CreateRecursive();
+
+                File.Copy(getPathToShimmerTestTarget(), Path.Combine(di.FullName, "ShimmerIAppUpdateTestTarget.exe"));
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
+
+                this.Log().Info("Invoking post-install");
+                var mi = fixture.GetType().GetMethod("runPostInstallOnDirectory", BindingFlags.NonPublic | BindingFlags.Instance);
+                mi.Invoke(fixture, new object[] { di.FullName, true, new Version(1, 1, 0, 0), Enumerable.Empty<ShortcutCreationRequest>() });
+
+                File.Exists(Path.Combine(tempDir, "Foo.lnk")).ShouldBeTrue();
+            }
         }
 
         [Fact]

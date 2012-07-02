@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Authentication;
+using System.Windows;
 using Shimmer.Client;
 
 namespace ShimmerIAppUpdateTestTarget
@@ -15,7 +17,23 @@ namespace ShimmerIAppUpdateTestTarget
                 throw new IOException();
             }
 
-            return Enumerable.Empty<ShortcutCreationRequest>();
+            var shortCutDir = getEnvVar("ShortcutDir");
+            if (String.IsNullOrWhiteSpace(shortCutDir)) {
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
+
+            var ret = new ShortcutCreationRequest() {
+                Arguments = "--foo",
+                Description = "A test app",
+                CreationLocation = ShortcutCreationLocation.Custom,
+                CustomLocation = shortCutDir,
+                IconLibrary = Assembly.GetExecutingAssembly().Location,
+                IconIndex = 0,
+                TargetPath = Assembly.GetExecutingAssembly().Location,
+                Title = "Foo",
+            };
+
+            return new[] { ret };
         }
 
         public void OnAppInstall()
