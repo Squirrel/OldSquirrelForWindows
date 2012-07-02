@@ -4,8 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using Moq;
 using NuGet;
 using ReactiveUI;
@@ -177,12 +179,14 @@ namespace Shimmer.Tests.Client
         public void IfAppSetupThrowsWeFailTheInstall()
         {
             string tempDir;
+
+            using (acquireEnvVarLock())
+            using (setShouldThrow())
             using (Utility.WithTempDirectory(out tempDir)) {
                 var di = new DirectoryInfo(Path.Combine(tempDir, "theApp", "app-1.1.0.0"));
                 di.CreateRecursive();
 
                 File.Copy(getPathToShimmerTestTarget(), Path.Combine(di.FullName, "ShimmerIAppUpdateTestTarget.exe"));
-                setShouldThrow();
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
 
@@ -221,9 +225,18 @@ namespace Shimmer.Tests.Client
             return ret;
         }
 
-        void setShouldThrow()
+        static readonly object gate = 42;
+        static IDisposable acquireEnvVarLock()
         {
-            setEnvVar("ShouldThrow", true);
+            // NB: Since we use process-wide environment variables to communicate
+            // across AppDomains, we have to serialize all of the tests
+            Monitor.Enter(gate);
+            return Disposable.Create(() => Monitor.Exit(gate));
+        }
+
+        static IDisposable setShouldThrow()
+        {
+            return setEnvVar("ShouldThrow", true);
         }
 
         static string getEnvVar(string name)
@@ -231,9 +244,12 @@ namespace Shimmer.Tests.Client
             return Environment.GetEnvironmentVariable(String.Format("__IAPPSETUP_TEST_{0}", name.ToUpperInvariant()));
         }
 
-        static void setEnvVar(string name, object val)
+        static IDisposable setEnvVar(string name, object val)
         {
+            var prevVal = Environment.GetEnvironmentVariable(name);
             Environment.SetEnvironmentVariable(String.Format("__IAPPSETUP_TEST_{0}", name.ToUpperInvariant()), val.ToString(), EnvironmentVariableTarget.Process);
+
+            return Disposable.Create(() => Environment.SetEnvironmentVariable(name, prevVal));
         }
     }
 }
