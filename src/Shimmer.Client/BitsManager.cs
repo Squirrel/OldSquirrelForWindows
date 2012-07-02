@@ -8,8 +8,8 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using ReactiveUI;
-using Shimmer.Core;
 using SharpBits.Base;
+using Shimmer.Core;
 
 namespace Shimmer.Client
 {
@@ -19,6 +19,7 @@ namespace Shimmer.Client
         IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths);
     }
 
+    [Serializable]
     public sealed class DirectUrlDownloader : IUrlDownloader, IDisposable
     {
         readonly IFileSystemFactory fileSystem;

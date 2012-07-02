@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -10,20 +11,21 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using Shimmer.Core;
 using NuGet;
 using ReactiveUI;
+using Shimmer.Core;
 
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
+using FileAccess = System.IO.FileAccess;
+using FileMode = System.IO.FileMode;
+using MemoryStream = System.IO.MemoryStream;
 using Path = System.IO.Path;
 using StreamReader = System.IO.StreamReader;
-using MemoryStream = System.IO.MemoryStream;
-using FileMode = System.IO.FileMode;
-using FileAccess = System.IO.FileAccess;
 
 namespace Shimmer.Client
 {
+    [Serializable]
     public class UpdateManager : IEnableLogger, IUpdateManager
     {
         readonly IFileSystemFactory fileSystem;
@@ -180,6 +182,12 @@ namespace Shimmer.Client
         {
             return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
+
+        DirectoryInfoBase getDirectoryForRelease(Version releaseVersion)
+        {
+            return fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + releaseVersion));
+        }
+
         //
         // CheckForUpdate methods
         //
@@ -294,7 +302,7 @@ namespace Shimmer.Client
         void installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
         {
             var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
-            var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
+            var target = getDirectoryForRelease(release.Version);
 
             // NB: This might happen if we got killed partially through applying the release
             if (target.Exists) {
@@ -327,8 +335,16 @@ namespace Shimmer.Client
             // Perform post-install; clean up the previous version by asking it
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
+            runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
+        }
+
+        void runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
+        {
+            this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
+
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
-            runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
+            var targetPath = getDirectoryForRelease(newCurrentVersion);
+            runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
 
         static bool pathIsInFrameworkProfile(IPackageFile packageFile, FrameworkVersion appFrameworkVersion)
@@ -389,15 +405,18 @@ namespace Shimmer.Client
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
                 .OrderBy(x => x.Name)
-                .SelectMany(dir => {
-                    var apps = findAppSetupsToRun(dir.FullName);
-                    var ver = new Version(dir.Name.Replace("app-", ""));
+                .SelectMany(x => AppDomainHelper.ExecuteInNewAppDomain(x, runAppSetupCleanups));
+        }
 
-                    var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
-                        
-                    Utility.DeleteDirectory(dir.FullName);
-                    return ret;
-                });
+        IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(DirectoryInfoBase dir)
+        {
+            var apps = findAppSetupsToRun(dir.FullName);
+            var ver = new Version(dir.Name.Replace("app-", ""));
+
+            var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
+
+            Utility.DeleteDirectory(dir.FullName);
+            return ret;
         }
 
         IEnumerable<ShortcutCreationRequest> uninstallAppVersion(IAppSetup app, Version ver)
@@ -434,8 +453,17 @@ namespace Shimmer.Client
 
         void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
-            findAppSetupsToRun(newAppDirectoryRoot)
-                .ForEach(app => installAppVersion(app, newCurrentVersion, shortcutRequestsToIgnore, isFirstInstall));
+            var postInstallInfo = new PostInstallInfo {
+                NewAppDirectoryRoot = newAppDirectoryRoot,
+                IsFirstInstall = isFirstInstall,
+                NewCurrentVersion = newCurrentVersion,
+                ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
+            };
+
+            AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, info => {
+                findAppSetupsToRun(info.NewAppDirectoryRoot).ForEach(app =>
+                    installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall));
+            });
         }
 
         void installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
@@ -445,6 +473,7 @@ namespace Shimmer.Client
                 app.OnVersionInstalled(newCurrentVersion);
             } catch (Exception ex) {
                 this.Log().ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
+                throw;
             }
 
             var shortcutList = Enumerable.Empty<ShortcutCreationRequest>();
@@ -452,6 +481,7 @@ namespace Shimmer.Client
                 shortcutList = app.GetAppShortcutList();
             } catch (Exception ex) {
                 this.Log().ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+                throw;
             }
 
             shortcutList

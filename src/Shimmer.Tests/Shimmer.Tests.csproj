@@ -128,11 +128,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\ApplyReleasesTests.cs" />
     <Compile Include="Client\BitsManagerTests.cs" />
+    <Compile Include="Client\CheckForUpdateTests.cs" />
+    <Compile Include="Client\DownloadReleasesTests.cs" />
     <Compile Include="Client\UpdateManagerTests.cs" />
+    <Compile Include="Core\AppDomainHelperTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StaticHttpServer.cs" />
     <Compile Include="TestHelpers\AssertExtensions.cs" />
     <Compile Include="TestHelpers\ExposedClass.cs" />
     <Compile Include="TestHelpers\ExposedObject.cs" />
