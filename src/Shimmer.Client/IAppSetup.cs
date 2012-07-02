@@ -39,7 +39,7 @@ namespace Shimmer.Client
                 dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), applicationName);
                 break;
             case ShortcutCreationLocation.Custom:
-                dir = (new FileInfo(CustomLocation)).DirectoryName;
+                dir = CustomLocation;
                 break;
             }
 
