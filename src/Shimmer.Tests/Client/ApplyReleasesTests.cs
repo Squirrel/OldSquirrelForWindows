@@ -160,7 +160,23 @@ namespace Shimmer.Tests.Client
         [Fact]
         public void CallAppInstallOnTheJustInstalledVersion()
         {
-            throw new NotImplementedException();
+            string tempDir;
+            using (acquireEnvVarLock())
+            using (Utility.WithTempDirectory(out tempDir)) {
+                var di = new DirectoryInfo(Path.Combine(tempDir, "theApp", "app-1.1.0.0"));
+                di.CreateRecursive();
+
+                File.Copy(getPathToShimmerTestTarget(), Path.Combine(di.FullName, "ShimmerIAppUpdateTestTarget.exe"));
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
+
+                this.Log().Info("Invoking post-install");
+                var mi = fixture.GetType().GetMethod("runPostInstallOnDirectory", BindingFlags.NonPublic | BindingFlags.Instance);
+                mi.Invoke(fixture, new object[] { di.FullName, true, new Version(1, 1, 0, 0), Enumerable.Empty<ShortcutCreationRequest>() });
+
+                getEnvVar("AppInstall_Called").ShouldEqual("1");
+                getEnvVar("VersionInstalled_Called").ShouldEqual("1.1.0.0");
+            }
         }
 
         [Fact]
@@ -247,7 +263,16 @@ namespace Shimmer.Tests.Client
             // NB: Since we use process-wide environment variables to communicate
             // across AppDomains, we have to serialize all of the tests
             Monitor.Enter(gate);
-            return Disposable.Create(() => Monitor.Exit(gate));
+            return Disposable.Create(() => {
+                // NB: The test target sets a bunch of environment variables that 
+                // we should clear out, but there's no way for the test target to
+                // clean these up correctly
+                Environment.GetEnvironmentVariables().Keys.OfType<string>()
+                    .Where(x => x.StartsWith("__IAPPSETUP_TEST"))
+                    .ForEach(x => Environment.SetEnvironmentVariable(x, null));
+
+                Monitor.Exit(gate);
+            });
         }
 
         static IDisposable setShouldThrow()
