@@ -22,13 +22,12 @@ namespace Shimmer.Core
 
         static TOut runInNewAppDomain<TIn, TOut>(TIn input, Func<MethodRunner, TIn, TOut> method)
         {
-            var appDomainSetup = new AppDomainSetup
-                                 {
-                                     ApplicationBase = AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
-                                     ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile,
-                                     ApplicationName = AppDomain.CurrentDomain.SetupInformation.ApplicationName,
-                                     LoaderOptimization = LoaderOptimization.MultiDomainHost
-                                 };
+            var appDomainSetup = new AppDomainSetup {
+                 ApplicationBase = AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
+                 ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile,
+                 ApplicationName = AppDomain.CurrentDomain.SetupInformation.ApplicationName,
+                 LoaderOptimization = LoaderOptimization.MultiDomainHost
+             };
 
             var permissionSet = new PermissionSet(PermissionState.Unrestricted);
             permissionSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
@@ -43,8 +42,7 @@ namespace Shimmer.Core
                     null);
 
                 return method(createMethodRunner(appDomain), input);
-            }
-            finally {
+            } finally {
                 if (appDomain != null) {
                     AppDomain.Unload(appDomain);
                 }

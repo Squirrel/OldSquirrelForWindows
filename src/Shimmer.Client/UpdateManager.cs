@@ -182,6 +182,12 @@ namespace Shimmer.Client
         {
             return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
+
+        DirectoryInfoBase getDirectoryForRelease(Version releaseVersion)
+        {
+            return fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + releaseVersion));
+        }
+
         //
         // CheckForUpdate methods
         //
@@ -296,7 +302,7 @@ namespace Shimmer.Client
         void installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
         {
             var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
-            var target = fileSystem.GetDirectoryInfo(Path.Combine(rootAppDirectory, "app-" + release.Version));
+            var target = getDirectoryForRelease(release.Version);
 
             // NB: This might happen if we got killed partially through applying the release
             if (target.Exists) {
@@ -329,9 +335,16 @@ namespace Shimmer.Client
             // Perform post-install; clean up the previous version by asking it
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
+            runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
+        }
+
+        void runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
+        {
             this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
+
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
-            runPostInstallOnDirectory(target.FullName, updateInfo.IsBootstrapping, newCurrentVersion, shortcutsToIgnore);
+            var targetPath = getDirectoryForRelease(newCurrentVersion);
+            runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
 
         static bool pathIsInFrameworkProfile(IPackageFile packageFile, FrameworkVersion appFrameworkVersion)
