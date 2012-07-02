@@ -176,7 +176,64 @@ namespace Shimmer.Tests.Client
         [Fact]
         public void IfAppSetupThrowsWeFailTheInstall()
         {
-            throw new NotImplementedException();
+            string tempDir;
+            using (Utility.WithTempDirectory(out tempDir)) {
+                var di = new DirectoryInfo(Path.Combine(tempDir, "theApp", "app-1.1.0.0"));
+                di.CreateRecursive();
+
+                File.Copy(getPathToShimmerTestTarget(), Path.Combine(di.FullName, "ShimmerIAppUpdateTestTarget.exe"));
+                setShouldThrow();
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
+
+                bool shouldDie = true;
+                try {
+                    this.Log().Info("Invoking post-install");
+
+                    var mi = fixture.GetType().GetMethod("runPostInstallOnDirectory", BindingFlags.NonPublic | BindingFlags.Instance);
+                    mi.Invoke(fixture, new object[] { di.FullName, true, new Version(1, 1, 0, 0), Enumerable.Empty<ShortcutCreationRequest>() });
+                } catch (TargetInvocationException ex) {
+                    this.Log().Info("Expected to receive Exception", ex);
+
+                    // NB: This is the exception explicitly rigged in OnAppInstall
+                    if (ex.InnerException is FileNotFoundException) {
+                        shouldDie = false;
+                    } else {
+                        this.Log().ErrorException("Expected FileNotFoundException, didn't get it", ex);
+                    }
+                }
+
+                shouldDie.ShouldBeFalse();
+            }
+        }
+
+        string getPathToShimmerTestTarget()
+        {
+#if DEBUG
+            const string config = "Debug";
+#else
+            const string config = "Release";
+#endif
+
+            var ret = IntegrationTestHelper.GetPath("..", "ShimmerIAppUpdateTestTarget", "bin", config, "ShimmerIAppUpdateTestTarget.exe");
+            File.Exists(ret).ShouldBeTrue();
+
+            return ret;
+        }
+
+        void setShouldThrow()
+        {
+            setEnvVar("ShouldThrow", true);
+        }
+
+        static string getEnvVar(string name)
+        {
+            return Environment.GetEnvironmentVariable(String.Format("__IAPPSETUP_TEST_{0}", name.ToUpperInvariant()));
+        }
+
+        static void setEnvVar(string name, object val)
+        {
+            Environment.SetEnvironmentVariable(String.Format("__IAPPSETUP_TEST_{0}", name.ToUpperInvariant()), val.ToString(), EnvironmentVariableTarget.Process);
         }
     }
 }
