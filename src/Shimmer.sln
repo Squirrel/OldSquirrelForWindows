@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateReleasePackage", "Cre
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleUpdatingApp", "SampleUpdatingApp\SampleUpdatingApp.csproj", "{6A3E0A21-A929-4C35-8784-219394205CE8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShimmerIAppUpdateTestTarget", "ShimmerIAppUpdateTestTarget\ShimmerIAppUpdateTestTarget.csproj", "{6AE437FB-6682-429F-9109-34F14DDAE480}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{6A3E0A21-A929-4C35-8784-219394205CE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A3E0A21-A929-4C35-8784-219394205CE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A3E0A21-A929-4C35-8784-219394205CE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AE437FB-6682-429F-9109-34F14DDAE480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AE437FB-6682-429F-9109-34F14DDAE480}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AE437FB-6682-429F-9109-34F14DDAE480}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AE437FB-6682-429F-9109-34F14DDAE480}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DBC4253F-26BD-46D9-94E0-1413AB59613D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBC4253F-26BD-46D9-94E0-1413AB59613D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBC4253F-26BD-46D9-94E0-1413AB59613D}.Release|Any CPU.ActiveCfg = Release|Any CPU
