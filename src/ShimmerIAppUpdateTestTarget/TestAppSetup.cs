@@ -9,6 +9,13 @@ using Shimmer.Client;
 
 namespace ShimmerIAppUpdateTestTarget
 {
+    // NB: CAUTION!! If you change this code, you *must* Rebuild All in order 
+    // to see the changes you've made - since VS doesn't know that this is
+    // a dependency (and we have to keep it that way or else we can't trust that
+    // we're not just finding this assembly via the reference and not the actual
+    // discovery / loading of the EXE), you'll get old versions of this file 
+    // running in your tests then pull your hair out wondering why stuff doesn't
+    // work.
     public class TestAppSetup : IAppSetup
     {
         public IEnumerable<ShortcutCreationRequest> GetAppShortcutList()
