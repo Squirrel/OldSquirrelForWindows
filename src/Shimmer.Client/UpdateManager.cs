@@ -405,17 +405,24 @@ namespace Shimmer.Client
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
                 .OrderBy(x => x.Name)
-                .SelectMany(x => AppDomainHelper.ExecuteInNewAppDomain(x, runAppSetupCleanups));
+                .Select(x => x.FullName)
+                .SelectMany(oldAppRoot => {
+                    var ret = AppDomainHelper.ExecuteInNewAppDomain(oldAppRoot, runAppSetupCleanups);
+
+                    // XXX: We need to handle if this fails
+                    Utility.DeleteDirectory(oldAppRoot);
+                    return ret;
+                });
         }
 
-        IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(DirectoryInfoBase dir)
+        IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(string fullDirectoryPath)
         {
-            var apps = findAppSetupsToRun(dir.FullName);
-            var ver = new Version(dir.Name.Replace("app-", ""));
+            var dirName = Path.GetFileName(fullDirectoryPath);
+            var apps = findAppSetupsToRun(fullDirectoryPath);
+            var ver = new Version(dirName.Replace("app-", ""));
 
             var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
 
-            Utility.DeleteDirectory(dir.FullName);
             return ret;
         }
 
