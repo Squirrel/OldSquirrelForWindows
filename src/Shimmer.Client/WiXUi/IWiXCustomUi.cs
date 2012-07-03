@@ -6,7 +6,7 @@ using TinyIoC;
 
 namespace Shimmer.Client.WiXUi
 {
-    interface IWiXCustomUi
+    public interface IWiXCustomUi
     {
         void RegisterTypes(TinyIoCContainer kernel);
     }
