@@ -123,11 +123,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitsManager.cs" />
-    <Compile Include="EngineWrapper.cs" />
+    <Compile Include="WiXUi\EngineWrapper.cs" />
     <Compile Include="IAppSetup.cs" />
     <Compile Include="IUpdateManager.cs" />
-    <Compile Include="IWiXEvents.cs" />
-    <Compile Include="IWixUiBootstrapper.cs" />
+    <Compile Include="WiXUi\IWiXEvents.cs" />
+    <Compile Include="WiXUi\IWixUiBootstrapper.cs" />
     <Compile Include="PostInstallInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShellFile.cs" />

@@ -1,7 +1,7 @@
 using ReactiveUI.Routing;
 using Shimmer.Core;
 
-namespace Shimmer.Client
+namespace Shimmer.Client.WiXUi
 {
     public interface IWixUiBootstrapper : IScreen
     {
