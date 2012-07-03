@@ -6,6 +6,8 @@ using System.Text;
 using System.Windows;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using ReactiveUI.Routing;
+using Shimmer.Client;
+using Shimmer.Core;
 using Shimmer.WiXUi.ViewModels;
 using Shimmer.WiXUi.Views;
 
@@ -19,14 +21,15 @@ namespace Shimmer.WiXUi
 
             setupWiXEventHooks();
 
-            var bootstrapper = new AppBootstrapper(this);
+            var bootstrapper = new WixUiBootstrapper(this);
 
             app.MainWindow = new RootWindow {
                 // XXX: Fix this casting shit in ReactiveUI.Routing
                 viewHost = {Router = (RoutingState) bootstrapper.Router}
             };
-
         }
+
+        public new IEngine Engine { get; protected set; }
 
         #region Extremely dull code to set up IWiXEvents
         void setupWiXEventHooks()
@@ -45,6 +48,7 @@ namespace Shimmer.WiXUi
             ProgressObs = Observable.FromEventPattern<ProgressEventArgs>(x => Progress += x, x => Progress -= x).Select(x => x.EventArgs);
             CacheAcquireBeginObs = Observable.FromEventPattern<CacheAcquireBeginEventArgs>(x => CacheAcquireBegin += x, x => CacheAcquireBegin -= x).Select(x => x.EventArgs);
             CacheCompleteObs = Observable.FromEventPattern<CacheCompleteEventArgs>(x => CacheComplete += x, x => CacheComplete -= x).Select(x => x.EventArgs);
+            Engine = new EngineWrapper(((BootstrapperApplication) this).Engine);
         }
 
         public IObservable<DetectBeginEventArgs> DetectBeginObs { get; private set; }

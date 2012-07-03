@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 
-namespace Shimmer.WiXUi
+namespace Shimmer.Client
 {
     public interface IEngine
     {

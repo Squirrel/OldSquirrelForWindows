@@ -1,10 +1,7 @@
 using System;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
-using ReactiveUI;
-using ReactiveUI.Routing;
-using TinyIoC;
 
-namespace Shimmer.WiXUi.ViewModels
+namespace Shimmer.Client
 {
     public interface IWiXEvents
     {
@@ -26,33 +23,7 @@ namespace Shimmer.WiXUi.ViewModels
         IObservable<ProgressEventArgs> ProgressObs { get; }
         IObservable<CacheAcquireBeginEventArgs> CacheAcquireBeginObs { get; }
         IObservable<CacheCompleteEventArgs> CacheCompleteObs { get; }
-    }
 
-    public interface IAppBootstrapper : IScreen { }
-
-    public class AppBootstrapper : ReactiveObject, IAppBootstrapper
-    {
-        public IRoutingState Router { get; protected set; }
-        public static TinyIoCContainer Kernel { get; protected set; }
-
-        public AppBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null)
-        {
-            Kernel = testKernel ?? createDefaultKernel();
-            Kernel.Register<IAppBootstrapper>(this).AsSingleton();
-            Kernel.Register<IScreen>(this);
-            Kernel.Register(wixEvents);
-
-            Router = router ?? new RoutingState();
-
-            RxApp.ConfigureServiceLocator(
-                (type, contract) => Kernel.Resolve(type, contract),
-                (type, contract) => Kernel.ResolveAll(type));
-       }
-
-        TinyIoCContainer createDefaultKernel()
-        {
-            var ret = new TinyIoCContainer();
-            return ret;
-        }
+        IEngine Engine { get; }
     }
 }

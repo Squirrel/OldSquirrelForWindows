@@ -68,6 +68,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BootstrapperCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ce35f76fcda82bad, processorArchitecture=MSIL" />
     <Reference Include="Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\Core.dll</HintPath>
@@ -83,6 +84,15 @@
     <Reference Include="ReactiveUI, Version=3.1.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-core.3.1.3\lib\Net4\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI.Blend">
+      <HintPath>..\packages\reactiveui-xaml.3.1.3\lib\Net4\ReactiveUI.Blend.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI.Routing">
+      <HintPath>..\packages\reactiveui-xaml.3.1.3\lib\Net4\ReactiveUI.Routing.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI.Xaml">
+      <HintPath>..\packages\reactiveui-xaml.3.1.3\lib\Net4\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="SharpBITS.Base">
       <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
@@ -101,6 +111,9 @@
       <HintPath>..\packages\Rx_Experimental-Main.1.1.11111\lib\Net4\System.Reactive.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Reactive.Windows.Threading, Version=1.1.11111.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx_Experimental-Xaml.1.1.11111\lib\Net4\System.Reactive.Windows.Threading.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -110,8 +123,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitsManager.cs" />
+    <Compile Include="EngineWrapper.cs" />
     <Compile Include="IAppSetup.cs" />
     <Compile Include="IUpdateManager.cs" />
+    <Compile Include="IWiXEvents.cs" />
+    <Compile Include="IWixUiBootstrapper.cs" />
     <Compile Include="PostInstallInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShellFile.cs" />
