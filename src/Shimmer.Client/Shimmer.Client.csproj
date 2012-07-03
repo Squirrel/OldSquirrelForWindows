@@ -126,6 +126,7 @@
     <Compile Include="WiXUi\EngineWrapper.cs" />
     <Compile Include="IAppSetup.cs" />
     <Compile Include="IUpdateManager.cs" />
+    <Compile Include="WiXUi\IWiXCustomUi.cs" />
     <Compile Include="WiXUi\IWiXEvents.cs" />
     <Compile Include="WiXUi\IWixUiBootstrapper.cs" />
     <Compile Include="PostInstallInfo.cs" />

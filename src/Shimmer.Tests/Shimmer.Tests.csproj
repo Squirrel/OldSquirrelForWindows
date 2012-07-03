@@ -157,8 +157,14 @@
       <Project>{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}</Project>
       <Name>Shimmer.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Shimmer.WiXUi\Shimmer.WiXUi.csproj">
+      <Project>{5f84c302-8216-47e0-b822-b83b65d81309}</Project>
+      <Name>Shimmer.WiXUi</Name>
+    </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="WiXUi\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

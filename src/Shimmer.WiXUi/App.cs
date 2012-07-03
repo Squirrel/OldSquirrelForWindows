@@ -7,6 +7,7 @@ using System.Windows;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using ReactiveUI.Routing;
 using Shimmer.Client;
+using Shimmer.Client.WiXUi;
 using Shimmer.Core;
 using Shimmer.WiXUi.ViewModels;
 using Shimmer.WiXUi.Views;

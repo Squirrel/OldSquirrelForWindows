@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using Shimmer.Core;
 using ReactiveUI;
 
@@ -34,6 +35,27 @@ namespace Shimmer.Tests.TestHelpers
         {
             int osVersion = Environment.OSVersion.Version.Major*100 + Environment.OSVersion.Version.Minor;
             return (osVersion < 601);
+        }
+
+        public static void RunBlockAsSTA(Action block)
+        {
+            Exception ex = null;
+            var t = new Thread(() => {
+                try {
+                    block();
+                } catch (Exception e) {
+                    ex = e;
+                }
+            });
+
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            t.Join();
+
+            if (ex != null) {
+                // NB: If we don't do this, the test silently passes
+                throw new Exception("", ex);
+            }
         }
     }
 }
