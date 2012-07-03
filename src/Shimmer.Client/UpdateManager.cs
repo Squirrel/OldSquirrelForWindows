@@ -521,28 +521,35 @@ namespace Shimmer.Client
 
         IEnumerable<IAppSetup> findAppSetupsToRun(string appDirectory)
         {
-            return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
-                .Select(x => {
-                    try {
-                        var ret = Assembly.LoadFile(x.FullName);
-                        return ret;
-                    } catch (Exception ex) {
-                        this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
-                        return null;
-                    }
-                })
-                .Where(x => x != null)
-                .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
-                .Select(x => {
-                    try {
-                        return (IAppSetup)Activator.CreateInstance(x);
-                    } catch (Exception ex) {
-                        this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
-                        return null;
-                    }
-                })
-                .Where(x => x != null)
-                .ToArray();
+            try {
+                return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
+                    .Select(x => {
+                        try {
+                            var ret = Assembly.LoadFile(x.FullName);
+                            return ret;
+                        } catch (Exception ex) {
+                            this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
+                            return null;
+                        }
+                    })
+                    .Where(x => x != null)
+                    .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                    .Select(x => {
+                        try {
+                            return (IAppSetup)Activator.CreateInstance(x);
+                        } catch (Exception ex) {
+                            this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
+                            return null;
+                        }
+                    })
+                    .Where(x => x != null)
+                    .ToArray();
+            } catch (UnauthorizedAccessException ex) {
+                // NB: This can happen if we run into a MoveFileEx'd directory,
+                // where we can't even get the list of files in it.
+                this.Log().WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
+                return null;
+            }
         }
 
         // NB: Once we uninstall the old version of the app, we try to schedule
@@ -556,10 +563,15 @@ namespace Shimmer.Client
         {
             var di = fileSystem.GetDirectoryInfo(rootAppDirectory);
 
+            // NB: If we try to access a directory that has already been 
+            // scheduled for deletion by MoveFileEx it throws what seems like
+            // NT's only error code, ERROR_ACCESS_DENIED. Squelch errors that
+            // come from here.
             return di.GetDirectories().ToObservable()
                 .Where(x => x.Name.ToLowerInvariant().Contains("app-"))
                 .Where(x => currentVersion != null ? x.Name != getDirectoryForRelease(currentVersion).Name : true)
-                .MapReduce(x => Observable.Start(() => Utility.DeleteDirectory(x.FullName), RxApp.TaskpoolScheduler))
+                .MapReduce(x => Observable.Start(() => Utility.DeleteDirectory(x.FullName), RxApp.TaskpoolScheduler)
+                    .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default)))
                 .Aggregate(Unit.Default, (acc, x) => acc);
         }
     }
