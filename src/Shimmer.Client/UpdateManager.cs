@@ -100,7 +100,7 @@ namespace Shimmer.Client
                 }
             }
 
-            var ret =  releaseFile
+            var ret = releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
                 .SelectMany(releases => determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates))
                 .Multicast(new AsyncSubject<UpdateInfo>());
@@ -142,7 +142,8 @@ namespace Shimmer.Client
             // once the entire operation has completed, even though we technically
             // could do it after DownloadUpdates finishes. We do this so that if
             // we get interrupted / killed during this operation, we'll start over
-            return createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion)
+            return cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
+                .SelectMany(_ => createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion))
                 .SelectMany(release => 
                     Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
                 .SelectMany(_ => UpdateLocalReleasesFile());
@@ -344,6 +345,7 @@ namespace Shimmer.Client
 
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             var targetPath = getDirectoryForRelease(newCurrentVersion);
+
             runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
 
@@ -405,17 +407,27 @@ namespace Shimmer.Client
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
                 .OrderBy(x => x.Name)
-                .SelectMany(x => AppDomainHelper.ExecuteInNewAppDomain(x, runAppSetupCleanups));
+                .SelectMany(oldAppRoot => {
+                    var path = oldAppRoot.FullName;
+                    var ret = AppDomainHelper.ExecuteInNewAppDomain(path, runAppSetupCleanups);
+
+                    try {
+                        Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
+                    } catch (Exception ex) {
+                        this.Log().WarnException("Couldn't delete old app directory on next reboot", ex);
+                    }
+                    return ret;
+                });
         }
 
-        IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(DirectoryInfoBase dir)
+        IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(string fullDirectoryPath)
         {
-            var apps = findAppSetupsToRun(dir.FullName);
-            var ver = new Version(dir.Name.Replace("app-", ""));
+            var dirName = Path.GetFileName(fullDirectoryPath);
+            var apps = findAppSetupsToRun(fullDirectoryPath);
+            var ver = new Version(dirName.Replace("app-", ""));
 
             var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
 
-            Utility.DeleteDirectory(dir.FullName);
             return ret;
         }
 
@@ -509,28 +521,58 @@ namespace Shimmer.Client
 
         IEnumerable<IAppSetup> findAppSetupsToRun(string appDirectory)
         {
-            return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
-                .Select(x => {
-                    try {
-                        var ret = Assembly.LoadFile(x.FullName);
-                        return ret;
-                    } catch (Exception ex) {
-                        this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
-                        return null;
-                    }
-                })
-                .Where(x => x != null)
-                .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
-                .Select(x => {
-                    try {
-                        return (IAppSetup)Activator.CreateInstance(x);
-                    } catch (Exception ex) {
-                        this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
-                        return null;
-                    }
-                })
-                .Where(x => x != null)
-                .ToArray();
+            try {
+                return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
+                    .Select(x => {
+                        try {
+                            var ret = Assembly.LoadFile(x.FullName);
+                            return ret;
+                        } catch (Exception ex) {
+                            this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
+                            return null;
+                        }
+                    })
+                    .Where(x => x != null)
+                    .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                    .Select(x => {
+                        try {
+                            return (IAppSetup)Activator.CreateInstance(x);
+                        } catch (Exception ex) {
+                            this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
+                            return null;
+                        }
+                    })
+                    .Where(x => x != null)
+                    .ToArray();
+            } catch (UnauthorizedAccessException ex) {
+                // NB: This can happen if we run into a MoveFileEx'd directory,
+                // where we can't even get the list of files in it.
+                this.Log().WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
+                return null;
+            }
+        }
+
+        // NB: Once we uninstall the old version of the app, we try to schedule
+        // it to be deleted at next reboot. Unfortunately, depending on whether
+        // the user has admin permissions, this can fail. So as a failsafe,
+        // before we try to apply any update, we assume previous versions in the
+        // directory are "dead" (i.e. already uninstalled, but not deleted), and
+        // we blow them away. This is to make sure that we don't attempt to run
+        // an uninstaller on an already-uninstalled version.
+        IObservable<Unit> cleanDeadVersions(Version currentVersion)
+        {
+            var di = fileSystem.GetDirectoryInfo(rootAppDirectory);
+
+            // NB: If we try to access a directory that has already been 
+            // scheduled for deletion by MoveFileEx it throws what seems like
+            // NT's only error code, ERROR_ACCESS_DENIED. Squelch errors that
+            // come from here.
+            return di.GetDirectories().ToObservable()
+                .Where(x => x.Name.ToLowerInvariant().Contains("app-"))
+                .Where(x => currentVersion != null ? x.Name != getDirectoryForRelease(currentVersion).Name : true)
+                .MapReduce(x => Observable.Start(() => Utility.DeleteDirectory(x.FullName), RxApp.TaskpoolScheduler)
+                    .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default)))
+                .Aggregate(Unit.Default, (acc, x) => acc);
         }
     }
 }

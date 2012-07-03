@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -158,6 +160,36 @@ namespace Shimmer.Core
             }
 
             return acc;
+        }
+
+        public static void DeleteDirectoryAtNextReboot(string directoryPath)
+        {
+            var di = new DirectoryInfo(directoryPath);
+
+            // NB: MoveFileEx blows up if you're a non-admin, so you always need a backup plan
+            di.GetFiles().ForEach(x => safeDeleteFileAtNextDir(x.FullName));
+            di.GetDirectories().ForEach(x => DeleteDirectoryAtNextReboot(di.FullName));
+
+            safeDeleteFileAtNextDir(directoryPath);
+        }
+
+        static void safeDeleteFileAtNextDir(string name)
+        {
+            if (!MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) throw new Win32Exception();
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, MoveFileFlags dwFlags);
+
+        [Flags]
+        enum MoveFileFlags
+        {
+            MOVEFILE_REPLACE_EXISTING = 0x00000001,
+            MOVEFILE_COPY_ALLOWED = 0x00000002,
+            MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004,
+            MOVEFILE_WRITE_THROUGH = 0x00000008,
+            MOVEFILE_CREATE_HARDLINK = 0x00000010,
+            MOVEFILE_FAIL_IF_NOT_TRACKABLE = 0x00000020
         }
     }
 
