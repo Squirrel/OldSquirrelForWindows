@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleUpdatingApp", "Sample
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShimmerIAppUpdateTestTarget", "ShimmerIAppUpdateTestTarget\ShimmerIAppUpdateTestTarget.csproj", "{6AE437FB-6682-429F-9109-34F14DDAE480}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shimmer.WiXUi", "Shimmer.WiXUi\Shimmer.WiXUi.csproj", "{5F84C302-8216-47E0-B822-B83B65D81309}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F84C302-8216-47E0-B822-B83B65D81309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F84C302-8216-47E0-B822-B83B65D81309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F84C302-8216-47E0-B822-B83B65D81309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F84C302-8216-47E0-B822-B83B65D81309}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6A3E0A21-A929-4C35-8784-219394205CE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6A3E0A21-A929-4C35-8784-219394205CE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A3E0A21-A929-4C35-8784-219394205CE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
