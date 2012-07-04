@@ -35,7 +35,7 @@ namespace Shimmer.Tests.Client
             var result = default(UpdateInfo);
 
             using (fixture.AcquireUpdateLock()) {
-                result = fixture.CheckForUpdate().Last();
+                result = fixture.CheckForUpdate().First();
             }
 
             Assert.NotNull(result);
@@ -68,7 +68,7 @@ namespace Shimmer.Tests.Client
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
             using (fixture.AcquireUpdateLock()) {
-                fixture.CheckForUpdate().Last();
+                fixture.CheckForUpdate().First();
             }
 
             fs.Verify(x => x.CreateDirectoryRecursive(localPackagesDir), Times.Once());
@@ -99,7 +99,7 @@ namespace Shimmer.Tests.Client
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
             using (fixture.AcquireUpdateLock()) {
-                fixture.CheckForUpdate().Last();
+                fixture.CheckForUpdate().First();
             }
 
             fs.Verify(x => x.CreateDirectoryRecursive(localPackagesDir), Times.Once());
@@ -132,7 +132,7 @@ namespace Shimmer.Tests.Client
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
             using (fixture.AcquireUpdateLock()) {
-                fixture.CheckForUpdate().Last();
+                fixture.CheckForUpdate().First();
             }
 
             fs.Verify(x => x.CreateDirectoryRecursive(localPackagesDir), Times.Once());
@@ -163,7 +163,7 @@ namespace Shimmer.Tests.Client
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
 
-            Assert.Throws<Exception>(() => fixture.CheckForUpdate().Last());
+            Assert.Throws<Exception>(() => fixture.CheckForUpdate().First());
         }
 
         [Fact]

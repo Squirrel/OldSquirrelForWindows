@@ -57,7 +57,7 @@ namespace Shimmer.Tests.Client
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.ApplyReleases(updateInfo).Last();
+                    fixture.ApplyReleases(updateInfo).Last().ShouldEqual(100);
                 }
 
                 var filesToFind = new[] {
@@ -102,7 +102,7 @@ namespace Shimmer.Tests.Client
                 updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.ApplyReleases(updateInfo).Last();
+                    fixture.ApplyReleases(updateInfo).Last().ShouldEqual(100);
                 }
 
                 var filesToFind = new[] {
