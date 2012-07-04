@@ -109,12 +109,12 @@ namespace Shimmer.Client
             return ret;
         }
 
-        public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
+        public IObservable<int> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
         {
-            var noLock = checkForLock<Unit>();
+            var noLock = checkForLock<int>();
             if (noLock != null) return noLock;
 
-            IObservable<Unit> downloadResult;
+            IObservable<int> downloadResult;
 
             if (isHttpUrl(updateUrlOrPath)) {
                 var urls = releasesToDownload.Select(x => String.Format("{0}/{1}", updateUrlOrPath, x.Filename));
@@ -122,31 +122,47 @@ namespace Shimmer.Client
 
                 downloadResult = urlDownloader.QueueBackgroundDownloads(urls, paths);
             } else {
+                var toIncrement = 100.0 / releasesToDownload.Count();
+
                 // Do a parallel copy from the remote directory to the local
-                downloadResult = releasesToDownload
-                    .MapReduce(x => fileSystem.CopyAsync(
+                downloadResult = releasesToDownload.ToObservable()
+                    .Select(x => fileSystem.CopyAsync(
                         Path.Combine(updateUrlOrPath, x.Filename),
                         Path.Combine(rootAppDirectory, "packages", x.Filename)))
-                    .Select(_ => Unit.Default);
+                    .Merge(4)
+                    .Scan(0.0, (acc, _) => acc + toIncrement)
+                    .Select(x => (int)x);
             }
 
-            return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
+            return downloadResult
+                .Select(x => (int)(x * 0.95))
+                .Concat(checksumAllPackages(releasesToDownload).Select(_ => 100));
         }
 
-        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo)
+        public IObservable<int> ApplyReleases(UpdateInfo updateInfo)
         {
-            var noLock = checkForLock<Unit>();
+            var noLock = checkForLock<int>();
             if (noLock != null) return noLock;
+
+            // NB: This is so gross, but reporting accurate progress here is 
+            // just too damn hard.
+            var ret = new ReplaySubject<int>();
 
             // NB: It's important that we update the local releases file *only* 
             // once the entire operation has completed, even though we technically
             // could do it after DownloadUpdates finishes. We do this so that if
             // we get interrupted / killed during this operation, we'll start over
-            return cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
+            cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
+                .Do(_ => ret.OnNext(10), ret.OnError)
                 .SelectMany(_ => createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion))
-                .SelectMany(release => 
+                .Do(_ => ret.OnNext(50), ret.OnError)
+                .SelectMany(release =>
                     Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
-                .SelectMany(_ => UpdateLocalReleasesFile());
+                .Do(_ => ret.OnNext(95), ret.OnError)
+                .SelectMany(_ => UpdateLocalReleasesFile())
+                .Subscribe(_ => ret.OnNext(100), ret.OnError, ret.OnCompleted);
+
+            return ret;
         }
 
         public IDisposable AcquireUpdateLock()
