@@ -99,8 +99,8 @@ namespace Shimmer.Client
             }
 
             var ret = This.CheckForUpdate()
-                .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).Select(_ => x))
-                .SelectMany(x => This.ApplyReleases(x).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).LastOrDefault()))
+                .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).TakeLast(1).Select(_ => x))
+                .SelectMany(x => This.ApplyReleases(x).TakeLast(1).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).LastOrDefault()))
                 .Finally(() => theLock.Dispose())
                 .Multicast(new AsyncSubject<ReleaseEntry>());
 
