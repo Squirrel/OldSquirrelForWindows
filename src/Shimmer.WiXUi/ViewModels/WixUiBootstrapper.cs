@@ -113,7 +113,6 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 // NB: Create a dummy subject to receive progress if we're in silent mode
-                // TODO: Progress, it does nothing!
                 IObserver<int> progress = new Subject<int>();
                 if (wixEvents.Command.Display == Display.Full) {
                     var installingVm = RxApp.GetService<IInstallingViewModel>();
@@ -143,16 +142,35 @@ namespace Shimmer.WiXUi.ViewModels
 
                 var eigenLock = eigenUpdater.AcquireUpdateLock();
 
-                eigenUpdater.CheckForUpdate()
+                var eigenUpdateProgress = eigenUpdater.CheckForUpdate()
                     .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply))
                     .Finally(eigenLock.Dispose)
-                    .SelectMany(x => {
+                    .Select(x => x / 2)
+                    .Multicast(new Subject<int>());
+
+                eigenUpdateProgress.Subscribe(progress);
+                eigenUpdateProgress.Connect();
+
+                var realUpdateProgress = eigenUpdateProgress.TakeLast(1)
+                    .SelectMany(_ => {
                         var realUpdateManager = new UpdateManager(bundledPackageMetadata.ProjectUrl.ToString(), BundledRelease.PackageName, fxVersion);
 
-                        return realUpdateManager.UpdateApp()
-                            .Select(_ => Unit.Default)
-                            .LoggedCatch(this, Observable.Return(Unit.Default), "Failed to update to latest remote version");
+                        return realUpdateManager.CheckForUpdate()
+                            .SelectMany(updateInfo => {
+                                return Observable.Concat(
+                                    realUpdateManager.DownloadReleases(updateInfo.ReleasesToApply).Select(x => x * 0.75),
+                                    realUpdateManager.ApplyReleases(updateInfo).Select(x => x * 0.25 + 75))
+                                        .Select(x => (int)x);
+                            }).LoggedCatch(this, Observable.Return(100), "Failed to update to latest remote version");
                     })
+                    .Select(x => x / 2 + 50)
+                    .Multicast(new Subject<int>());
+
+                realUpdateProgress.Subscribe(progress);
+                realUpdateProgress.Connect();
+
+                realUpdateProgress
+                    .TakeLast(1)
                     .ObserveOn(RxApp.DeferredScheduler)
                     .Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
