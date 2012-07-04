@@ -57,7 +57,7 @@ namespace Shimmer.Tests.Client
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.ApplyReleases(updateInfo).First();
+                    fixture.ApplyReleases(updateInfo).Last();
                 }
 
                 var filesToFind = new[] {
@@ -102,7 +102,7 @@ namespace Shimmer.Tests.Client
                 updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.ApplyReleases(updateInfo).First();
+                    fixture.ApplyReleases(updateInfo).Last();
                 }
 
                 var filesToFind = new[] {
@@ -144,7 +144,7 @@ namespace Shimmer.Tests.Client
                 var resultObs = (IObservable<ReleaseEntry>)fixture.GetType().GetMethod("createFullPackagesFromDeltas", BindingFlags.NonPublic | BindingFlags.Instance)
                     .Invoke(fixture, new object[] { new[] {deltaEntry}, baseEntry });
 
-                var result = resultObs.First();
+                var result = resultObs.Last();
                 var zp = new ZipPackage(Path.Combine(tempDir, "theApp", "packages", result.Filename));
 
                 zp.Version.ToString().ShouldEqual("1.1.0.0");

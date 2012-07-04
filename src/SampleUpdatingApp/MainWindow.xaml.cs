@@ -69,21 +69,21 @@ namespace SampleUpdatingApp
             CheckForUpdate = new ReactiveAsyncCommand(noneInFlight);
             CheckForUpdate.RegisterAsyncFunction(_ => {
                 using (updateManager.AcquireUpdateLock()) {
-                    return updateManager.CheckForUpdate().First();
+                    return updateManager.CheckForUpdate().Last();
                 }
             }).Subscribe(x => { UpdateInfo = x; DownloadedUpdateInfo = null; });
 
             DownloadReleases = new ReactiveAsyncCommand(noneInFlight.Where(_ => UpdateInfo != null));
             DownloadReleases.RegisterAsyncFunction(_ => {
                 using (updateManager.AcquireUpdateLock()) {
-                    return updateManager.DownloadReleases(UpdateInfo.ReleasesToApply).First();
+                    return updateManager.DownloadReleases(UpdateInfo.ReleasesToApply).Last();
                 }
             }).Subscribe(_ => DownloadedUpdateInfo = UpdateInfo);
 
             ApplyReleases = new ReactiveAsyncCommand(noneInFlight.Where(_ => DownloadedUpdateInfo != null));
             ApplyReleases.RegisterAsyncFunction(_ => {
                 using (updateManager.AcquireUpdateLock()) {
-                    return updateManager.ApplyReleases(DownloadedUpdateInfo).First();
+                    return updateManager.ApplyReleases(DownloadedUpdateInfo).Last();
                 }
             });
 

@@ -32,7 +32,7 @@ namespace Shimmer.Tests.Client
                     var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
                     using (fixture.AcquireUpdateLock()) {
-                        fixture.UpdateLocalReleasesFile().First();
+                        fixture.UpdateLocalReleasesFile().Last();
                     }
 
                     var releasePath = Path.Combine(packageDir.FullName, "RELEASES");
