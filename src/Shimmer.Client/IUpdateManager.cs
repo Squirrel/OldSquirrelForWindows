@@ -39,9 +39,9 @@ namespace Shimmer.Client
         /// </summary>
         /// <param name="releasesToDownload">The list of releases to download, 
         /// almost always from UpdateInfo.ReleasesToApply.</param>
-        /// <returns>A completion Observable - will either return a single 
-        /// Unit.Default or Throws.</returns>
-        IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
+        /// <returns>A progress Observable - will return values from 0-100 and
+        /// Complete, or Throw</returns>
+        IObservable<int> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
 
         /// <summary>
         /// Take an already downloaded set of releases and apply them, 
@@ -50,9 +50,9 @@ namespace Shimmer.Client
         /// </summary>
         /// <param name="updateInfo">The UpdateInfo instance acquired from 
         /// CheckForUpdate</param>
-        /// <returns>A completion Observable - will either return a single 
-        /// Unit.Default or Throws.</returns>
-        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo);
+        /// <returns>A progress Observable - will return values from 0-100 and
+        /// Complete, or Throw</returns>
+        IObservable<int> ApplyReleases(UpdateInfo updateInfo);
     }
 
     [ContractClassFor(typeof(IUpdateManager))]
@@ -68,18 +68,18 @@ namespace Shimmer.Client
             return default(IObservable<UpdateInfo>);
         }
 
-        public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
+        public IObservable<int> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
         {
             // XXX: Why doesn't this work?
             Contract.Requires(releasesToDownload != null);
             Contract.Requires(releasesToDownload.Any());
-            return default(IObservable<Unit>);
+            return default(IObservable<int>);
         }
 
-        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo)
+        public IObservable<int> ApplyReleases(UpdateInfo updateInfo)
         {
             Contract.Requires(updateInfo != null);
-            return default(IObservable<Unit>);
+            return default(IObservable<int>);
         }
     }
 
@@ -100,7 +100,7 @@ namespace Shimmer.Client
 
             var ret = This.CheckForUpdate()
                 .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).Select(_ => x))
-                .SelectMany(x => This.ApplyReleases(x).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).FirstOrDefault()))
+                .SelectMany(x => This.ApplyReleases(x).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).LastOrDefault()))
                 .Finally(() => theLock.Dispose())
                 .Multicast(new AsyncSubject<ReleaseEntry>());
 
