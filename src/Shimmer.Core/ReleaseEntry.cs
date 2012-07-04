@@ -63,6 +63,12 @@ namespace Shimmer.Core
             } 
         }
 
+        public string PackageName {
+            get {
+                return Filename.Substring(0, Filename.IndexOf('-'));
+            }
+        }
+
         public string GetReleaseNotes(string packageDirectory)
         {
             var zp = new ZipPackage(Path.Combine(packageDirectory, Filename));

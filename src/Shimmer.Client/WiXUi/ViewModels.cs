@@ -11,26 +11,25 @@ namespace Shimmer.Client.WiXUi
 {
     public interface IWelcomeViewModel : IRoutableViewModel
     {
-        IPackage PackageMetadata { get; }
-        bool AlreadyInstalled { get; }
+        IPackage PackageMetadata { get; set; }
         ReactiveCommand ShouldProceed { get; }
     }
 
     public interface IInstallingViewModel : IRoutableViewModel
     {
-        IPackage PackageMetadata { get; }
-        IObserver<int> ProgressValue { get; set; }
+        IPackage PackageMetadata { get; set; }
+        IObserver<int> ProgressValue { get; }
     }
 
     public interface IUninstallingViewModel : IRoutableViewModel
     {
-        IPackage PackageMetadata { get; }
-        IObserver<int> ProgressValue { get; set; }
+        IPackage PackageMetadata { get; set; }
+        IObserver<int> ProgressValue { get; }
     }
 
     public interface IErrorViewModel : IRoutableViewModel
     {
-        IPackage PackageMetadata { get; }
+        IPackage PackageMetadata { get; set; }
         UserError Error { get; set; }
     }
 }

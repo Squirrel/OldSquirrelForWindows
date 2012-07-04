@@ -25,5 +25,9 @@ namespace Shimmer.Client.WiXUi
         IObservable<CacheCompleteEventArgs> CacheCompleteObs { get; }
 
         IEngine Engine { get; }
+        Command Command { get; }
+        IntPtr MainWindowHwnd { get; }
+
+        void ShouldQuit();
     }
 }

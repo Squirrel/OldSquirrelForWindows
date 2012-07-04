@@ -36,8 +36,16 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\wix\sdk\BootstrapperCore.dll</HintPath>
     </Reference>
+    <Reference Include="Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ext\Core.dll</HintPath>
+    </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="NuGetPackageExplorer.Types, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b33e3c54f0b885e9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ext\NuGetPackageExplorer.Types.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />

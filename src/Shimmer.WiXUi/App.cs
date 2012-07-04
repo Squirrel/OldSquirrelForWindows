@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Interop;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using ReactiveUI.Routing;
 using Shimmer.Client;
@@ -28,9 +29,21 @@ namespace Shimmer.WiXUi
                 // XXX: Fix this casting shit in ReactiveUI.Routing
                 viewHost = {Router = (RoutingState) bootstrapper.Router}
             };
+
+            MainWindowHwnd = IntPtr.Zero;
+            if (Command.Display == Display.Full) {
+                app.MainWindow.ShowDialog();
+                MainWindowHwnd = new WindowInteropHelper(app.MainWindow).Handle;
+            }
         }
 
         public new IEngine Engine { get; protected set; }
+        public IntPtr MainWindowHwnd { get; protected set; }
+
+        public void ShouldQuit()
+        {
+            Application.Current.Shutdown();
+        }
 
         #region Extremely dull code to set up IWiXEvents
         void setupWiXEventHooks()

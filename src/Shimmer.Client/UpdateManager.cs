@@ -170,6 +170,17 @@ namespace Shimmer.Client
                 ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler);
         }
 
+        public IObservable<Unit> FullUninstall()
+        {
+            var noLock = checkForLock<Unit>();
+            if (noLock != null) return noLock;
+
+            return Observable.Start(() => {
+                cleanUpOldVersions(new Version(255, 255, 255, 255));
+                Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
+            }, RxApp.TaskpoolScheduler);
+        }
+
         IObservable<TRet> checkForLock<TRet>()
         {
             if (!hasUpdateLock) {
