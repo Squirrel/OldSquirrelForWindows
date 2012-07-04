@@ -34,10 +34,12 @@ namespace Shimmer.Client
             return Http.DownloadUrl(url).Select(x => Encoding.UTF8.GetString(x));
         }
 
-        public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+        public IObservable<int> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
         {
-            return urls.Zip(localPaths, (u, p) => new { Url = u, Path = p })
-                .ToObservable()
+            var fileCount = urls.Count();
+            double toIncrement = 100.0 / fileCount;
+
+            return urls.Zip(localPaths, (u, p) => new { Url = u, Path = p }).ToObservable()
                 .Select(x => Http.DownloadUrl(x.Url).Select(Content => new { x.Url, x.Path, Content })).Merge(4)
                 .SelectMany(x => Observable.Start(() => {
                     var fi = fileSystem.GetFileInfo(x.Path);
@@ -47,7 +49,8 @@ namespace Shimmer.Client
                         of.Write(x.Content, 0, x.Content.Length);
                     }
                 }, RxApp.TaskpoolScheduler))
-                .Aggregate(Unit.Default, (acc, x) => acc);
+                .Scan(0.0, (acc, _) => acc + toIncrement)
+                .Select(x => (int)x);
         }
 
         public void Dispose()
@@ -81,9 +84,9 @@ namespace Shimmer.Client
             return Http.DownloadUrl(url).Select(x => Encoding.UTF8.GetString(x));
         }
 
-        public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+        public IObservable<int> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
         {
-            var ret = new AsyncSubject<Unit>();
+            var ret = new ReplaySubject<int>();
             var jobFiles = urls.Zip(localPaths, (url, path) => new {url, path});
 
             var job = manager.CreateJob(applicationName + "_" + Guid.NewGuid() , JobType.Download);
@@ -95,7 +98,7 @@ namespace Shimmer.Client
                     if (job.ErrorCount != 0) {
                         ret.OnError(new BitsException(job.Error));
                     } else {
-                        ret.OnNext(Unit.Default); 
+                        ret.OnNext(100); 
                         ret.OnCompleted();
                     }
                 } catch (Exception ex) {

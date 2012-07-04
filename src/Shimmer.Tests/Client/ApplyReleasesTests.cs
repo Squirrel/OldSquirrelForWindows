@@ -28,9 +28,9 @@ namespace Shimmer.Tests.Client
                 return Observable.Empty<string>();
             }
 
-            public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+            public IObservable<int> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
             {
-                return Observable.Empty<Unit>();
+                return Observable.Empty<int>();
             }
         }
 
