@@ -47,6 +47,11 @@ namespace Shimmer.WiXUi.ViewModels
                 (type, contract) => Kernel.ResolveAll(type));
 
             UserError.RegisterHandler(ex => {
+                if (wixEvents.Command.Display != Display.Full) {
+                    this.Log().Error(ex.ErrorMessage);
+                    wixEvents.ShouldQuit();
+                }
+
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
                 Router.Navigate.Execute(errorVm);
