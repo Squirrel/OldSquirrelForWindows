@@ -32,7 +32,7 @@ namespace Shimmer.Tests.Client
             using (var fixture = new BitsUrlDownloader("BITSTests")) {
                 fixture.QueueBackgroundDownloads(urls, files.Select(x => Path.Combine(tempPath, x)))
                     .Timeout(TimeSpan.FromSeconds(120), RxApp.TaskpoolScheduler)
-                    .First();
+                    .Last();
 
                 files.Select(x => Path.Combine(tempPath, x))
                     .Select(x => new FileInfo(x))
@@ -62,7 +62,7 @@ namespace Shimmer.Tests.Client
                 Assert.Throws<Exception>(() => {
                     fixture.QueueBackgroundDownloads(urls, files.Select(x => Path.Combine(tempPath, x)))
                         .Timeout(TimeSpan.FromSeconds(120), RxApp.TaskpoolScheduler)
-                        .First();
+                        .Last();
                 });
             }
         }

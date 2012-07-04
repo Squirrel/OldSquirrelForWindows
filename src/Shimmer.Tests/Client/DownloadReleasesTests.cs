@@ -134,7 +134,7 @@ namespace Shimmer.Tests.Client
 
                 var fixture = new UpdateManager("http://localhost:30405", "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.DownloadReleases(entriesToDownload).First();
+                    fixture.DownloadReleases(entriesToDownload).Last().ShouldEqual(100);
                 }
 
                 entriesToDownload.ForEach(x => {
@@ -169,7 +169,7 @@ namespace Shimmer.Tests.Client
 
                 var fixture = new UpdateManager(updateDir.FullName, "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.DownloadReleases(entriesToDownload).First();
+                    fixture.DownloadReleases(entriesToDownload).Last().ShouldEqual(100);;
                 }
 
                 entriesToDownload.ForEach(x => {
