@@ -134,7 +134,10 @@ namespace Shimmer.Tests.Client
 
                 var fixture = new UpdateManager("http://localhost:30405", "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.DownloadReleases(entriesToDownload).Last().ShouldEqual(100);
+                    var progress = fixture.DownloadReleases(entriesToDownload).ToList().First();
+                    this.Log().Info("Progress: [{0}]", String.Join(",", progress));
+                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).ShouldBeTrue();
+                    progress.Last().ShouldEqual(100);
                 }
 
                 entriesToDownload.ForEach(x => {
@@ -169,7 +172,10 @@ namespace Shimmer.Tests.Client
 
                 var fixture = new UpdateManager(updateDir.FullName, "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture.AcquireUpdateLock()) {
-                    fixture.DownloadReleases(entriesToDownload).Last().ShouldEqual(100);;
+                    var progress = fixture.DownloadReleases(entriesToDownload).ToList().First();
+                    this.Log().Info("Progress: [{0}]", String.Join(",", progress));
+                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).ShouldBeTrue();
+                    progress.Last().ShouldEqual(100);
                 }
 
                 entriesToDownload.ForEach(x => {
