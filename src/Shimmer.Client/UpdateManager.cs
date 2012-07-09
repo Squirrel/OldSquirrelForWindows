@@ -454,7 +454,7 @@ namespace Shimmer.Client
                     files.Add(file.FullName.Substring(oldAppDirectory.FullName.Length + 1));
                 }
             }
-            return files;
+            return files.Distinct();
         }
 
         void recreatePinnedExecutables(string newAppDirectoryRoot, IEnumerable<string> pinnedExecutables) {
