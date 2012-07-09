@@ -360,12 +360,12 @@ namespace Shimmer.Client
         {
             this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
 
-            var pinnedExecutables = getOldPinnedRelativeExecutables(newCurrentVersion);
+            fixPinnedExecutables(newCurrentVersion);
+
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             var targetPath = getDirectoryForRelease(newCurrentVersion);
 
             runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
-            recreatePinnedExecutables(targetPath.FullName, pinnedExecutables);
         }
 
         static bool pathIsInFrameworkProfile(IPackageFile packageFile, FrameworkVersion appFrameworkVersion)
@@ -439,29 +439,41 @@ namespace Shimmer.Client
                 });
         }
 
-        IEnumerable<string> getOldPinnedRelativeExecutables(Version newCurrentVersion) {
+        void fixPinnedExecutables(Version newCurrentVersion) {
             var oldAppDirectories = fileSystem
                 .GetDirectoryInfo(rootAppDirectory)
                 .GetDirectories()
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                .Where(x => x.Name != "app-" + newCurrentVersion);
-            var files = new List<string>();
-            foreach (var oldAppDirectory in oldAppDirectories) {
-                foreach (var file in oldAppDirectory.GetFiles("*.exe", SearchOption.AllDirectories).Where(x => TaskbarHelper.IsPinnedToTaskbar(x.FullName))) {
-                    TaskbarHelper.UnpinFromTaskbar(file.FullName);
+                .Where(x => x.Name != "app-" + newCurrentVersion)
+                .Select(x => x.FullName)
+                .ToArray();
+            var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
 
-                    // we want the path relative to the app folder
-                    files.Add(file.FullName.Substring(oldAppDirectory.FullName.Length + 1));
-                }
-            }
-            return files.Distinct();
-        }
+            var taskbarPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
-        void recreatePinnedExecutables(string newAppDirectoryRoot, IEnumerable<string> pinnedExecutables) {
-            foreach (var pinnedExecutable in pinnedExecutables) {
-                var executablePath = Path.Combine(newAppDirectoryRoot, pinnedExecutable);
-                if (fileSystem.GetFileInfo(executablePath).Exists) {
-                    TaskbarHelper.PinToTaskbar(executablePath);
+            foreach (var shortcut in fileSystem.GetDirectoryInfo(taskbarPath).GetFiles("*.lnk").Select(x => new ShellLink(x.FullName))) {
+                foreach (var oldAppDirectory in oldAppDirectories) {
+                    if (shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+
+                        // replace old app path with new app path and check, if executable still exists
+                        var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
+                        if (fileSystem.GetFileInfo(newTarget).Exists) {
+                            shortcut.Target = newTarget;
+
+                            // replace working directory too if appropriate
+                            if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                                shortcut.WorkingDirectory = Path.Combine(newAppPath,
+                                    shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
+                            }
+
+                            shortcut.Save();
+                        } else {
+                            TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
+                        }
+                        break;
+                    }
                 }
             }
         }
