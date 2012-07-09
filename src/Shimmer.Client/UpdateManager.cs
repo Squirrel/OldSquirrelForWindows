@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -359,10 +360,12 @@ namespace Shimmer.Client
         {
             this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
 
+            var pinnedExecutables = getOldPinnedRelativeExecutables(newCurrentVersion);
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             var targetPath = getDirectoryForRelease(newCurrentVersion);
 
             runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
+            recreatePinnedExecutables(targetPath.FullName, pinnedExecutables);
         }
 
         static bool pathIsInFrameworkProfile(IPackageFile packageFile, FrameworkVersion appFrameworkVersion)
@@ -434,6 +437,33 @@ namespace Shimmer.Client
                     }
                     return ret;
                 });
+        }
+
+        IEnumerable<string> getOldPinnedRelativeExecutables(Version newCurrentVersion) {
+            var oldAppDirectories = fileSystem
+                .GetDirectoryInfo(rootAppDirectory)
+                .GetDirectories()
+                .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
+                .Where(x => x.Name != "app-" + newCurrentVersion);
+            var files = new List<string>();
+            foreach (var oldAppDirectory in oldAppDirectories) {
+                foreach (var file in oldAppDirectory.GetFiles("*.exe", SearchOption.AllDirectories).Where(x => TaskbarHelper.IsPinnedToTaskbar(x.FullName))) {
+                    TaskbarHelper.UnpinFromTaskbar(file.FullName);
+
+                    // we want the path relative to the app folder
+                    files.Add(file.FullName.Substring(oldAppDirectory.FullName.Length + 1));
+                }
+            }
+            return files;
+        }
+
+        void recreatePinnedExecutables(string newAppDirectoryRoot, IEnumerable<string> pinnedExecutables) {
+            foreach (var pinnedExecutable in pinnedExecutables) {
+                var executablePath = Path.Combine(newAppDirectoryRoot, pinnedExecutable);
+                if (fileSystem.GetFileInfo(executablePath).Exists) {
+                    TaskbarHelper.PinToTaskbar(executablePath);
+                }
+            }
         }
 
         IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(string fullDirectoryPath)
