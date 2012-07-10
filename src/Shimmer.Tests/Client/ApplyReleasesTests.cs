@@ -249,6 +249,52 @@ namespace Shimmer.Tests.Client
             }
         }
 
+        [Fact]
+        public void ExecutablesPinnedToTaskbarShouldPointToNewVersion()
+        {
+            string tempDir;
+
+            using (Utility.WithTempDirectory(out tempDir)) {
+                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
+                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+
+                new[] {
+                    "SampleUpdatingApp.1.0.0.0.nupkg",
+                    "SampleUpdatingApp.1.1.0.0.nupkg",
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
+
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "SampleUpdatingApp.1.0.0.0.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "SampleUpdatingApp.1.1.0.0.nupkg"));
+
+                var updateInfo = UpdateInfo.Create(null, new[] { baseEntry }, "dontcare", FrameworkVersion.Net40);
+                using (fixture.AcquireUpdateLock()) {
+                    fixture.ApplyReleases(updateInfo).ToList().First();
+                }
+
+                var oldExecutable = Path.Combine(tempDir, "theApp", "app-1.0.0.0", "SampleUpdatingApp.exe");
+                File.Exists(oldExecutable).ShouldBeTrue();
+                TaskbarHelper.PinToTaskbar(oldExecutable);
+
+                updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                using (fixture.AcquireUpdateLock()) {
+                    fixture.ApplyReleases(updateInfo).ToList().First();
+                }
+
+                var newExecutable = Path.Combine(tempDir, "theApp", "app-1.1.0.0", "SampleUpdatingApp.exe");
+                File.Exists(newExecutable).ShouldBeTrue();
+                TaskbarHelper.IsPinnedToTaskbar(newExecutable).ShouldBeTrue();
+
+                var retries = 20;
+                do {
+                    TaskbarHelper.UnpinFromTaskbar(newExecutable);
+                    Thread.Sleep(50);
+                    retries--;
+                } while (TaskbarHelper.IsPinnedToTaskbar(newExecutable) && retries > 0);
+            }
+        }
+
         string getPathToShimmerTestTarget()
         {
 #if DEBUG
