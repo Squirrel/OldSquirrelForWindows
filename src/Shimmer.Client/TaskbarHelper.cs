@@ -17,10 +17,18 @@ namespace Shimmer.Client {
 
         public static void PinToTaskbar(string executablePath) {
             pinUnpin(executablePath, "pin to taskbar");
+
+            if (!IsPinnedToTaskbar(executablePath)) {
+                throw new Exception("Pinning executable to taskbar failed.");
+            }
         }
 
         public static void UnpinFromTaskbar(string executablePath) {
             pinUnpin(executablePath, "unpin from taskbar");
+
+            if (IsPinnedToTaskbar(executablePath)) {
+                throw new Exception("Executable is still pinned to taskbar.");
+            }
         }
 
         private static void pinUnpin(string executablePath, string verbToExecute) {

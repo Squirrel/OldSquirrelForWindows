@@ -286,12 +286,7 @@ namespace Shimmer.Tests.Client
                 File.Exists(newExecutable).ShouldBeTrue();
                 TaskbarHelper.IsPinnedToTaskbar(newExecutable).ShouldBeTrue();
 
-                var retries = 20;
-                do {
-                    TaskbarHelper.UnpinFromTaskbar(newExecutable);
-                    Thread.Sleep(50);
-                    retries--;
-                } while (TaskbarHelper.IsPinnedToTaskbar(newExecutable) && retries > 0);
+                Utility.Retry(() => TaskbarHelper.UnpinFromTaskbar(newExecutable));
             }
         }
 
