@@ -440,6 +440,10 @@ namespace Shimmer.Client
         }
 
         void fixPinnedExecutables(Version newCurrentVersion) {
+            if (Environment.OSVersion.Version < new Version(6, 1)) {
+                return;
+            }
+
             var oldAppDirectories = fileSystem
                 .GetDirectoryInfo(rootAppDirectory)
                 .GetDirectories()
