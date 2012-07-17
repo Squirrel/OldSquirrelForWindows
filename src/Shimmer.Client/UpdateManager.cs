@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -359,6 +360,8 @@ namespace Shimmer.Client
         {
             this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
 
+            fixPinnedExecutables(newCurrentVersion);
+
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             var targetPath = getDirectoryForRelease(newCurrentVersion);
 
@@ -434,6 +437,49 @@ namespace Shimmer.Client
                     }
                     return ret;
                 });
+        }
+
+        void fixPinnedExecutables(Version newCurrentVersion) {
+            if (Environment.OSVersion.Version < new Version(6, 1)) {
+                return;
+            }
+
+            var oldAppDirectories = fileSystem
+                .GetDirectoryInfo(rootAppDirectory)
+                .GetDirectories()
+                .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
+                .Where(x => x.Name != "app-" + newCurrentVersion)
+                .Select(x => x.FullName)
+                .ToArray();
+            var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
+
+            var taskbarPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
+
+            foreach (var shortcut in fileSystem.GetDirectoryInfo(taskbarPath).GetFiles("*.lnk").Select(x => new ShellLink(x.FullName))) {
+                foreach (var oldAppDirectory in oldAppDirectories) {
+                    if (shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+
+                        // replace old app path with new app path and check, if executable still exists
+                        var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
+                        if (fileSystem.GetFileInfo(newTarget).Exists) {
+                            shortcut.Target = newTarget;
+
+                            // replace working directory too if appropriate
+                            if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                                shortcut.WorkingDirectory = Path.Combine(newAppPath,
+                                    shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
+                            }
+
+                            shortcut.Save();
+                        } else {
+                            TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
+                        }
+                        break;
+                    }
+                }
+            }
         }
 
         IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(string fullDirectoryPath)
