@@ -68,7 +68,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BootstrapperCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ce35f76fcda82bad, processorArchitecture=MSIL" />
+    <Reference Include="BootstrapperCore">
+      <HintPath>..\..\ext\wix\sdk\BootstrapperCore.dll</HintPath>
+    </Reference>
     <Reference Include="Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\Core.dll</HintPath>
