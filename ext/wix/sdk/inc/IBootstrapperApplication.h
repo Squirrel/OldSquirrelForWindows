@@ -1,14 +1,9 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="IBootstrapperApplication.h" company="Microsoft">
-//    Copyright (c) Microsoft Corporation.  All rights reserved.
-//    
-//    The use and distribution terms for this software are covered by the
-//    Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-//    which can be found in the file CPL.TXT at the root of this distribution.
-//    By using this software in any fashion, you are agreeing to be bound by
-//    the terms of this license.
-//    
-//    You must not remove this notice, or any other, from this software.
+// <copyright file="IBootstrapperApplication.h" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
 // <summary>
@@ -56,6 +51,8 @@ enum BOOTSTRAPPER_ERROR_TYPE
     BOOTSTRAPPER_ERROR_TYPE_ELEVATE,            // error occurred trying to elevate.
     BOOTSTRAPPER_ERROR_TYPE_WINDOWS_INSTALLER,  // error came from windows installer.
     BOOTSTRAPPER_ERROR_TYPE_EXE_PACKAGE,        // error came from an exe package.
+    BOOTSTRAPPER_ERROR_TYPE_HTTP_AUTH_SERVER,   // error occurred trying to authenticate with HTTP server.
+    BOOTSTRAPPER_ERROR_TYPE_HTTP_AUTH_PROXY,    // error occurred trying to authenticate with HTTP proxy.
 };
 
 
@@ -458,20 +455,20 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
         __in int nRecommendation
         ) = 0;
 
-    // OnCacheAcquireBegin - called when the engine begins to verify then copy
-    //                       a payload to the package cache folder.
+    // OnCacheVerifyBegin - called when the engine begins to verify then copy
+    //                      a payload or container to the package cache folder.
     //
     // Return:
     //  IDCANCEL instructs the engine to stop caching.
     //
     //  IDNOACTION instructs the engine to continue.
     STDMETHOD_(int, OnCacheVerifyBegin)(
-        __in_z_opt LPCWSTR wzPackageId,
+        __in_z_opt LPCWSTR wzPackageOrContainerId,
         __in_z_opt LPCWSTR wzPayloadId
         ) = 0;
 
     // OnCacheVerifyComplete - called after the engine verifies and copies
-    //                          a payload to the package cache folder.
+    //                         a payload or container to the package cache folder.
     //
     // Return:
     //  IDRETRY instructs the engine to try the verification of the payload again.
@@ -482,7 +479,7 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //
     //  All other return codes are ignored.
     STDMETHOD_(int, OnCacheVerifyComplete)(
-        __in_z_opt LPCWSTR wzPackageId,
+        __in_z_opt LPCWSTR wzPackageOrContainerId,
         __in_z_opt LPCWSTR wzPayloadId,
         __in HRESULT hrStatus,
         __in int nRecommendation

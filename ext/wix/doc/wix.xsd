@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  <copyright file="wix.xsd" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xse="http://schemas.microsoft.com/wix/2005/XmlSchemaExtension" xmlns:html="http://www.w3.org/1999/xhtml" targetNamespace="http://schemas.microsoft.com/wix/2006/wi" xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <xs:annotation>
     <xs:documentation>
-            Copyright (c) Microsoft Corporation.  All rights reserved.
-            
-            The use and distribution terms for this software are covered by the
-            Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-            which can be found in the file CPL.TXT at the root of this distribution.
-            By using this software in any fashion, you are agreeing to be bound by
-            the terms of this license.
-            
-            You must not remove this notice, or any other, from this software.
-
             Schema for describing Windows Installer database files (.msi/.msm/.pcp).
         </xs:documentation>
   </xs:annotation>
@@ -609,6 +607,7 @@
     <xs:annotation>
       <xs:documentation>Describes a single msp package to install.</xs:documentation>
       <xs:appinfo>
+        <xse:seeAlso ref="SlipstreamMsp" />
         <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="Chain" />
         <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="PackageGroup" />
       </xs:appinfo>
@@ -642,9 +641,17 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="PerMachine" type="YesNoTypeUnion">
+      <xs:attribute name="PerMachine" type="YesNoDefaultTypeUnion">
         <xs:annotation>
           <xs:documentation>Indicates the package must be executed elevated. The default is "no".</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="Slipstream" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>
+            Specifies whether to automatically slipstream the patch for any target msi packages in the chain. The default is "no".
+            Even when the value is "no", you can still author the SlipstreamMsp element under MsiPackage elements as desired.
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>
@@ -677,12 +684,22 @@
       <xs:attributeGroup ref="ChainPackageCommonAttributes" />
       <xs:attribute name="DetectCondition" type="xs:string">
         <xs:annotation>
-          <xs:documentation>A condition that determines if the package is present on the target system.</xs:documentation>
+          <xs:documentation>
+            A condition that determines if the package is present on the target system. This condition can use built-in 
+            variables and variables returned by searches. This condition is necessary because Windows doesn't provide a 
+            method to detect the presence of an MsuPackage. Burn uses this condition to determine how to treat this 
+            package during a bundle action; for example, if this condition is false or omitted and the bundle is being 
+            installed, Burn will install this package.
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="KB" type="xs:string">
         <xs:annotation>
-          <xs:documentation>The knowledge base identifier for the MSU.</xs:documentation>
+          <xs:documentation>
+            The knowledge base identifier for the MSU. The KB attribute must be specified to enable the MSU package to
+            be uninstalled. Even then MSU uninstallation is only supported on Windows 7 and later. When the KB attribute
+            is specified, the Permanent attribute will the control whether the package is uninstalled.
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>
@@ -716,12 +733,18 @@
       <xs:attributeGroup ref="ChainPackageCommonAttributes" />
       <xs:attribute name="DetectCondition" type="xs:string">
         <xs:annotation>
-          <xs:documentation>A condition that determines if the package is present on the target system.</xs:documentation>
+          <xs:documentation>
+            A condition that determines if the package is present on the target system. This condition can use built-in 
+            variables and variables returned by searches. This condition is necessary because Windows doesn't provide a 
+            method to detect the presence of an ExePackage. Burn uses this condition to determine how to treat this 
+            package during a bundle action; for example, if this condition is false or omitted and the bundle is being 
+            installed, Burn will install this package.
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="InstallCommand" type="xs:string">
         <xs:annotation>
-          <xs:documentation>The command-line arguments to specify to indicate an install.</xs:documentation>
+          <xs:documentation>The command-line arguments provided to the ExePackage during install. If this attribute is absent the executable will be launched with no command-line arguments.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="RepairCommand" type="xs:string">
@@ -734,10 +757,10 @@
       </xs:attribute>
       <xs:attribute name="UninstallCommand" type="xs:string">
         <xs:annotation>
-          <xs:documentation>The command-line arguments to specify to indicate an uninstall.</xs:documentation>
+          <xs:documentation>The command-line arguments provided to the ExePackage during uninstall. If this attribute is absent the executable will be launched with no command-line arguments. To prevent an ExePackage from being uninstalled set the Permanent attribute to "yes".</xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="PerMachine" type="YesNoTypeUnion">
+      <xs:attribute name="PerMachine" type="YesNoDefaultTypeUnion">
         <xs:annotation>
           <xs:documentation>Indicates the package must be executed elevated. The default is "no".</xs:documentation>
         </xs:annotation>
@@ -848,7 +871,7 @@
     </xs:attribute>
     <xs:attribute name="InstallCondition" type="xs:string">
       <xs:annotation>
-        <xs:documentation>A condition to evaluate before installing the package. The package will only be installed if the condition evaluates to true.</xs:documentation>
+        <xs:documentation>A condition to evaluate before installing the package. The package will only be installed if the condition evaluates to true. If the condition evaluates to false and the bundle is being installed, repaired, or modified, the package will be uninstalled.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Cache" type="YesNoTypeUnion">
@@ -859,6 +882,26 @@
     <xs:attribute name="CacheId" type="xs:string">
       <xs:annotation>
         <xs:documentation>The identifier to use when caching the package.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DisplayName" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Specifies the display name to place in the bootstrapper application data manifest for the package. By default, ExePackages
+          use the ProductName field from the version information, MsiPackages use the ProductName property, and MspPackages use
+          the DisplayName patch metadata property. Other package types must use this attribute to define a display name in the
+          bootstrapper application data manifest.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="Description" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Specifies the description to place in the bootstrapper application data manifest for the package. By default, ExePackages
+          use the FileName field from the version information, MsiPackages use the ARPCOMMENTS property, and MspPackages use
+          the Description patch metadata property. Other package types must use this attribute to define a desciption in the
+          bootstrapper application data manifest.
+        </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="LogPathVariable" type="xs:string">
@@ -989,12 +1032,13 @@
   </xs:element>
   <xs:element name="SlipstreamMsp">
     <xs:annotation>
-      <xs:documentation>
-                Specifies a patch included in the same bundle that is installed when the parent MSI package
-                is installed.
-            </xs:documentation>
+      <xs:documentation>Specifies a patch included in the same bundle that is installed when the parent MSI package is installed.</xs:documentation>
       <xs:appinfo>
+        <xse:seeAlso ref="MspPackage" />
         <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="MsiPackage" />
+        <xse:remarks>
+          <html:p>You can also specify that any MspPackage elements in the chain are automatically slipstreamed by setting the Slipstream attribute of an MspPackage to "yes". This will reduce the amount of authoring you need to write and will determine which msi packages can slipstream patches when building a bundle.</html:p>
+        </xse:remarks>
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1046,6 +1090,14 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
+      <xs:anyAttribute namespace="##other" processContents="lax">
+        <xs:annotation>
+          <xs:documentation>
+                    Extensibility point in the WiX XML Schema.  Schema extensions can register additional
+                    attributes at this point in the schema.
+                </xs:documentation>
+        </xs:annotation>
+      </xs:anyAttribute>
     </xs:complexType>
   </xs:element>
   <xs:element name="Container">
@@ -1059,19 +1111,35 @@
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element ref="PackageGroupRef" />
       </xs:choice>
-      <xs:attribute name="Id" type="xs:string" use="optional">
+      <xs:attribute name="DownloadUrl" type="xs:string">
         <xs:annotation>
-          <xs:documentation>The destination path and file name for this container.</xs:documentation>
+          <xs:documentation>
+            <html:p>The URL to use to download the container. This attribute is only valid when the container is detached. The
+            following substitutions are supported:</html:p>
+            <html:ul>
+              <html:li>{0} is always null.</html:li>
+              <html:li>{1} is replaced by the container Id.</html:li>
+              <html:li>{2} is replaced by the container file name.</html:li>
+            </html:ul>
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="Name" type="xs:string" use="optional">
+      <xs:attribute name="Id" type="xs:string">
         <xs:annotation>
-          <xs:documentation>The destination path and file name for this container.</xs:documentation>
+          <xs:documentation>The unique identifier for the container. If this attribute is not specified the Name attribute will be used.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="Type" type="BurnContainerType" use="optional">
+      <xs:attribute name="Name" type="xs:string">
         <xs:annotation>
-          <xs:documentation>The destination path and file name for this container.</xs:documentation>
+          <xs:documentation>The file name for this container. A relative path may be provided to place the container in a sub-folder of the bundle.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="Type" type="BurnContainerType">
+        <xs:annotation>
+          <xs:documentation>
+            Indicates whether the container is "attached" to the bundle executable or placed external to the bundle extecutable as "detached". If
+            this attribute is not specified, the default is to create a detached container.
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>
@@ -1276,6 +1344,7 @@
       <xs:documentation>Create a RelatedBundle element.</xs:documentation>
       <xs:appinfo>
         <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="Bundle" />
+        <xse:parent namespace="http://schemas.microsoft.com/wix/2006/wi" ref="Fragment" />
       </xs:appinfo>
     </xs:annotation>
     <xs:complexType>
@@ -1718,6 +1787,7 @@
         <xs:element ref="PayloadGroup" />
         <xs:element ref="Property" />
         <xs:element ref="PropertyRef" />
+        <xs:element ref="RelatedBundle" />
         <xs:element ref="SetDirectory" />
         <xs:element ref="SetProperty" />
         <xs:element ref="SFPCatalog" />
@@ -3559,7 +3629,7 @@
         <xse:howtoRef href="parentdirectorysearch.htm">How To: Get the parent directory of a file search</xse:howtoRef>
         <xse:remarks>
           <html:p>Use the AssignToProperty attribute to search for a file but set the outer property to the directory containing the file. When this attribute is set to 'yes', you may only nest a FileSearch element with a unique Id or define no child element.</html:p>
-          <html:a>When the parent DirectorySearch/@Depth attribute is greater than 1, the FileSearch/@Id attribute must be absent or the same as the parent DirectorySearch/@Id attribute value, unless the parent DirectorySearch/@AssignToProperty attribute value is 'yes'.</html:a>
+          <html:a>When the parent DirectorySearch/@Depth attribute is greater than 0, the FileSearch/@Id attribute must be absent or the same as the parent DirectorySearch/@Id attribute value, unless the parent DirectorySearch/@AssignToProperty attribute value is 'yes'.</html:a>
         </xse:remarks>
       </xs:appinfo>
       <xs:documentation>Searches for directory and assigns to value of parent Property.</xs:documentation>
@@ -6488,7 +6558,7 @@
         <xs:annotation>
           <xs:documentation>
                         The value of this attribute should be one of the following:
-                        <html:ol><html:li>The name (not the display name) of a previously installed service.</html:li><html:li>A foreign key referring to another ServiceInstall/@Id.</html:li><html:li>A group of services (in which case the Group attribute should be set to 'yes').</html:li></html:ol></xs:documentation>
+                        <html:ol><html:li>The name (not the display name) of a previously installed service.</html:li><html:li>The name of a service group (in which case the Group attribute must be set to 'yes').</html:li></html:ol></xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="Group" type="YesNoTypeUnion">
@@ -7487,11 +7557,10 @@
       <xs:attribute name="Win64" type="YesNoTypeUnion">
         <xs:annotation>
           <xs:documentation>
-                        By default, components take on the 'bitness' of the source code being compiled, as specified
-                        by the -arch switch (or the InstallerPlatform property in an MSBuild .wixproj project):
-                        'x86' defaults to 32-bit components; 'x64' and 'ia64' default to 64-bit components.
-                        Specify 'no' for this attribute to specify a 32-bit component in a 64-bit package. 
-                        (Including a 64-bit component in a 32-bit package is not supported.)
+                        Set this attribute to 'yes' to mark this as a 64-bit component. This attribute facilitates
+                        the installation of packages that include both 32-bit and 64-bit components.  If this bit
+                        is not set, the component is registered as a 32-bit component.  If this is a 64-bit
+                        component replacing a 32-bit component, set this bit and assign a new GUID in the Guid attribute.
                     </xs:documentation>
         </xs:annotation>
       </xs:attribute>
@@ -8235,11 +8304,12 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
-      <xs:attribute name="Level" type="xs:integer" use="required">
+      <xs:attribute name="Level" type="xs:integer">
         <xs:annotation>
           <xs:documentation>
                     Sets the install level of this feature.  A value of 0 will disable the feature.  Processing the
-                    Condition Table can modify the level value (this is set via the Condition child element).
+                    Condition Table can modify the level value (this is set via the Condition child element). The
+                    default value is "1".
                 </xs:documentation>
         </xs:annotation>
       </xs:attribute>
@@ -8459,8 +8529,6 @@
           <xs:documentation>
                         Indicates the compression level for the Media's cabinet.  This attribute can
                         only be used in conjunction with the Cabinet attribute.  The default is 'mszip'.
-                        Explicitly-authored compression level can be overridden with the WIX_COMPRESSION_LEVEL 
-                        environment variable.
                     </xs:documentation>
         </xs:annotation>
       </xs:attribute>
@@ -8525,10 +8593,7 @@
     <xs:annotation>
       <xs:documentation>
                 MediaTeplate element describes information to automatically assign files to cabinets. 
-                A maximum of 999 cabinets will be created, based on the MaximumUncompressedMediaSize 
-                attribute value, the WIX_MUMS environment variable, or the default of 200MB. Note 
-                that MediaTemplate and Media cannot be used together in the same package. Explicitly
-                authored DiskId values are ignored when using MediaTemplate.
+                A maximumum number of cabinets created is 999.
             </xs:documentation>
     </xs:annotation>
     <xs:complexType>
@@ -8547,8 +8612,6 @@
           <xs:documentation>
                         Indicates the compression level for the Media's cabinet.  This attribute can 
                         only be used in conjunction with the Cabinet attribute.  The default is 'mszip'.
-                        Explicitly-authored compression level can be overridden with the WIX_COMPRESSION_LEVEL 
-                        environment variable.
                     </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
@@ -8994,6 +9057,14 @@
                         The condition that determines whether the Directory is set. If the condition evaluates to false, the SetDirectory is skipped.
                     </xs:documentation>
           </xs:annotation>
+          <xs:attribute name="Action" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>
+                                By default the action is "Set" + Id attribute's value. This optional attribute can override the action name in the case
+                                where multiple SetDirectory elements target the same Id (probably with mutually exclusive conditions).
+                            </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="Id" type="xs:string">
             <xs:annotation>
               <xs:documentation>
@@ -9055,6 +9126,14 @@
                         The condition that determines whether the Property is set. If the condition evaluates to false, the Set is skipped.
                     </xs:documentation>
           </xs:annotation>
+          <xs:attribute name="Action" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>
+                                By default the action is "Set" + Id attribute's value. This optional attribute can override the action name in the case
+                                where multiple SetProperty elements target the same Id (probably with mutually exclusive conditions).
+                            </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="After" type="xs:string">
             <xs:annotation>
               <xs:documentation>The name of the standard or custom action after which this action should be performed. Mutually exclusive with the Before attribute. A Before or After attribute is required when setting a Property.</xs:documentation>
@@ -12777,6 +12856,13 @@
         <xs:annotation>
           <xs:documentation>
                         Schedules the assignment in the InstallUISequence and the InstallExecuteSequence.
+                    </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="first">
+        <xs:annotation>
+          <xs:documentation>
+                        Schedules the assignment to run in the InstallUISequence or the InstallExecuteSequence if the InstallUISequence is skipped.
                     </xs:documentation>
         </xs:annotation>
       </xs:enumeration>

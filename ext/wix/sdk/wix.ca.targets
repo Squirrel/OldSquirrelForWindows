@@ -1,16 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <!--
-****************************************************************************************************
-wix.ca.targets
+  <copyright file="wix.ca.targets" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
 
-WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
-          created a backup copy.  Incorrect changes to this file will make it
-          impossible to load or build your projects from the command-line or the IDE.
+  <remarks>
+    WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+              created a backup copy.  Incorrect changes to this file will make it
+              impossible to load or build your projects from the command-line or the IDE.
 
-This file defines properties used in the post-build process for WiX/DTF managed custom action projects.
-
-Copyright (c) Microsoft Corporation. All rights reserved.
-****************************************************************************************************
+    This file defines properties used in the post-build process for WiX/DTF managed custom action projects.
+  </remarks>
 -->
 <Project
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003"

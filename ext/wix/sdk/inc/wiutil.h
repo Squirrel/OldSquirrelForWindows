@@ -1,15 +1,10 @@
 #pragma once
 //-------------------------------------------------------------------------------------------------
-// <copyright file="wiutil.h" company="Microsoft">
-//    Copyright (c) Microsoft Corporation.  All rights reserved.
-//    
-//    The use and distribution terms for this software are covered by the
-//    Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-//    which can be found in the file CPL.TXT at the root of this distribution.
-//    By using this software in any fashion, you are agreeing to be bound by
-//    the terms of this license.
-//    
-//    You must not remove this notice, or any other, from this software.
+// <copyright file="wiutil.h" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
 // <summary>
@@ -209,6 +204,17 @@ typedef UINT (WINAPI *PFN_MSIENUMPRODUCTSW)(
     __in DWORD iProductIndex,
     __out_ecount(MAX_GUID_CHARS + 1) LPWSTR lpProductBuf
     );
+typedef UINT (WINAPI *PFN_MSIENUMPRODUCTSEXW)(
+    __in_z_opt LPCWSTR wzProductCode,
+    __in_z_opt LPCWSTR wzUserSid,
+    __in DWORD dwContext,
+    __in DWORD dwIndex,
+    __out_opt WCHAR wzInstalledProductCode[39],
+    __out_opt MSIINSTALLCONTEXT *pdwInstalledContext,
+    __out_opt LPWSTR wzSid,
+    __inout_opt LPDWORD pcchSid
+    );
+
 typedef UINT (WINAPI *PFN_MSIENUMRELATEDPRODUCTSW)(
     __in LPCWSTR lpUpgradeCode,
     __reserved DWORD dwReserved,
@@ -295,6 +301,16 @@ HRESULT DAPI WiuDeterminePatchSequence(
 HRESULT DAPI WiuEnumProducts(
     __in DWORD iProductIndex,
     __out_ecount(MAX_GUID_CHARS + 1) LPWSTR wzProductCode
+    );
+HRESULT DAPI WiuEnumProductsEx(
+    __in_z_opt LPCWSTR wzProductCode,
+    __in_z_opt LPCWSTR wzUserSid,
+    __in DWORD dwContext,
+    __in DWORD dwIndex,
+    __out_opt WCHAR wzInstalledProductCode[39],
+    __out_opt MSIINSTALLCONTEXT *pdwInstalledContext,
+    __out_opt LPWSTR wzSid,
+    __inout_opt LPDWORD pcchSid
     );
 HRESULT DAPI WiuEnumRelatedProducts(
     __in_z LPCWSTR wzUpgradeCode,

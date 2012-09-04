@@ -1,15 +1,10 @@
 #pragma once
 //-------------------------------------------------------------------------------------------------
-// <copyright file="balutil.h" company="Microsoft">
-//    Copyright (c) Microsoft Corporation.  All rights reserved.
-//    
-//    The use and distribution terms for this software are covered by the
-//    Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-//    which can be found in the file CPL.TXT at the root of this distribution.
-//    By using this software in any fashion, you are agreeing to be bound by
-//    the terms of this license.
-//    
-//    You must not remove this notice, or any other, from this software.
+// <copyright file="balutil.h" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //
 // <summary>
@@ -33,6 +28,10 @@ extern "C" {
 #define BalExitOnRootFailure1(x, f, s) if (FAILED(x)) { BalLogError(x, f, s); Dutil_RootFailure(__FILE__, __LINE__, x); ExitTrace1(x, f, s); goto LExit; }
 #define BalExitOnRootFailure2(x, f, s, t) if (FAILED(x)) { BalLogError(x, f, s, t); Dutil_RootFailure(__FILE__, __LINE__, x); ExitTrace2(x, f, s, t); goto LExit; }
 #define BalExitOnRootFailure3(x, f, s, t, u) if (FAILED(x)) { BalLogError(x, f, s, t, u); Dutil_RootFailure(__FILE__, __LINE__, x); ExitTrace3(x, f, s, t, u); goto LExit; }
+
+#define BalExitOnNullWithLastError(p, x, f) if (NULL == p) { DWORD Dutil_er = ::GetLastError(); x = HRESULT_FROM_WIN32(Dutil_er); if (!FAILED(x)) { x = E_FAIL; } BalLogError(x, f); ExitTrace(x, f); goto LExit; }
+#define BalExitOnNullWithLastError1(p, x, f, s) if (NULL == p) { DWORD Dutil_er = ::GetLastError(); x = HRESULT_FROM_WIN32(Dutil_er); if (!FAILED(x)) { x = E_FAIL; } BalLogError(x, f, s); ExitTrace1(x, f, s); goto LExit; }
+
 
 /*******************************************************************
  BalInitialize - remembers the engine interface to enable logging and

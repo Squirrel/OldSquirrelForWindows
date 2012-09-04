@@ -1,14 +1,9 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="BalBaseBootstrapperApplication.h" company="Microsoft">
-//    Copyright (c) Microsoft Corporation.  All rights reserved.
-//    
-//    The use and distribution terms for this software are covered by the
-//    Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-//    which can be found in the file CPL.TXT at the root of this distribution.
-//    By using this software in any fashion, you are agreeing to be bound by
-//    the terms of this license.
-//    
-//    You must not remove this notice, or any other, from this software.
+// <copyright file="BalBaseBootstrapperApplication.h" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 //-------------------------------------------------------------------------------------------------
 
@@ -383,7 +378,7 @@ public: // IBurnUserExperience
     }
 
     virtual STDMETHODIMP_(int) OnError(
-        __in BOOTSTRAPPER_ERROR_TYPE /*errorType*/,
+        __in BOOTSTRAPPER_ERROR_TYPE errorType,
         __in_z LPCWSTR wzPackageId,
         __in DWORD dwCode,
         __in_z LPCWSTR /*wzError*/,
@@ -394,6 +389,15 @@ public: // IBurnUserExperience
         )
     {
         BalRetryErrorOccurred(wzPackageId, dwCode);
+
+        if (BOOTSTRAPPER_DISPLAY_FULL == m_display)
+        {
+            if (BOOTSTRAPPER_ERROR_TYPE_HTTP_AUTH_SERVER == errorType ||BOOTSTRAPPER_ERROR_TYPE_HTTP_AUTH_PROXY == errorType)
+            {
+                nRecommendation = IDTRYAGAIN;
+            }
+        }
+
         return CheckCanceled() ? IDCANCEL : nRecommendation;
     }
 
@@ -521,15 +525,26 @@ protected:
         return m_fRollingBack ? FALSE : m_fCanceled;
     }
 
+    BOOL IsRollingBack()
+    {
+        return m_fRollingBack;
+    }
+
+    BOOL IsCanceled()
+    {
+        return m_fCanceled;
+    }
+
     CBalBaseBootstrapperApplication(
         __in IBootstrapperEngine* /*pEngine*/,
-        __in BOOTSTRAPPER_RESTART restart,
+        __in const BOOTSTRAPPER_COMMAND* pCommand,
         __in DWORD dwRetryCount = 0,
         __in DWORD dwRetryTimeout = 1000
         )
     {
         m_cReferences = 1;
-        m_restart = restart;
+        m_display = pCommand->display;
+        m_restart = pCommand->restart;
 
         ::InitializeCriticalSection(&m_csCanceled);
         m_fCanceled = FALSE;
@@ -547,6 +562,7 @@ protected:
 
 private:
     long m_cReferences;
+    BOOTSTRAPPER_DISPLAY m_display;
     BOOTSTRAPPER_RESTART m_restart;
 
     CRITICAL_SECTION m_csCanceled;

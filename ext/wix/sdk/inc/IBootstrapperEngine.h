@@ -1,14 +1,9 @@
 //-------------------------------------------------------------------------------------------------
-// <copyright file="IBootstrapperEngine.h" company="Microsoft">
-//    Copyright (c) Microsoft Corporation.  All rights reserved.
-//    
-//    The use and distribution terms for this software are covered by the
-//    Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-//    which can be found in the file CPL.TXT at the root of this distribution.
-//    By using this software in any fashion, you are agreeing to be bound by
-//    the terms of this license.
-//    
-//    You must not remove this notice, or any other, from this software.
+// <copyright file="IBootstrapperEngine.h" company="Outercurve Foundation">
+//   Copyright (c) 2004, Outercurve Foundation.
+//   This software is released under Microsoft Reciprocal License (MS-RL).
+//   The license and further copyright text can be found in the file
+//   LICENSE.TXT at the root directory of the distribution.
 // </copyright>
 // 
 // <summary>
@@ -63,6 +58,7 @@ enum BOOTSTRAPPER_PACKAGE_STATE
 enum BOOTSTRAPPER_REQUEST_STATE
 {
     BOOTSTRAPPER_REQUEST_STATE_NONE,
+    BOOTSTRAPPER_REQUEST_STATE_FORCE_ABSENT,
     BOOTSTRAPPER_REQUEST_STATE_ABSENT,
     BOOTSTRAPPER_REQUEST_STATE_CACHE,
     BOOTSTRAPPER_REQUEST_STATE_PRESENT,

@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  <copyright file="thmutil.xsd" company="Outercurve Foundation">
+    Copyright (c) 2004, Outercurve Foundation.
+    This software is released under Microsoft Reciprocal License (MS-RL).
+    The license and further copyright text can be found in the file
+    LICENSE.TXT at the root directory of the distribution.
+  </copyright>
+-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
           xmlns:xse="http://schemas.microsoft.com/wix/2005/XmlSchemaExtension"
          xmlns:html="http://www.w3.org/1999/xhtml"
@@ -6,16 +14,6 @@
               xmlns="http://wixtoolset.org/schemas/thmutil/2010">
     <xs:annotation>
         <xs:documentation>
-            Copyright (c) Microsoft Corporation.  All rights reserved.
-            
-            The use and distribution terms for this software are covered by the
-            Common Public License 1.0 (http://opensource.org/licenses/cpl1.0.php)
-            which can be found in the file CPL.TXT at the root of this distribution.
-            By using this software in any fashion, you are agreeing to be bound by
-            the terms of this license.
-            
-            You must not remove this notice, or any other, from this software.
-
             Schema for describing Theme files processsed by thmutil.
         </xs:documentation>
     </xs:annotation>
@@ -27,10 +25,11 @@
         </xs:documentation></xs:annotation>
         <xs:complexType>
             <xs:choice maxOccurs="unbounded">
-                <xs:element ref="Window" />
                 <xs:element ref="Font" />
                 <xs:element ref="ImageList" />
                 <xs:element ref="Page" />
+                <xs:element ref="Window" />
+                <xs:group ref="ControlElements" maxOccurs="unbounded" />
             </xs:choice>
             <xs:attribute name="ImageFile" type="xs:string">
                 <xs:annotation>
@@ -38,62 +37,6 @@
                     theme. This image is referenced by controls using the SourceX and SourceY attributes.</xs:documentation>
                 </xs:annotation>
             </xs:attribute>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name="Window">
-        <xs:annotation>
-            <xs:documentation>Defines the overall look of the main window.</xs:documentation>
-            <xs:appinfo>
-                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
-            </xs:appinfo>
-        </xs:annotation>
-        <xs:complexType>
-            <xs:simpleContent>
-                <xs:extension base="xs:string">
-                    <xs:annotation>
-                        <xs:documentation>Caption for the window.</xs:documentation>
-                    </xs:annotation>
-                    <xs:attribute name="FontId" type="xs:nonNegativeInteger">
-                        <xs:annotation>
-                            <xs:documentation>Numeric identifier to the Font element that serves as the default font for the window.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="Height" type="xs:positiveInteger">
-                        <xs:annotation>
-                            <xs:documentation>Height of the window.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="HexStyle" type="xs:hexBinary">
-                        <xs:annotation>
-                            <xs:documentation>Hexadecimal window style. If this is not specified the default value is: WS_OVERLAPPED | WS_VISIBLE | WS_MINIMIZEBOX | WS_SYSMENU.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="IconFile" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>Relative path to an icon file for the window. Mutually exclusive with IconResource and SourceX and SourceY attributes.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="IconResource" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>Identifier that references icon resource in the module for the window. Mutually exclusive with IconFile and SourceX and SourceY attributes.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="SourceX" type="xs:nonNegativeInteger">
-                        <xs:annotation>
-                            <xs:documentation>X offset of the window background in the Theme/@ImageFile. Mutually exclusive with IconFile and IconResource.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="SourceY" type="xs:nonNegativeInteger">
-                        <xs:annotation>
-                            <xs:documentation>Y offset of the window background in the Theme/@ImageFile. Mutually exclusive with IconFile and IconResource.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="Width" type="xs:positiveInteger">
-                        <xs:annotation><xs:documentation>Width of the window.</xs:documentation></xs:annotation>
-                    </xs:attribute>
-                </xs:extension>
-            </xs:simpleContent>
         </xs:complexType>
     </xs:element>
 
@@ -174,20 +117,7 @@
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element ref="Billboard" />
-                <xs:element ref="Button" />
-                <xs:element ref="Checkbox" />
-                <xs:element ref="Editbox" />
-                <xs:element ref="Hyperlink" />
-                <xs:element ref="Hypertext" />
-                <xs:element ref="ListView" />
-                <xs:element ref="Image" />
-                <xs:element ref="Progressbar" />
-                <xs:element ref="Richedit" />
-                <xs:element ref="Static" />
-                <xs:element ref="Text" />
-            </xs:choice>
+            <xs:group ref="ControlElements" maxOccurs="unbounded"/>
             <xs:attribute name="Name" type="xs:string">
                 <xs:annotation>
                     <xs:documentation>
@@ -199,53 +129,61 @@
         </xs:complexType>
     </xs:element>
 
-    <xs:attributeGroup name="CommonControlAttributes">
-        <xs:attribute name="Name" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Optional name for the control.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Height" type="xs:int" use="required">
-            <xs:annotation>
-                <xs:documentation>Height of the control. Non-positive values extend the control to the bottom of the window minus the value.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="HexStyle" type="xs:hexBinary">
-            <xs:annotation>
-                <xs:documentation>Hexadecimal window style for the control.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="HideWhenDisabled" type="YesNoType">
-            <xs:annotation>
-                <xs:documentation>Specifies whether the control should be hidden when disabled.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="TabStop" type="YesNoType">
-            <xs:annotation>
-                <xs:documentation>Specifies whether the control is part of the tab sequence of controls.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Visible" type="YesNoType">
-            <xs:annotation>
-                <xs:documentation>Specifies whether the control is initially visible.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Width" type="xs:int" use="required">
-            <xs:annotation>
-                <xs:documentation>Width of the control. Non-positive values extend the control to the right of the window minus the value.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="X" type="xs:int" use="required">
-            <xs:annotation>
-                <xs:documentation>X coordinate for the control from the left of the window. Negative values are coordinates from the right of the window minus the width of the control.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Y" type="xs:int" use="required">
-            <xs:annotation>
-                <xs:documentation>Y coordinate for the control from the top of the window. Negative values are coordinates from the bottom of the window minus the height of the control.</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:attributeGroup>
+    <xs:element name="Window">
+        <xs:annotation>
+            <xs:documentation>Defines the overall look of the main window.</xs:documentation>
+            <xs:appinfo>
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="Theme" />
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>Caption for the window.</xs:documentation>
+                    </xs:annotation>
+                    <xs:attribute name="FontId" type="xs:nonNegativeInteger">
+                        <xs:annotation>
+                            <xs:documentation>Numeric identifier to the Font element that serves as the default font for the window.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="Height" type="xs:positiveInteger">
+                        <xs:annotation>
+                            <xs:documentation>Height of the window.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="HexStyle" type="xs:hexBinary">
+                        <xs:annotation>
+                            <xs:documentation>Hexadecimal window style. If this is not specified the default value is: WS_OVERLAPPED | WS_VISIBLE | WS_MINIMIZEBOX | WS_SYSMENU.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="IconFile" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Relative path to an icon file for the window. Mutually exclusive with IconResource and SourceX and SourceY attributes.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="IconResource" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Identifier that references icon resource in the module for the window. Mutually exclusive with IconFile and SourceX and SourceY attributes.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="SourceX" type="xs:nonNegativeInteger">
+                        <xs:annotation>
+                            <xs:documentation>X offset of the window background in the Theme/@ImageFile. Mutually exclusive with IconFile and IconResource.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="SourceY" type="xs:nonNegativeInteger">
+                        <xs:annotation>
+                            <xs:documentation>Y offset of the window background in the Theme/@ImageFile. Mutually exclusive with IconFile and IconResource.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="Width" type="xs:positiveInteger">
+                        <xs:annotation><xs:documentation>Width of the window.</xs:documentation></xs:annotation>
+                    </xs:attribute>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
 
     <xs:element name="Billboard">
         <xs:annotation>
@@ -259,7 +197,6 @@
             <xs:sequence>
                 <xs:element ref="Image" />
             </xs:sequence>
-
             <xs:attributeGroup ref="CommonControlAttributes" />
             <xs:attribute name="Interval" type="xs:positiveInteger">
                 <xs:annotation>
@@ -449,36 +386,35 @@
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
-            <xs:simpleContent>
-                <xs:extension base="xs:string">
-                    <xs:attributeGroup ref="CommonControlAttributes" />
-                    <xs:attribute name="HexExtendedStyle" type="xs:hexBinary">
-                        <xs:annotation>
-                            <xs:documentation>Hexadecimal extended window style.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="ImageList" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_NORMAL.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="ImageListSmall" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_SMALL.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="ImageListState" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_STATE.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                    <xs:attribute name="ImageListGroupHeader" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_GROUPHEADER.</xs:documentation>
-                        </xs:annotation>
-                    </xs:attribute>
-                </xs:extension>
-            </xs:simpleContent>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Column" />
+            </xs:choice>
+            <xs:attributeGroup ref="CommonControlAttributes" />
+            <xs:attribute name="HexExtendedStyle" type="xs:hexBinary">
+                <xs:annotation>
+                    <xs:documentation>Hexadecimal extended window style.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="ImageList" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_NORMAL.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="ImageListSmall" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_SMALL.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="ImageListState" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_STATE.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="ImageListGroupHeader" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the Image List to assign to this listview with type LVSIL_GROUPHEADER.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
         </xs:complexType>
     </xs:element>
 
@@ -536,6 +472,21 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="Tab">
+        <xs:annotation>
+            <xs:documentation>Defines a tab.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>Caption of the tab.</xs:documentation>
+                    </xs:annotation>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
     <xs:element name="Text">
         <xs:annotation>
             <xs:documentation>Defines text.</xs:documentation>
@@ -556,6 +507,11 @@
                             <xs:documentation>Specifies the text should be centered horizontally in the width of the control. Default is "no".</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
+                    <xs:attribute name="DisablePrefix" type="YesNoType" use="optional">
+                        <xs:annotation>
+                            <xs:documentation>By default ampersands (&amp;) in the text will underline the next character and treat it as an accelerator key. Set this attribute to "yes" to disable that behavior. Default is "no".</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
                     <xs:attribute name="FontId" type="xs:nonNegativeInteger" use="required">
                         <xs:annotation>
                             <xs:documentation>Numeric identifier to the Font element that serves as the font for the control.</xs:documentation>
@@ -566,9 +522,138 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="TreeView">
+        <xs:annotation>
+            <xs:documentation>Defines a treeview.</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attributeGroup ref="CommonControlAttributes"/>
+            <xs:attribute name="EnableDragDrop">
+                <xs:annotation>
+                    <xs:documentation>Specifies whether drag and drop is enabled for the treeview.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="FullRowSelect">
+                <xs:annotation>
+                    <xs:documentation>Specifies whether an entire row is selected for the treeivew.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="asButtons">
+                <xs:annotation>
+                    <xs:documentation>Specifies whether the treeview will show buttons.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="AlwaysShowSelect">
+                <xs:annotation>
+                    <xs:documentation>Specifies whether the row always appears selected even when the treeview has lost focus.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="LinesAtRoot">
+                <xs:annotation>
+                    <xs:documentation>Specifies whether the root nodes have lines beside them.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="HasLines">
+                <xs:annotation>
+                    <xs:documentation>Specifies whether lines appear for all treeview items.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Column">
+        <xs:annotation>
+            <xs:documentation>A column of a list.</xs:documentation>
+            <xs:appinfo>
+                <xse:parent namespace="http://wixtoolset.org/schemas/thmutil/2010" ref="ListView" />
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>Text for the column header.</xs:documentation>
+                    </xs:annotation>
+                    <xs:attribute name="Width" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Width of the column.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:group name="ControlElements">
+        <xs:choice>
+            <xs:element ref="Billboard" />
+            <xs:element ref="Button" />
+            <xs:element ref="Checkbox" />
+            <xs:element ref="Editbox" />
+            <xs:element ref="Hyperlink" />
+            <xs:element ref="Hypertext" />
+            <xs:element ref="Image" />
+            <xs:element ref="ListView" />
+            <xs:element ref="Progressbar" />
+            <xs:element ref="Richedit" />
+            <xs:element ref="Static" />
+            <xs:element ref="Tab" />
+            <xs:element ref="Text" />
+            <xs:element ref="TreeView" />
+        </xs:choice>
+    </xs:group>
+
+    <xs:attributeGroup name="CommonControlAttributes">
+        <xs:attribute name="Name" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Optional name for the control.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Height" type="xs:int" use="required">
+            <xs:annotation>
+                <xs:documentation>Height of the control. Non-positive values extend the control to the bottom of the window minus the value.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="HexStyle" type="xs:hexBinary">
+            <xs:annotation>
+                <xs:documentation>Hexadecimal window style for the control.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="HideWhenDisabled" type="YesNoType">
+            <xs:annotation>
+                <xs:documentation>Specifies whether the control should be hidden when disabled.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="TabStop" type="YesNoType">
+            <xs:annotation>
+                <xs:documentation>Specifies whether the control is part of the tab sequence of controls.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Visible" type="YesNoType">
+            <xs:annotation>
+                <xs:documentation>Specifies whether the control is initially visible.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Width" type="xs:int" use="required">
+            <xs:annotation>
+                <xs:documentation>Width of the control. Non-positive values extend the control to the right of the window minus the value.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="X" type="xs:int" use="required">
+            <xs:annotation>
+                <xs:documentation>X coordinate for the control from the left of the window. Negative values are coordinates from the right of the window minus the width of the control.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Y" type="xs:int" use="required">
+            <xs:annotation>
+                <xs:documentation>Y coordinate for the control from the top of the window. Negative values are coordinates from the bottom of the window minus the height of the control.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+
     <xs:simpleType name="YesNoType">
         <xs:annotation><xs:documentation>Values of this type will either be "yes" or "no".</xs:documentation></xs:annotation>
-        <xs:restriction base='xs:NMTOKEN'>
+        <xs:restriction base="xs:NMTOKEN">
             <xs:enumeration value="no"/>
             <xs:enumeration value="yes"/>
         </xs:restriction>
