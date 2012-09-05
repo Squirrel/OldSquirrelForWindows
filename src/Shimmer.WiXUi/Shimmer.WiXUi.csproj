@@ -86,6 +86,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shimmer.WixUi.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
