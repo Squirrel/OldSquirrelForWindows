@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Net;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
@@ -118,7 +119,15 @@ namespace Shimmer.Tests.Client
 
             var updateDir = new DirectoryInfo(IntegrationTestHelper.GetPath("..", "SampleUpdatingApp", "SampleReleasesFolder"));
 
-            var httpServer = new StaticHttpServer(30405, updateDir.FullName);
+            IDisposable disp;
+            try {
+                var httpServer = new StaticHttpServer(30405, updateDir.FullName);
+                disp = httpServer.Start();
+            }
+            catch (HttpListenerException) {
+                Assert.False(true, @"Windows sucks, go run 'netsh http add urlacl url=http://+:30405/ user=MYMACHINE\MyUser");
+                return;
+            }
 
             var entriesToDownload = updateDir.GetFiles("*.nupkg")
                 .Select(x => ReleaseEntry.GenerateFromFile(x.FullName))
@@ -126,7 +135,7 @@ namespace Shimmer.Tests.Client
 
             entriesToDownload.Count().ShouldBeGreaterThan(0);
 
-            using (httpServer.Start())
+            using (disp)
             using (Utility.WithTempDirectory(out tempDir)) {
                 // NB: This is normally done by CheckForUpdates, but since 
                 // we're skipping that in the test we have to do it ourselves
