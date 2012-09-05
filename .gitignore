@@ -164,3 +164,7 @@ pip-log.txt
 
 # NCrunch crap
 *ncrunch*
+
+## WiX PDBs
+*.wixpdb
+*.wixobj
