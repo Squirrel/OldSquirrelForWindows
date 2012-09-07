@@ -24,5 +24,6 @@
     <file src="bin\$configuration$\*.exe" target="tools" />
     <file src="bin\$configuration$\*.dll" target="tools" />
     <file src="bin\$configuration$\*.pdb" target="tools" />
+    <file src="tools\*.ps1" target="tools" />
   </files>
 </package>
