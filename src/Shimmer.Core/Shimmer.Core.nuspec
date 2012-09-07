@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/github/Shimmer/blob/master/COPYING</licenseUrl>
+    <projectUrl>https://github.com/github/Shimmer/blob/master</projectUrl>
+    <iconUrl>http://f.cl.ly/items/1G1J1l220W0J1W2R1o2E/Image%202012.09.06%204:03:56%20PM.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <copyright>Copyright 2012 GitHub</copyright>
+    <tags>Installer Desktop WiX</tags>
+  </metadata>
+</package>
