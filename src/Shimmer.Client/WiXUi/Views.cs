@@ -2,23 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ReactiveUI;
 using ReactiveUI.Routing;
 
 namespace Shimmer.Client.WiXUi
 {
-    public interface IWelcomeView : IViewForViewModel<IWelcomeViewModel>
+    public interface IWelcomeView : IViewFor<IWelcomeViewModel>
     {
     }
 
-    public interface IInstallingView : IViewForViewModel<IInstallingViewModel>
+    public interface IInstallingView : IViewFor<IInstallingViewModel>
     {
     }
 
-    public interface IUninstallingView : IViewForViewModel<IUninstallingViewModel>
+    public interface IUninstallingView : IViewFor<IUninstallingViewModel>
     {
     }
 
-    public interface IErrorView : IViewForViewModel<IErrorViewModel>
+    public interface IErrorView : IViewFor<IErrorViewModel>
     {
     }
 }

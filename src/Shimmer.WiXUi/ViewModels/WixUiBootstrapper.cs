@@ -44,7 +44,8 @@ namespace Shimmer.WiXUi.ViewModels
 
             RxApp.ConfigureServiceLocator(
                 (type, contract) => Kernel.Resolve(type, contract),
-                (type, contract) => Kernel.ResolveAll(type));
+                (type, contract) => Kernel.ResolveAll(type),
+                (c, t, s) => Kernel.Register(t, c, s));
 
             UserError.RegisterHandler(ex => {
                 if (wixEvents.Command.Display != Display.Full) {
