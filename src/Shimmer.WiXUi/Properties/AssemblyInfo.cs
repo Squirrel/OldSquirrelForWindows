@@ -8,9 +8,9 @@ using Shimmer.WiXUi;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Shimmer.WiXUi")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Dont Use This Package")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("GitHub")]
 [assembly: AssemblyProduct("Shimmer.WiXUi")]
 [assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
