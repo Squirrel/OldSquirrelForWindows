@@ -315,6 +315,7 @@ $solutionDir = Get-SolutionDir
 ### DEBUG:
 $createReleasePackageExe = [IO.Path]::Combine($solutionDir, 'CreateReleasePackage', 'bin', 'Debug', 'CreateReleasePackage.exe')
 
+$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $releaseDir = Join-Path $solutionDir "Releases"
 mkdir -p $releaseDir
 
@@ -329,8 +330,24 @@ foreach ($item in $dte.Solution.Projects | ?{$_.Object.References | ?{$_.Name -e
 		& $createReleasePackageExe -o $releaseDir $pkg.FullName 
 		$vars = & $createReleasePackageExe --package-info $pkg.FullName
 
+		## Eval in some constants, here's what gets defined:
+		<#
+			$NuGetPackage_Authors = 'Paul'
+			$NuGetPackage_Description = 'Description'
+			$NuGetPackage_IconUrl = ''
+			$NuGetPackage_LicenseUrl = ''
+			$NuGetPackage_ProjectUrl = ''
+			$NuGetPackage_Summary = ''
+			$NuGetPackage_Title = 'Shimmer.WiXUi'
+			$NuGetPackage_Version = '1.0.0.0'
+		#>
+
+		$varNames = $vars.Split("`n'") | % { $_.Substring(0, $_.IndexOf(' ')) }
 		foreach($expr in $vars.Split("`n")) {
 			if ($expr.Length -gt 1) { invoke-expression $expr }
 		}
+
+		$defineList = $varNames | % { $e = invoke-expression $_;  [String]::Format("-d`"{0}={1}`"", $_.Substring(1), $e) }
+		$defines = [String]::Join(" ", $defineList)
 	}
 }
