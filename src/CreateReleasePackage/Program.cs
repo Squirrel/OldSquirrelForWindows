@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Mono.Options;
 using NuGet;
+using ReactiveUI;
 using Shimmer.Core;
 
 namespace CreateReleasePackage
@@ -22,7 +23,7 @@ namespace CreateReleasePackage
             var package = new ReleasePackage(optParams["input"]);
             var targetFile = Path.Combine(targetDir, package.SuggestedReleaseFileName);
 
-            package.CreateReleasePackage(targetFile, optParams["pkgdir"] != "" ? optParams["pkgdir"] : null);
+            var fullRelease = package.CreateReleasePackage(targetFile, optParams["pkgdir"] != "" ? optParams["pkgdir"] : null);
 
             var releaseFile = Path.Combine(targetDir, "RELEASES");
             if (File.Exists(releaseFile)) {
@@ -41,6 +42,7 @@ namespace CreateReleasePackage
                 
             ReleaseEntry.BuildReleasesFile(targetDir);
 
+            Console.WriteLine(fullRelease);
             return 0;
         }
 
@@ -115,7 +117,9 @@ namespace CreateReleasePackage
             };
 
             var output = String.Join("\n",
-                toWrite.Select(x => String.Format("$NuGetPackage_{0} = '{1}'", x.Name, x.Value)));
+                toWrite
+                    .Where(x => x.Value.Length > 0)
+                    .Select(x => String.Format("$NuGetPackage_{0} = '{1}'", x.Name, x.Value)));
 
             Console.WriteLine(output);
         }

@@ -87,7 +87,6 @@
     <None Include="packages.config" />
     <None Include="CreateReleasePackage.nuspec" />
     <None Include="tools\Create-Release.ps1" />
-    <None Include="tools\Test-Command.ps1" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

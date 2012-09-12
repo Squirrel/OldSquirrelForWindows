@@ -25,7 +25,10 @@
       <Payload SourceFile="$(var.ToolsDir)\System.Reactive.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Windows.Threading.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Windows.Interactivity.dll" />
-      <Payload SourceFile="$(var.CustomUIDll)" />
+
+      <!-- TODO:
+      <Payload SourceFile="$(var.CustomUiDll)" />
+      -->
 
       <Payload SourceFile="$(var.NuGetFullPackage)" />
     </BootstrapperApplicationRef>
