@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Mono.Options;
+using NuGet;
 using Shimmer.Core;
 
 namespace CreateReleasePackage
@@ -46,12 +47,14 @@ namespace CreateReleasePackage
         static Dictionary<string, string> parseOptions(string[] args)
         {
             bool showHelp = false;
+            bool showPackageInfo = false;
             string targetDir = null;
             string packagesDir = null;
 
             var opts = new OptionSet() {
                 { "p|packages-directory=", "(Optional) The NuGet packages directory to use, omit to use default", v => packagesDir = v },
                 { "o|output-directory=", "The target directory to put the generated file", v => targetDir = v },
+                { "package-info", "Write information about the package to stdout in a machine-parsable format", v => showPackageInfo = v != null},
                 { "h|help", "Show this message and exit", v => showHelp = v != null },
             };
 
@@ -61,6 +64,11 @@ namespace CreateReleasePackage
             if (!File.Exists(filename)) {
                 Console.Error.WriteLine("'{0}' doesn't exist. Please specify an existing NuGet package", filename);
                 showHelp = true;
+            }
+
+            if (showPackageInfo) {
+                writePackageVariables(filename);
+                return null;
             }
 
             if (String.IsNullOrEmpty(targetDir) || !Directory.Exists(targetDir)) {
@@ -90,6 +98,26 @@ namespace CreateReleasePackage
                 { "target", targetDir },
                 { "pkgdir", packagesDir ?? ""},
             };
+        }
+
+        static void writePackageVariables(string filename)
+        {
+            var zp = new ZipPackage(filename);
+            var toWrite = new[] {
+                new {Name = "Authors", Value = String.Join(", ", zp.Authors ?? Enumerable.Empty<string>())},
+                new {Name = "Description", Value = zp.Description},
+                new {Name = "IconUrl", Value = zp.IconUrl != null ? zp.IconUrl.ToString() : ""},
+                new {Name = "LicenseUrl", Value = zp.LicenseUrl != null ? zp.IconUrl.ToString() : ""},
+                new {Name = "ProjectUrl", Value = zp.ProjectUrl != null ? zp.ProjectUrl.ToString() : ""},
+                new {Name = "Summary", Value = zp.Summary},
+                new {Name = "Title", Value = zp.Title},
+                new {Name = "Version", Value = zp.Version.ToString()},
+            };
+
+            var output = String.Join("\n",
+                toWrite.Select(x => String.Format("$NuGetPackage_{0} = '{1}'", x.Name, x.Value)));
+
+            Console.WriteLine(output);
         }
     }
 }
