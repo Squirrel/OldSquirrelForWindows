@@ -321,6 +321,16 @@ mkdir -p $releaseDir
 foreach ($item in $dte.Solution.Projects | ?{$_.Object.References | ?{$_.Name -eq "Shimmer.Client"}}) {
 	$name = $item.Name
 	$buildDir = Get-ProjectBuildOutputDir $name
+
 	echo "Creating Release for $name"
-	ls "$buildDir\*.nupkg" | % { & $createReleasePackageExe -o $releaseDir $_.FullName }
+
+	$nugetPackages = ls "$buildDir\*.nupkg"
+	foreach($pkg in $nugetPackages) {
+		& $createReleasePackageExe -o $releaseDir $pkg.FullName 
+		$vars = & $createReleasePackageExe --package-info $pkg.FullName
+
+		foreach($expr in $vars.Split("`n")) {
+			if ($expr.Length -gt 1) { invoke-expression $expr }
+		}
+	}
 }
