@@ -55,8 +55,8 @@ namespace Shimmer.Tests.Core
             IPackage result = fixture.findPackageFromName("xunit", VersionUtility.ParseVersionSpec("[1.0,2.0]"), sourceDir, null);
 
             result.Id.ShouldEqual("xunit");
-            result.Version.Major.ShouldEqual(1);
-            result.Version.Minor.ShouldEqual(9);
+            result.Version.Version.Major.ShouldEqual(1);
+            result.Version.Version.Minor.ShouldEqual(9);
         }
 
         [Fact]
@@ -110,7 +110,7 @@ namespace Shimmer.Tests.Core
                 pkg.GetFiles().ForEach(x => this.Log().Info(x.Path));
 
                 var filesToLookFor = new[] {
-                    "System.Reactive.dll",
+                    "System.Reactive.Core.dll",
                     "ReactiveUI.dll",
                     "Ionic.Zip.dll",
                     "SampleUpdatingApp.exe",
