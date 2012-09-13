@@ -14,6 +14,8 @@ namespace CreateReleasePackage
     {
         static int Main(string[] args)
         {
+            RxApp.LoggerFactory = _ => new NullLogger();
+
             var optParams = parseOptions(args);
             if (optParams == null) {
                 return -1;
