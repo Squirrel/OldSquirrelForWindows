@@ -1,7 +1,11 @@
 param (
-	[Parameter(Position=0, ValueFromPipeLine=$true)]
-	[string] $Param_ProjectNameToBuild = '',
+    [Parameter(Position=0, ValueFromPipeLine=$true)]
+    [string] $Param_ProjectNameToBuild = ''
 )
+
+Set-PSDebug -Strict
+$ErrorActionPreference = "Stop"
+
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $support = Join-Path $toolsDir "support.ps1"
@@ -74,7 +78,7 @@ $wixDir = [IO.Path]::Combine($solutionDir, '..', 'ext', 'wix')
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $releaseDir = Join-Path $solutionDir "Releases"
-mkdir -p $releaseDir
+if ({ Test-Path $releaseDir } -eq $false) { mkdir -p $releaseDir }
 
 if ($Param_ProjectName.Length -gt 0) {
 	Create-ReleaseForProject $Param_ProjectName
