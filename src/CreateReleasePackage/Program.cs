@@ -120,7 +120,7 @@ namespace CreateReleasePackage
 
             var output = String.Join("\n",
                 toWrite
-                    .Where(x => x.Value.Length > 0)
+                    .Where(x => !string.IsNullOrEmpty(x.Value))
                     .Select(x => String.Format("$NuGetPackage_{0} = '{1}'", x.Name, x.Value)));
 
             Console.WriteLine(output);
