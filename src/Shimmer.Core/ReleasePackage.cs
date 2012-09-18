@@ -372,7 +372,7 @@ namespace Shimmer.Core
                 }
 
                 return findAllDependentPackages(ret, packagesRootDir).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
-            });
+            }).ToArray();
         }
 
         IPackage findPackageFromName(string id, IVersionSpec versionSpec, string packagesRootDir = null, IQueryable<IPackage> machineCache = null)
