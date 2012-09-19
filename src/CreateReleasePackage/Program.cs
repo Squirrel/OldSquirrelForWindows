@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Mono.Options;
 using NuGet;
 using ReactiveUI;
@@ -107,6 +108,7 @@ namespace CreateReleasePackage
         static string processTemplateFile(string packageFile, string templateFile)
         {
             var zp = new ZipPackage(packageFile);
+            var noBetaRegex = new Regex(@"-.*$");
 
             var toSub = new[] {
                 new {Name = "Authors", Value = String.Join(", ", zp.Authors ?? Enumerable.Empty<string>())},
@@ -114,9 +116,9 @@ namespace CreateReleasePackage
                 new {Name = "IconUrl", Value = zp.IconUrl != null ? zp.IconUrl.ToString() : ""},
                 new {Name = "LicenseUrl", Value = zp.LicenseUrl != null ? zp.IconUrl.ToString() : ""},
                 new {Name = "ProjectUrl", Value = zp.ProjectUrl != null ? zp.ProjectUrl.ToString() : ""},
-                new {Name = "Summary", Value = zp.Summary},
+                new {Name = "Summary", Value = zp.Summary ?? zp.Title },
                 new {Name = "Title", Value = zp.Title},
-                new {Name = "Version", Value = zp.Version.ToString()},
+                new {Name = "Version", Value = noBetaRegex.Replace(zp.Version.ToString(), "") },
             };
 
             var output = toSub.Aggregate(new StringBuilder(File.ReadAllText(templateFile)), (acc, x) =>
