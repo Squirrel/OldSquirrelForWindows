@@ -10,7 +10,6 @@
       <Payload SourceFile="$(var.ToolsDir)\Core.dll" />
       <Payload SourceFile="$(var.ToolsDir)\Ionic.Zip.dll" />
       <Payload SourceFile="$(var.ToolsDir)\MarkdownSharp.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\NLog.dll" />
       <Payload SourceFile="$(var.ToolsDir)\NuGetPackageExplorer.Types.dll" />
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Blend.dll" />
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.dll" />
@@ -22,7 +21,10 @@
       <Payload SourceFile="$(var.ToolsDir)\Shimmer.WiXUi.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Interactive.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.IO.Abstractions.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Core.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Interfaces.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Linq.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.PlatformServices.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Windows.Threading.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Windows.Interactivity.dll" />
 
