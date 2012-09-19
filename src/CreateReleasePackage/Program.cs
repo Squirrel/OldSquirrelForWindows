@@ -51,14 +51,14 @@ namespace CreateReleasePackage
         static Dictionary<string, string> parseOptions(string[] args)
         {
             bool showHelp = false;
-            bool showPackageInfo = false;
             string targetDir = null;
             string packagesDir = null;
+            string templateSource = null;
 
             var opts = new OptionSet() {
                 { "p|packages-directory=", "(Optional) The NuGet packages directory to use, omit to use default", v => packagesDir = v },
                 { "o|output-directory=", "The target directory to put the generated file", v => targetDir = v },
-                { "package-info", "Write information about the package to stdout in a machine-parsable format", v => showPackageInfo = v != null},
+                { "preprocess-template=", "The template file to parse. Part of Create-Release.ps1, ignore this", v => templateSource = v },
                 { "h|help", "Show this message and exit", v => showHelp = v != null },
             };
 
@@ -70,8 +70,8 @@ namespace CreateReleasePackage
                 showHelp = true;
             }
 
-            if (showPackageInfo) {
-                writePackageVariables(filename);
+            if (templateSource != null) {
+                Console.WriteLine(processTemplateFile(filename, templateSource));
                 return null;
             }
 
@@ -104,10 +104,11 @@ namespace CreateReleasePackage
             };
         }
 
-        static void writePackageVariables(string filename)
+        static string processTemplateFile(string packageFile, string templateFile)
         {
-            var zp = new ZipPackage(filename);
-            var toWrite = new[] {
+            var zp = new ZipPackage(packageFile);
+
+            var toSub = new[] {
                 new {Name = "Authors", Value = String.Join(", ", zp.Authors ?? Enumerable.Empty<string>())},
                 new {Name = "Description", Value = zp.Description},
                 new {Name = "IconUrl", Value = zp.IconUrl != null ? zp.IconUrl.ToString() : ""},
@@ -118,12 +119,12 @@ namespace CreateReleasePackage
                 new {Name = "Version", Value = zp.Version.ToString()},
             };
 
-            var output = String.Join("\n",
-                toWrite
-                    .Where(x => !string.IsNullOrEmpty(x.Value))
-                    .Select(x => String.Format("$NuGetPackage_{0} = '{1}'", x.Name, x.Value)));
+            var output = toSub.Aggregate(new StringBuilder(File.ReadAllText(templateFile)), (acc, x) =>
+                { acc.Replace(String.Format("$(var.NuGetPackage_{0})", x.Name), x.Value); return acc; });
 
-            Console.WriteLine(output);
+            var ret = Path.GetTempFileName();
+            File.WriteAllText(ret, output.ToString(), Encoding.UTF8);
+            return ret;
         }
     }
 }
