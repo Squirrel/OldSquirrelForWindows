@@ -4,7 +4,7 @@ param (
 )
 
 Set-PSDebug -Strict
-$ErrorActionPreference = "Stop"
+#$ErrorActionPreference = "Stop"
 
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -23,6 +23,29 @@ function Get-ProjectBuildOutputDir {
 	Join-Path $projDir $buildSuffix
 }
 
+<# DEBUG:
+function Get-ProjectBuildOutputDir {
+    param(
+        [parameter(Mandatory = $true)]
+        [string]$ProjectName
+    )
+
+    "$toolsDir\..\..\SampleUpdatingApp\bin\Debug"
+}
+#>
+
+function Generate-TemplateFromPackage {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$packageFile,
+        [Parameter(Mandatory = $true)]
+        [string]$templateFile
+    )
+
+	$resultFile = & $createReleasePackageExe --preprocess-template $templateFile $pkg.FullName
+    $resultFile
+}
+
 function Create-ReleaseForProject {
 	param(
 		[Parameter(Mandatory = $true)]
@@ -33,43 +56,33 @@ function Create-ReleaseForProject {
 
 	echo "Creating Release for $name"
 
-	$nugetPackages = ls "$buildDir\*.nupkg"
+	$nugetPackages = ls "$buildDir\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 	foreach($pkg in $nugetPackages) {
-		$fullRelease = & $createReleasePackageExe -o $releaseDir $pkg.FullName 
-		$vars = & $createReleasePackageExe --package-info $pkg.FullName
+		$packageDir = Join-Path $solutionDir "packages"
+		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkg.FullName 
 
-		## Eval in some constants, here's what gets defined:
-		<#
-			$NuGetPackage_Authors = 'Paul'
-			$NuGetPackage_Description = 'Description'
-			$NuGetPackage_IconUrl = ''
-			$NuGetPackage_LicenseUrl = ''
-			$NuGetPackage_ProjectUrl = ''
-			$NuGetPackage_Summary = ''
-			$NuGetPackage_Title = 'Shimmer.WiXUi'
-			$NuGetPackage_Version = '1.0.0.0'
-		#>
+        ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
+        $fullRelease = $fullRelease.Split(" ")[0]
 
-		$varNames = $vars.Split("`n'") | % { $_.Substring(0, $_.IndexOf(' ')) }
-		foreach($expr in $vars.Split("`n")) {
-			if ($expr.Length -gt 1) { invoke-expression $expr }
-		}
+        $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
+        $wixTemplate = Join-Path $buildDir "template.wxs"
+        rm $wixTemplate
+        mv $candleTemplate $wixTemplate
 
 		$pkgFullName = $pkg.FullName
-		$defineList = $varNames | % { $e = invoke-expression $_;  [String]::Format("-d`"{0}={1}`"", $_.Substring(1), $e) }
-		$defines = [String]::Join(" ", $defineList) + " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`"" 
+		$defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`"" 
 
 		$candleExe = Join-Path $wixDir "candle.exe"
 		$lightExe = Join-Path $wixDir "light.exe"
-		$wixTemplate = Join-Path $toolsDir "template.wxs"
-		$extensions = "-ext `"$wixDir\WixBalExtension.dll`" -ext `"$wixDir\WixUtilExtension.exe`""
-
-		& $candleExe "$defines -out $buildDir -arch x86 $extensions"
-		& $lightExe "-out $releaseDir\Setup.exe $extensions $buildDir\template.wixobj"
+		
+		rm "$buildDir\template.wixobj"
+        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
+		& $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDir\template.wixobj"
 	}
 }
 
 $solutionDir = Get-SolutionDir
+##$solutionDir = "$toolsDir\..\.."
 
 ### DEBUG:
 $createReleasePackageExe = [IO.Path]::Combine($solutionDir, 'CreateReleasePackage', 'bin', 'Debug', 'CreateReleasePackage.exe')
@@ -80,6 +93,7 @@ $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $releaseDir = Join-Path $solutionDir "Releases"
 if ({ Test-Path $releaseDir } -eq $false) { mkdir -p $releaseDir }
 
+<#
 if ($Param_ProjectName.Length -gt 0) {
 	Create-ReleaseForProject $Param_ProjectName
 } else {
@@ -88,3 +102,7 @@ if ($Param_ProjectName.Length -gt 0) {
 		Create-ReleaseForProject $Param_ProjectName
 	}
 }
+#>
+
+### DEBUG:
+Create-ReleaseForProject SampleUpdatingApp
