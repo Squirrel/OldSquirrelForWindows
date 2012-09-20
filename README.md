@@ -40,3 +40,9 @@ without having to jump through insane hoops
 * Creating an update for my app should be a very simple process that is easily
   automated
 * Support for multiple "channels" (a-la Chrome Dev/Beta/Release)
+
+## Want to learn more?
+
+Check out 
+[the specs directory](https://github.com/github/Shimmer/tree/master/specs) for
+more information about how the framework works.
