@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param (
-    [Parameter(Position=0, ValueFromPipeLine=$true)]
+    [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
     [string] $Param_ProjectNameToBuild = ''
 )
 
@@ -93,17 +93,8 @@ $wixDir = [IO.Path]::Combine($solutionDir, '..', 'ext', 'wix')
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $releaseDir = Join-Path $solutionDir "Releases"
 if ({ Test-Path $releaseDir } -eq $false) { mkdir -p $releaseDir }
-
-<#
-if ($Param_ProjectName.Length -gt 0) {
-	Create-ReleaseForProject $Param_ProjectName
-} else {
-	foreach ($item in $dte.Solution.Projects | ?{$_.Object.References | ?{$_.Name -eq "Shimmer.Client"}}) {
-		$name = $item.Name
-		Create-ReleaseForProject $Param_ProjectName
-	}
-}
-#>
+	
+Create-ReleaseForProject $Param_ProjectName
 
 ### DEBUG:
-Create-ReleaseForProject SampleUpdatingApp
+#Create-ReleaseForProject SampleUpdatingApp
