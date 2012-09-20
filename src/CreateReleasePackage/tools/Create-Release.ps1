@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param (
     [Parameter(Position=0, ValueFromPipeLine=$true)]
     [string] $Param_ProjectNameToBuild = ''
@@ -76,7 +77,7 @@ function Create-ReleaseForProject {
 		$lightExe = Join-Path $wixDir "light.exe"
 		
 		rm "$buildDir\template.wixobj"
-        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
+        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
 		& $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDir\template.wixobj"
 	}
 }

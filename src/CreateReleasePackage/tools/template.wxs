@@ -33,6 +33,7 @@
       -->
 
       <Payload SourceFile="$(var.NuGetFullPackage)" />
+      <Payload SourceFile="$(var.ReleasesFile)" />
     </BootstrapperApplicationRef>
 
     <Chain>
