@@ -1,0 +1,60 @@
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Bundle 
+      Name="$(var.NuGetPackage_Summary)" 
+      Version="$(var.NuGetPackage_Version)"
+      Manufacturer="$(var.NuGetPackage_Authors)" 
+      UpgradeCode="c99da653-84c8-4c03-bc0e-716cc966b50c">
+
+    <BootstrapperApplicationRef Id="ManagedBootstrapperApplicationHost">
+      <Payload Name="BootstrapperCore.config" SourceFile="$(var.ToolsDir)\Shimmer.WiXUI.config" />
+      <Payload SourceFile="$(var.ToolsDir)\Core.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Ionic.Zip.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\MarkdownSharp.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\NuGetPackageExplorer.Types.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Blend.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Routing.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Xaml.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\SharpBITS.Base.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Shimmer.Client.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Shimmer.Core.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Shimmer.WiXUi.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Interactive.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.IO.Abstractions.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Core.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Interfaces.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Linq.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.PlatformServices.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Windows.Threading.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\System.Windows.Interactivity.dll" />
+
+      <!-- TODO:
+      <Payload SourceFile="$(var.CustomUiDll)" />
+      -->
+
+      <Payload SourceFile="$(var.NuGetFullPackage)" />
+      <Payload SourceFile="$(var.ReleasesFile)" />
+    </BootstrapperApplicationRef>
+
+    <Chain>
+      <PackageGroupRef Id="Netfx4Full" />
+    </Chain>
+  </Bundle>
+
+  <!-- NetFx.wxs -->
+
+  <Fragment>
+      <WixVariable Id="WixMbaPrereqPackageId" Value="Netfx4Full" />
+      <WixVariable Id="WixMbaPrereqLicenseUrl" Value="NetfxLicense.rtf" />
+
+      <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4FullVersion" />
+      <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4x64FullVersion" Win64="yes" />
+
+      <PackageGroup Id="Netfx4Full">
+          <ExePackage Id="Netfx4Full" Cache="no" Compressed="no" PerMachine="yes" Permanent="yes" Vital="yes" SourceFile="dotNetFx40_Full_x86_x64.exe"
+                      DownloadUrl="http://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAAE/dotNetFx40_Full_x86_x64.exe"
+                      DetectCondition="Netfx4FullVersion AND (NOT VersionNT64 OR Netfx4x64FullVersion)" />
+      </PackageGroup>
+  </Fragment>
+
+</Wix>

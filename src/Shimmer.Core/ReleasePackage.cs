@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -361,7 +362,8 @@ namespace Shimmer.Core
         {
             package = package ?? new ZipPackage(InputPackageFile);
 
-            return package.Dependencies.SelectMany(dependency => {
+            var deps = package.DependencySets.SelectMany(x => x.Dependencies);
+            return deps.SelectMany(dependency => {
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
 
                 if (ret == null) {
@@ -370,7 +372,7 @@ namespace Shimmer.Core
                 }
 
                 return findAllDependentPackages(ret, packagesRootDir).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
-            });
+            }).ToArray();
         }
 
         IPackage findPackageFromName(string id, IVersionSpec versionSpec, string packagesRootDir = null, IQueryable<IPackage> machineCache = null)

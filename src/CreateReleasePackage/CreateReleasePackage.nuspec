@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Shimmer</id>
-    <version>$version$</version>
+    <version>$version$-beta</version>
     <title>It's like ClickOnce but Works™</title>
     <authors>$author$</authors>
     <owners>$author$</owners>

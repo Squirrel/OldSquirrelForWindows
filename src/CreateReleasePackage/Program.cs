@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Mono.Options;
+using NuGet;
+using ReactiveUI;
 using Shimmer.Core;
 
 namespace CreateReleasePackage
@@ -12,6 +15,8 @@ namespace CreateReleasePackage
     {
         static int Main(string[] args)
         {
+            RxApp.LoggerFactory = _ => new NullLogger();
+
             var optParams = parseOptions(args);
             if (optParams == null) {
                 return -1;
@@ -21,7 +26,7 @@ namespace CreateReleasePackage
             var package = new ReleasePackage(optParams["input"]);
             var targetFile = Path.Combine(targetDir, package.SuggestedReleaseFileName);
 
-            package.CreateReleasePackage(targetFile, optParams["pkgdir"] != "" ? optParams["pkgdir"] : null);
+            var fullRelease = package.CreateReleasePackage(targetFile, optParams["pkgdir"] != "" ? optParams["pkgdir"] : null);
 
             var releaseFile = Path.Combine(targetDir, "RELEASES");
             if (File.Exists(releaseFile)) {
@@ -40,6 +45,7 @@ namespace CreateReleasePackage
                 
             ReleaseEntry.BuildReleasesFile(targetDir);
 
+            Console.WriteLine(fullRelease);
             return 0;
         }
 
@@ -48,10 +54,12 @@ namespace CreateReleasePackage
             bool showHelp = false;
             string targetDir = null;
             string packagesDir = null;
+            string templateSource = null;
 
             var opts = new OptionSet() {
                 { "p|packages-directory=", "(Optional) The NuGet packages directory to use, omit to use default", v => packagesDir = v },
                 { "o|output-directory=", "The target directory to put the generated file", v => targetDir = v },
+                { "preprocess-template=", "The template file to parse. Part of Create-Release.ps1, ignore this", v => templateSource = v },
                 { "h|help", "Show this message and exit", v => showHelp = v != null },
             };
 
@@ -61,6 +69,11 @@ namespace CreateReleasePackage
             if (!File.Exists(filename)) {
                 Console.Error.WriteLine("'{0}' doesn't exist. Please specify an existing NuGet package", filename);
                 showHelp = true;
+            }
+
+            if (templateSource != null) {
+                Console.WriteLine(processTemplateFile(filename, templateSource));
+                return null;
             }
 
             if (String.IsNullOrEmpty(targetDir) || !Directory.Exists(targetDir)) {
@@ -90,6 +103,30 @@ namespace CreateReleasePackage
                 { "target", targetDir },
                 { "pkgdir", packagesDir ?? ""},
             };
+        }
+
+        static string processTemplateFile(string packageFile, string templateFile)
+        {
+            var zp = new ZipPackage(packageFile);
+            var noBetaRegex = new Regex(@"-.*$");
+
+            var toSub = new[] {
+                new {Name = "Authors", Value = String.Join(", ", zp.Authors ?? Enumerable.Empty<string>())},
+                new {Name = "Description", Value = zp.Description},
+                new {Name = "IconUrl", Value = zp.IconUrl != null ? zp.IconUrl.ToString() : ""},
+                new {Name = "LicenseUrl", Value = zp.LicenseUrl != null ? zp.IconUrl.ToString() : ""},
+                new {Name = "ProjectUrl", Value = zp.ProjectUrl != null ? zp.ProjectUrl.ToString() : ""},
+                new {Name = "Summary", Value = zp.Summary ?? zp.Title },
+                new {Name = "Title", Value = zp.Title},
+                new {Name = "Version", Value = noBetaRegex.Replace(zp.Version.ToString(), "") },
+            };
+
+            var output = toSub.Aggregate(new StringBuilder(File.ReadAllText(templateFile)), (acc, x) =>
+                { acc.Replace(String.Format("$(var.NuGetPackage_{0})", x.Name), x.Value); return acc; });
+
+            var ret = Path.GetTempFileName();
+            File.WriteAllText(ret, output.ToString(), Encoding.UTF8);
+            return ret;
         }
     }
 }
