@@ -31,6 +31,7 @@ namespace Shimmer.WiXUi.ViewModels
         public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
+
             Kernel.Register<IWixUiBootstrapper>(this);
             Kernel.Register<IScreen>(this);
             Kernel.Register(wixEvents);
