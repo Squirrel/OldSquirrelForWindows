@@ -79,7 +79,7 @@ namespace Shimmer.WiXUi.ViewModels
                     var updateLock = updateManager.AcquireUpdateLock();
                     updateManager.FullUninstall()
                         .ObserveOn(RxApp.DeferredScheduler)
-                        .Log(this, "Failed uninstall")
+                        .Log(this, "Full uninstall")
                         .Finally(updateLock.Dispose)
                         .Subscribe(
                             _ => wixEvents.Engine.Plan(LaunchAction.Uninstall),
