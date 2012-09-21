@@ -274,6 +274,23 @@ namespace Shimmer.WiXUi.ViewModels
             foreach (var extension in extensions) {
                 extension.RegisterTypes(kernel);
             }
+
+            registerDefaultTypes(kernel);
+        }
+
+        static void registerDefaultTypes(TinyIoCContainer kernel)
+        {
+            var toRegister = new[] {
+                new { Interface = typeof(IErrorViewModel), Impl = typeof(ErrorViewModel) },
+                new { Interface = typeof(IWelcomeViewModel), Impl = typeof(WelcomeViewModel) },
+                new { Interface = typeof(IInstallingViewModel), Impl = typeof(InstallingViewModel) },
+                new { Interface = typeof(IUninstallingViewModel), Impl = typeof(UninstallingViewModel) },
+            };
+
+            foreach (var pair in toRegister) {
+                if (kernel.CanResolve(pair.Interface)) continue;
+                kernel.Register(pair.Interface, pair.Impl);
+            }
         }
 
         TinyIoCContainer createDefaultKernel()
