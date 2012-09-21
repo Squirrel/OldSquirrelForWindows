@@ -15,6 +15,7 @@ using ReactiveUI.Xaml;
 using Shimmer.Client;
 using Shimmer.Client.WiXUi;
 using Shimmer.Core;
+using Shimmer.WiXUi.Views;
 using TinyIoC;
 
 namespace Shimmer.WiXUi.ViewModels
@@ -285,10 +286,13 @@ namespace Shimmer.WiXUi.ViewModels
                 new { Interface = typeof(IWelcomeViewModel), Impl = typeof(WelcomeViewModel) },
                 new { Interface = typeof(IInstallingViewModel), Impl = typeof(InstallingViewModel) },
                 new { Interface = typeof(IUninstallingViewModel), Impl = typeof(UninstallingViewModel) },
+                new { Interface = typeof(IErrorView), Impl = typeof(ErrorView) },
+                new { Interface = typeof(IWelcomeView), Impl = typeof(WelcomeView) },
+                new { Interface = typeof(IInstallingView), Impl = typeof(InstallingView) },
+                new { Interface = typeof(IUninstallingView), Impl = typeof(UninstallingView) }
             };
 
-            foreach (var pair in toRegister) {
-                if (kernel.CanResolve(pair.Interface)) continue;
+            foreach (var pair in toRegister.Where(pair => !kernel.CanResolve(pair.Interface))) {
                 kernel.Register(pair.Interface, pair.Impl);
             }
         }
