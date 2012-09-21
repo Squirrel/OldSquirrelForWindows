@@ -34,10 +34,13 @@ namespace Shimmer.WiXUi.ViewModels
             set { this.RaiseAndSetIfChanged(x => x.Error, value); }
         }
 
+        public ReactiveCommand Shutdown { get; protected set; }
+
         public ErrorViewModel(IScreen hostScreen)
         {
             HostScreen = hostScreen;
 
+            Shutdown = new ReactiveCommand();
             this.WhenAny(x => x.PackageMetadata, x => x.Value)
                 .SelectMany(x => x != null ? Observable.Return(x.Title) : Observable.Empty<string>())
                 .ToProperty(this, x => x.Title);

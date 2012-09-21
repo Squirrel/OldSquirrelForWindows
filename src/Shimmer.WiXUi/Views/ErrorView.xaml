@@ -15,12 +15,12 @@
 
         <TextBlock Text="Failed to Install" FontWeight="ExtraLight" FontSize="32" Margin="8,0,0,0"/>
         <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
-            <TextBlock Text="Shit is not bananas. Let's tell them why." FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
+            <TextBlock Text="{Binding Path=Error.ErrorMessage}" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
         </Border>
 
         <!-- NB: Left this here so the spacing doesn't change-->
         <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontWeight="Light" FontSize="36" Margin="0,8,0,0">
-            <Hyperlink>Close</Hyperlink>
+            <Hyperlink Command="{Binding Shutdown}">Close</Hyperlink>
         </TextBlock>
     </Grid>
 </UserControl>

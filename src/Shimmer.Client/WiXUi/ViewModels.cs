@@ -31,5 +31,6 @@ namespace Shimmer.Client.WiXUi
     {
         IPackage PackageMetadata { get; set; }
         UserError Error { get; set; }
+        ReactiveCommand Shutdown { get; }
     }
 }
