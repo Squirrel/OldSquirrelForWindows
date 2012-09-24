@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Text;
 using System.Windows;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
@@ -31,12 +30,14 @@ namespace Shimmer.WiXUi.ViewModels
         readonly Lazy<ReleaseEntry> _BundledRelease;
         public ReleaseEntry BundledRelease { get { return _BundledRelease.Value; } }
 
-        IFileSystemFactory fileSystem;
+        readonly IFileSystemFactory fileSystem;
+        readonly string currentAssemblyDir;
 
-        public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null, IFileSystemFactory fileSystem = null)
+        public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null, IFileSystemFactory fileSystem = null, string currentAssemblyDir = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
             this.fileSystem = fileSystem ?? new AnonFileSystem();
+            this.currentAssemblyDir = currentAssemblyDir ?? Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             Kernel.Register<IWixUiBootstrapper>(this);
             Kernel.Register<IScreen>(this);
@@ -147,7 +148,7 @@ namespace Shimmer.WiXUi.ViewModels
                 // installer as often (never, technically).
 
                 var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-                var eigenUpdater = new UpdateManager(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), BundledRelease.PackageName, fxVersion);
+                var eigenUpdater = new UpdateManager(currentAssemblyDir, BundledRelease.PackageName, fxVersion);
 
                 var eigenLock = eigenUpdater.AcquireUpdateLock();
 
@@ -217,9 +218,7 @@ namespace Shimmer.WiXUi.ViewModels
 
         IPackage openBundledPackage()
         {
-            var fi = fileSystem.GetFileInfo(Path.Combine(
-                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), 
-                BundledRelease.Filename));
+            var fi = fileSystem.GetFileInfo(Path.Combine(currentAssemblyDir, BundledRelease.Filename));
 
             return new ZipPackage(fi.FullName);
         }
@@ -233,7 +232,7 @@ namespace Shimmer.WiXUi.ViewModels
 
         ReleaseEntry readBundledReleasesFile()
         {
-            var release = fileSystem.GetFileInfo(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "RELEASES"));
+            var release = fileSystem.GetFileInfo(Path.Combine(currentAssemblyDir, "RELEASES"));
 
             if (!release.Exists) {
                 UserError.Throw("This installer is incorrectly configured, please contact the author", 
@@ -257,16 +256,17 @@ namespace Shimmer.WiXUi.ViewModels
 
         void registerExtensionDlls(TinyIoCContainer kernel)
         {
-            var di = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            var di = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(currentAssemblyDir));
 
+            var thisAssembly = System.Reflection.Assembly.GetExecutingAssembly().Location;
             var extensions = di.GetFiles("*.dll")
-                .Where(x => x.FullName != Assembly.GetExecutingAssembly().Location)
+                .Where(x => x.FullName != thisAssembly)
                 .SelectMany(x => {
                     try {
-                        return new[] {Assembly.LoadFile(x.FullName)};
+                        return new[] { System.Reflection.Assembly.LoadFile(x.FullName) };
                     } catch (Exception ex) {
                         this.Log().WarnException("Couldn't load " + x.Name, ex);
-                        return Enumerable.Empty<Assembly>();
+                        return Enumerable.Empty<System.Reflection.Assembly>();
                     }
                 })
                 .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes())
