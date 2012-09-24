@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -18,6 +17,9 @@ using Shimmer.Core;
 using Shimmer.WiXUi.Views;
 using TinyIoC;
 
+using Path = System.IO.Path;
+using FileNotFoundException = System.IO.FileNotFoundException;
+
 namespace Shimmer.WiXUi.ViewModels
 {
     public class WixUiBootstrapper : ReactiveObject, IWixUiBootstrapper
@@ -29,9 +31,12 @@ namespace Shimmer.WiXUi.ViewModels
         readonly Lazy<ReleaseEntry> _BundledRelease;
         public ReleaseEntry BundledRelease { get { return _BundledRelease.Value; } }
 
-        public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null)
+        IFileSystemFactory fileSystem;
+
+        public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null, IFileSystemFactory fileSystem = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
+            this.fileSystem = fileSystem ?? new AnonFileSystem();
 
             Kernel.Register<IWixUiBootstrapper>(this);
             Kernel.Register<IScreen>(this);
@@ -71,8 +76,6 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                // TODO: If the app is already installed, run it and bail
-
                 if (wixEvents.Command.Action == LaunchAction.Uninstall) {
                     var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40);
 
@@ -88,6 +91,9 @@ namespace Shimmer.WiXUi.ViewModels
 
                     return;
                 }
+
+                // TODO: If the app is already installed, run it and bail
+                // If Display is silent, we should just exit here.
 
                 if (wixEvents.Command.Action == LaunchAction.Install) {
                     if (wixEvents.Command.Display != Display.Full) {
@@ -211,7 +217,7 @@ namespace Shimmer.WiXUi.ViewModels
 
         IPackage openBundledPackage()
         {
-            var fi = new FileInfo(Path.Combine(
+            var fi = fileSystem.GetFileInfo(Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), 
                 BundledRelease.Filename));
 
@@ -227,7 +233,8 @@ namespace Shimmer.WiXUi.ViewModels
 
         ReleaseEntry readBundledReleasesFile()
         {
-            var release = new FileInfo(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "RELEASES"));
+            var release = fileSystem.GetFileInfo(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "RELEASES"));
+
             if (!release.Exists) {
                 UserError.Throw("This installer is incorrectly configured, please contact the author", 
                     new FileNotFoundException(release.FullName));
@@ -237,7 +244,8 @@ namespace Shimmer.WiXUi.ViewModels
             ReleaseEntry ret;
 
             try {
-                ret = ReleaseEntry.ParseReleaseFile(File.ReadAllText(release.FullName, Encoding.UTF8)).Single();
+                var fileText = fileSystem.GetFile(release.FullName).ReadAllText(release.FullName, Encoding.UTF8);
+                ret = ReleaseEntry.ParseReleaseFile(fileText).Single();
             } catch (Exception ex) {
                 this.Log().ErrorException("Couldn't read bundled RELEASES file", ex);
                 UserError.Throw("This installer is incorrectly configured, please contact the author", ex);
@@ -249,7 +257,7 @@ namespace Shimmer.WiXUi.ViewModels
 
         void registerExtensionDlls(TinyIoCContainer kernel)
         {
-            var di = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            var di = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
             var extensions = di.GetFiles("*.dll")
                 .Where(x => x.FullName != Assembly.GetExecutingAssembly().Location)
