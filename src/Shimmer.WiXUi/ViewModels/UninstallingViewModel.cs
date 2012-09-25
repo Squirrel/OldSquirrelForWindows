@@ -11,7 +11,7 @@ using Shimmer.Client.WiXUi;
 
 namespace Shimmer.WiXUi.ViewModels
 {
-    public class UninstallingViewModel : ReactiveObject, IInstallingViewModel
+    public class UninstallingViewModel : ReactiveObject, IUninstallingViewModel
     {
         public string UrlPathSegment { get { return "installing";  } }
         public IScreen HostScreen { get; private set; }

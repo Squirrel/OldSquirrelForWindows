@@ -36,7 +36,7 @@ namespace Shimmer.WiXUi.ViewModels
         public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null, IFileSystemFactory fileSystem = null, string currentAssemblyDir = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
-            this.fileSystem = fileSystem ?? new AnonFileSystem();
+            this.fileSystem = fileSystem ?? AnonFileSystem.Default;
             this.currentAssemblyDir = currentAssemblyDir ?? Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             Kernel.Register<IWixUiBootstrapper>(this);
@@ -51,7 +51,9 @@ namespace Shimmer.WiXUi.ViewModels
             registerExtensionDlls(Kernel);
 
             RxApp.ConfigureServiceLocator(
-                (type, contract) => Kernel.Resolve(type, contract),
+                (type, contract) => String.IsNullOrEmpty(contract) ?
+                    Kernel.Resolve(type) :
+                    Kernel.Resolve(type, contract),
                 (type, contract) => Kernel.ResolveAll(type),
                 (c, t, s) => Kernel.Register(t, c, s));
 
