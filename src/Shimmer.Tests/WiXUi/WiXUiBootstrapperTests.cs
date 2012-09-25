@@ -103,6 +103,10 @@ namespace Shimmer.Tests.WiXUi
             events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
             events.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
 
+            var engine = new Mock<IEngine>();
+            engine.Setup(x => x.Plan(LaunchAction.Uninstall)).Verifiable();
+            events.SetupGet(x => x.Engine).Returns(engine.Object);
+
             string dir;
             using (withFakeInstallDirectory(out dir)) {
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
@@ -111,6 +115,7 @@ namespace Shimmer.Tests.WiXUi
                 detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(UninstallingViewModel));
+                engine.Verify(x => x.Plan(LaunchAction.Uninstall), Times.Once());
             }
         }
 
