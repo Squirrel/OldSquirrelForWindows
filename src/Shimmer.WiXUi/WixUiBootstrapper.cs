@@ -39,6 +39,19 @@ namespace Shimmer.WiXUi.ViewModels
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
             this.currentAssemblyDir = currentAssemblyDir ?? Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
+            RxApp.ConfigureServiceLocator(
+                (type, contract) => String.IsNullOrEmpty(contract) ?
+                    Kernel.Resolve(type) :
+                    Kernel.Resolve(type, contract),
+                (type, contract) => Kernel.ResolveAll(type, true),
+                (c, t, s) => {
+                    if (String.IsNullOrEmpty(s)) {
+                        Kernel.Register(t, c, Guid.NewGuid().ToString());
+                    } else {
+                        Kernel.Register(t, c, s);
+                    }
+                });
+
             Kernel.Register<IWixUiBootstrapper>(this);
             Kernel.Register<IScreen>(this);
             Kernel.Register(wixEvents);
@@ -49,13 +62,6 @@ namespace Shimmer.WiXUi.ViewModels
             _BundledRelease = new Lazy<ReleaseEntry>(readBundledReleasesFile);
 
             registerExtensionDlls(Kernel);
-
-            RxApp.ConfigureServiceLocator(
-                (type, contract) => String.IsNullOrEmpty(contract) ?
-                    Kernel.Resolve(type) :
-                    Kernel.Resolve(type, contract),
-                (type, contract) => Kernel.ResolveAll(type),
-                (c, t, s) => Kernel.Register(t, c, s));
 
             UserError.RegisterHandler(ex => {
                 if (wixEvents.Command.Display != Display.Full) {
