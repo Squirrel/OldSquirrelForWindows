@@ -19,13 +19,18 @@ namespace Shimmer.WiXUi
         {
             var app = new Application();
 
+            // NB: These are mirrored instead of just exposing Command because
+            // Command is impossible to mock, since there is no way to set any
+            // of its properties
+            DisplayMode = Command.Display;
+            Action = Command.Action;
+
             setupWiXEventHooks();
 
             var bootstrapper = new WixUiBootstrapper(this);
 
             app.MainWindow = new RootWindow {
-                // XXX: Fix this casting shit in ReactiveUI.Routing
-                viewHost = {Router = (RoutingState) bootstrapper.Router}
+                viewHost = {Router = bootstrapper.Router}
             };
 
             MainWindowHwnd = IntPtr.Zero;
@@ -37,6 +42,9 @@ namespace Shimmer.WiXUi
 
         public new IEngine Engine { get; protected set; }
         public IntPtr MainWindowHwnd { get; protected set; }
+
+        public Display DisplayMode { get; protected set; }
+        public LaunchAction Action { get; protected set; }
 
         public void ShouldQuit()
         {

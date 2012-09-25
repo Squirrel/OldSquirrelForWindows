@@ -64,7 +64,7 @@ namespace Shimmer.WiXUi.ViewModels
             registerExtensionDlls(Kernel);
 
             UserError.RegisterHandler(ex => {
-                if (wixEvents.Command.Display != Display.Full) {
+                if (wixEvents.DisplayMode != Display.Full) {
                     this.Log().Error(ex.ErrorMessage);
                     wixEvents.ShouldQuit();
                 }
@@ -85,7 +85,7 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                if (wixEvents.Command.Action == LaunchAction.Uninstall) {
+                if (wixEvents.Action == LaunchAction.Uninstall) {
                     var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40);
 
                     var updateLock = updateManager.AcquireUpdateLock();
@@ -104,8 +104,8 @@ namespace Shimmer.WiXUi.ViewModels
                 // TODO: If the app is already installed, run it and bail
                 // If Display is silent, we should just exit here.
 
-                if (wixEvents.Command.Action == LaunchAction.Install) {
-                    if (wixEvents.Command.Display != Display.Full) {
+                if (wixEvents.Action == LaunchAction.Install) {
+                    if (wixEvents.DisplayMode != Display.Full) {
                         wixEvents.Engine.Plan(LaunchAction.Install);
                         return;
                     }
@@ -125,14 +125,14 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                if (wixEvents.Command.Action != LaunchAction.Install) {
+                if (wixEvents.Action != LaunchAction.Install) {
                     wixEvents.Engine.Apply(wixEvents.MainWindowHwnd);
                     return;
                 }
 
                 // NB: Create a dummy subject to receive progress if we're in silent mode
                 IObserver<int> progress = new Subject<int>();
-                if (wixEvents.Command.Display == Display.Full) {
+                if (wixEvents.DisplayMode == Display.Full) {
                     var installingVm = RxApp.GetService<IInstallingViewModel>();
                     progress = installingVm.ProgressValue;
                     installingVm.PackageMetadata = bundledPackageMetadata;
@@ -202,7 +202,7 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                if (wixEvents.Command.Display != Display.Full) {
+                if (wixEvents.DisplayMode != Display.Full) {
                     wixEvents.ShouldQuit();
                 }
 
