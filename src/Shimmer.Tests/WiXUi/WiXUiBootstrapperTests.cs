@@ -4,10 +4,12 @@ using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using Moq;
 using ReactiveUI;
@@ -38,20 +40,17 @@ namespace Shimmer.Tests.WiXUi
             events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
 
             string dir;
-            const string pkg = "SampleUpdatingApp.1.1.0.0.nupkg";
-            using (Utility.WithTempDirectory(out dir)) {
-                File.Copy(IntegrationTestHelper.GetPath("fixtures", pkg), Path.Combine(dir, pkg));
-                var rp = ReleaseEntry.GenerateFromFile(Path.Combine(dir, pkg));
-                ReleaseEntry.WriteReleaseFile(new[] {rp}, Path.Combine(dir, "RELEASES"));
-
+            using (withFakeInstallDirectory(out dir)) {
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
-                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", PackHResultIntoIntEvenThoughItShouldntBeThere(0x80004005), PackageState.Unknown));
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", packHResultIntoIntEvenThoughItShouldntBeThere(0x80004005), PackageState.Unknown));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
 
                 router.NavigateAndReset.Execute(RxApp.GetService<IWelcomeViewModel>());
                 error.OnNext(new ErrorEventArgs(ErrorType.ExePackage, "Foo", 
-                    PackHResultIntoIntEvenThoughItShouldntBeThere(0x80004005), "Noope", 0, new string[0], 0));
+                    packHResultIntoIntEvenThoughItShouldntBeThere(0x80004005), "Noope", 0, new string[0], 0));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
             }
@@ -64,13 +63,55 @@ namespace Shimmer.Tests.WiXUi
         [Fact]
         public void RouteToInstallOnDetectPackageComplete()
         {
-            throw new NotImplementedException();
+            var router = new RoutingState();
+            var detectComplete = new Subject<DetectPackageCompleteEventArgs>();
+            var error = new Subject<ErrorEventArgs>();
+
+            var events = new Mock<IWiXEvents>();
+            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectComplete);
+            events.SetupGet(x => x.ErrorObs).Returns(error);
+            events.SetupGet(x => x.PlanCompleteObs).Returns(Observable.Never<PlanCompleteEventArgs>());
+            events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
+
+            events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+            events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+
+            string dir;
+            using (withFakeInstallDirectory(out dir)) {
+                var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+
+                router.GetCurrentViewModel().GetType().ShouldEqual(typeof(WelcomeViewModel));
+            }
         }
 
         [Fact]
         public void RouteToUninstallOnDetectPackageComplete()
         {
-            throw new NotImplementedException();
+            var router = new RoutingState();
+            var detectComplete = new Subject<DetectPackageCompleteEventArgs>();
+            var error = new Subject<ErrorEventArgs>();
+
+            var events = new Mock<IWiXEvents>();
+            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectComplete);
+            events.SetupGet(x => x.ErrorObs).Returns(error);
+            events.SetupGet(x => x.PlanCompleteObs).Returns(Observable.Never<PlanCompleteEventArgs>());
+            events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
+
+            events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+            events.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
+
+            string dir;
+            using (withFakeInstallDirectory(out dir)) {
+                var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+
+                router.GetCurrentViewModel().GetType().ShouldEqual(typeof(UninstallingViewModel));
+            }
         }
 
         [Fact]
@@ -135,7 +176,24 @@ namespace Shimmer.Tests.WiXUi
             throw new NotImplementedException();
         }
 
-        int PackHResultIntoIntEvenThoughItShouldntBeThere(uint hr)
+        static object gate = 42;
+        static IDisposable withFakeInstallDirectory(out string path)
+        {
+            var ret = Utility.WithTempDirectory(out path);
+
+            const string pkg = "SampleUpdatingApp.1.1.0.0.nupkg";
+            File.Copy(IntegrationTestHelper.GetPath("fixtures", pkg), Path.Combine(path, pkg));
+            var rp = ReleaseEntry.GenerateFromFile(Path.Combine(path, pkg));
+            ReleaseEntry.WriteReleaseFile(new[] {rp}, Path.Combine(path, "RELEASES"));
+
+            // NB: This is a temporary hack. The reason we serialize the tests
+            // like this, is to make sure that we don't have two tests registering
+            // their Service Locators with RxApp.
+            Monitor.Enter(gate);
+            return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
+        }
+
+        static int packHResultIntoIntEvenThoughItShouldntBeThere(uint hr)
         {
             return BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
         }
