@@ -86,18 +86,9 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
-                    var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40);
-
-                    var updateLock = updateManager.AcquireUpdateLock();
-                    updateManager.FullUninstall()
-                        .ObserveOn(RxApp.DeferredScheduler)
-                        .Log(this, "Full uninstall")
-                        .Finally(updateLock.Dispose)
-                        .Subscribe(
-                            _ => wixEvents.Engine.Plan(LaunchAction.Uninstall),
-                            ex => UserError.Throw("Failed to uninstall application", ex),
-                            () => wixEvents.ShouldQuit());
-
+                    var uninstallVm = RxApp.GetService<IUninstallingViewModel>();
+                    Router.Navigate.Execute(uninstallVm);
+                    wixEvents.Engine.Plan(LaunchAction.Uninstall);
                     return;
                 }
 
@@ -113,7 +104,6 @@ namespace Shimmer.WiXUi.ViewModels
                     var welcomeVm = RxApp.GetService<IWelcomeViewModel>();
                     welcomeVm.PackageMetadata = bundledPackageMetadata;
                     welcomeVm.ShouldProceed.Subscribe(_ => wixEvents.Engine.Plan(LaunchAction.Install));
-
                     Router.Navigate.Execute(welcomeVm);
                 }
             });
@@ -125,74 +115,16 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                if (wixEvents.Action != LaunchAction.Install) {
-                    wixEvents.Engine.Apply(wixEvents.MainWindowHwnd);
+                if (wixEvents.Action == LaunchAction.Uninstall) {
+                    executeUninstall(wixEvents).Subscribe(
+                        _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
+                        ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
                     return;
                 }
 
-                // NB: Create a dummy subject to receive progress if we're in silent mode
-                IObserver<int> progress = new Subject<int>();
-                if (wixEvents.DisplayMode == Display.Full) {
-                    var installingVm = RxApp.GetService<IInstallingViewModel>();
-                    progress = installingVm.ProgressValue;
-                    installingVm.PackageMetadata = bundledPackageMetadata;
-                    Router.Navigate.Execute(installingVm);
-                }
-
-                // NB: This bit of code is a bit clever. The binaries that WiX 
-                // has installed *itself* meets the qualifications for being a
-                // Shimmer update directory (a RELEASES file and the corresponding 
-                // NuGet packages). 
-                //
-                // So, in order to reuse some code and not write the same things 
-                // twice we're going to "Eigenupdate" from our own directory; 
-                // UpdateManager will operate in bootstrap mode and create a 
-                // local directory for us. 
-                //
-                // Then, we create a *new* UpdateManager whose target is the normal 
-                // update URL - we can then apply delta updates against the bundled 
-                // NuGet package to get up to vCurrent. The reason we go through
-                // this rigamarole is so that developers don't have to rebuild the 
-                // installer as often (never, technically).
-
-                var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-                var eigenUpdater = new UpdateManager(currentAssemblyDir, BundledRelease.PackageName, fxVersion);
-
-                var eigenLock = eigenUpdater.AcquireUpdateLock();
-
-                var eigenUpdateProgress = eigenUpdater.CheckForUpdate()
-                    .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply))
-                    .Finally(eigenLock.Dispose)
-                    .Select(x => x / 2)
-                    .Multicast(new Subject<int>());
-
-                eigenUpdateProgress.Subscribe(progress);
-                eigenUpdateProgress.Connect();
-
-                var realUpdateProgress = eigenUpdateProgress.TakeLast(1)
-                    .SelectMany(_ => {
-                        var realUpdateManager = new UpdateManager(bundledPackageMetadata.ProjectUrl.ToString(), BundledRelease.PackageName, fxVersion);
-
-                        return realUpdateManager.CheckForUpdate()
-                            .SelectMany(updateInfo => {
-                                return Observable.Concat(
-                                    realUpdateManager.DownloadReleases(updateInfo.ReleasesToApply).Select(x => x * 0.75),
-                                    realUpdateManager.ApplyReleases(updateInfo).Select(x => x * 0.25 + 75))
-                                        .Select(x => (int)x);
-                            }).LoggedCatch(this, Observable.Return(100), "Failed to update to latest remote version");
-                    })
-                    .Select(x => x / 2 + 50)
-                    .Multicast(new Subject<int>());
-
-                realUpdateProgress.Subscribe(progress);
-                realUpdateProgress.Connect();
-
-                realUpdateProgress
-                    .TakeLast(1)
-                    .ObserveOn(RxApp.DeferredScheduler)
-                    .Subscribe(
-                        _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
-                        ex => UserError.Throw("Failed to install application", ex));
+                executeInstall(wixEvents, currentAssemblyDir, bundledPackageMetadata).Subscribe(
+                    _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
+                    ex => UserError.Throw("Failed to install application", ex));
             });
 
             wixEvents.ApplyCompleteObs.Subscribe(eventArgs => {
@@ -202,7 +134,7 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                if (wixEvents.DisplayMode != Display.Full) {
+                if (wixEvents.DisplayMode != Display.Full || wixEvents.Action != LaunchAction.Install) {
                     wixEvents.ShouldQuit();
                 }
 
@@ -210,6 +142,83 @@ namespace Shimmer.WiXUi.ViewModels
             });
 
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
+        }
+
+        IObservable<Unit> executeInstall(IWiXEvents wixEvents, string currentAssemblyDir, IPackage bundledPackageMetadata)
+        {
+            // NB: Create a dummy subject to receive progress if we're in silent mode
+            IObserver<int> progress = new Subject<int>();
+
+            if (wixEvents.DisplayMode == Display.Full) {
+                var installingVm = RxApp.GetService<IInstallingViewModel>();
+                progress = installingVm.ProgressValue;
+                installingVm.PackageMetadata = bundledPackageMetadata;
+                Router.Navigate.Execute(installingVm);
+            }
+
+            // NB: This bit of code is a bit clever. The binaries that WiX 
+            // has installed *itself* meets the qualifications for being a
+            // Shimmer update directory (a RELEASES file and the corresponding 
+            // NuGet packages). 
+            //
+            // So, in order to reuse some code and not write the same things 
+            // twice we're going to "Eigenupdate" from our own directory; 
+            // UpdateManager will operate in bootstrap mode and create a 
+            // local directory for us. 
+            //
+            // Then, we create a *new* UpdateManager whose target is the normal 
+            // update URL - we can then apply delta updates against the bundled 
+            // NuGet package to get up to vCurrent. The reason we go through
+            // this rigamarole is so that developers don't have to rebuild the 
+            // installer as often (never, technically).
+
+            var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
+            var eigenUpdater = new UpdateManager(currentAssemblyDir, BundledRelease.PackageName, fxVersion);
+
+            var eigenLock = eigenUpdater.AcquireUpdateLock();
+
+            var eigenUpdateProgress = eigenUpdater.CheckForUpdate()
+                .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply))
+                .Finally(eigenLock.Dispose)
+                .Select(x => x/2)
+                .Multicast(new Subject<int>());
+
+            eigenUpdateProgress.Subscribe(progress);
+            eigenUpdateProgress.Connect();
+
+            var realUpdateProgress = eigenUpdateProgress.TakeLast(1)
+                .SelectMany(_ => {
+                    var realUpdateManager = new UpdateManager(bundledPackageMetadata.ProjectUrl.ToString(),
+                        BundledRelease.PackageName, fxVersion);
+
+                    return realUpdateManager.CheckForUpdate()
+                        .SelectMany(updateInfo => {
+                            return Observable.Concat(
+                                realUpdateManager.DownloadReleases(updateInfo.ReleasesToApply).Select(x => x*0.75),
+                                realUpdateManager.ApplyReleases(updateInfo).Select(x => x*0.25 + 75))
+                                .Select(x => (int) x);
+                        }).LoggedCatch(this, Observable.Return(100), "Failed to update to latest remote version");
+                })
+                .Select(x => x/2 + 50)
+                .Multicast(new Subject<int>());
+
+            realUpdateProgress.Subscribe(progress);
+            realUpdateProgress.Connect();
+
+            return realUpdateProgress
+                .TakeLast(1).Select(_ => Unit.Default)
+                .ObserveOn(RxApp.DeferredScheduler);
+        }
+
+        IObservable<Unit> executeUninstall(IWiXEvents wixEvents)
+        {
+            var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40);
+
+            var updateLock = updateManager.AcquireUpdateLock();
+            return updateManager.FullUninstall()
+                .ObserveOn(RxApp.DeferredScheduler)
+                .Log(this, "Full uninstall")
+                .Finally(updateLock.Dispose);
         }
 
         UserError convertHResultToError(int status)
