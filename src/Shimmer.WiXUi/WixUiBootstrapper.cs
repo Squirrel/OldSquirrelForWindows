@@ -153,7 +153,7 @@ namespace Shimmer.WiXUi.ViewModels
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
         }
 
-        IObservable<Unit> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null)
+        IObservable<Unit> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null, string targetRootDirectory = null)
         {
             progress = progress ?? new Subject<int>();
 
@@ -174,7 +174,7 @@ namespace Shimmer.WiXUi.ViewModels
             // installer as often (never, technically).
 
             var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-            var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion);
+            var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
             var eigenLock = eigenUpdater.AcquireUpdateLock();
 
@@ -189,8 +189,8 @@ namespace Shimmer.WiXUi.ViewModels
 
             var realUpdateProgress = eigenUpdateProgress.TakeLast(1)
                 .SelectMany(_ => {
-                    var realUpdateManager = new UpdateManager(bundledPackageMetadata.ProjectUrl.ToString(),
-                        bundledPackageMetadata.Id, fxVersion);
+                    var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
+                    var realUpdateManager = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory); 
 
                     return realUpdateManager.CheckForUpdate()
                         .SelectMany(updateInfo => {
