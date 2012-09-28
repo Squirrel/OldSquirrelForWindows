@@ -116,13 +116,22 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
-                    executeUninstall(wixEvents).Subscribe(
+                    executeUninstall().Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
                     return;
                 }
 
-                executeInstall(wixEvents, currentAssemblyDir, bundledPackageMetadata).Subscribe(
+                IObserver<int> progress = null;
+
+                if (wixEvents.DisplayMode == Display.Full) {
+                    var installingVm = RxApp.GetService<IInstallingViewModel>();
+                    progress = installingVm.ProgressValue;
+                    installingVm.PackageMetadata = bundledPackageMetadata;
+                    Router.Navigate.Execute(installingVm);
+                }
+
+                executeInstall(currentAssemblyDir, bundledPackageMetadata, progress).Subscribe(
                     _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                     ex => UserError.Throw("Failed to install application", ex));
             });
@@ -144,17 +153,9 @@ namespace Shimmer.WiXUi.ViewModels
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
         }
 
-        IObservable<Unit> executeInstall(IWiXEvents wixEvents, string currentAssemblyDir, IPackage bundledPackageMetadata)
+        IObservable<Unit> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null)
         {
-            // NB: Create a dummy subject to receive progress if we're in silent mode
-            IObserver<int> progress = new Subject<int>();
-
-            if (wixEvents.DisplayMode == Display.Full) {
-                var installingVm = RxApp.GetService<IInstallingViewModel>();
-                progress = installingVm.ProgressValue;
-                installingVm.PackageMetadata = bundledPackageMetadata;
-                Router.Navigate.Execute(installingVm);
-            }
+            progress = progress ?? new Subject<int>();
 
             // NB: This bit of code is a bit clever. The binaries that WiX 
             // has installed *itself* meets the qualifications for being a
@@ -173,7 +174,7 @@ namespace Shimmer.WiXUi.ViewModels
             // installer as often (never, technically).
 
             var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-            var eigenUpdater = new UpdateManager(currentAssemblyDir, BundledRelease.PackageName, fxVersion);
+            var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion);
 
             var eigenLock = eigenUpdater.AcquireUpdateLock();
 
@@ -189,7 +190,7 @@ namespace Shimmer.WiXUi.ViewModels
             var realUpdateProgress = eigenUpdateProgress.TakeLast(1)
                 .SelectMany(_ => {
                     var realUpdateManager = new UpdateManager(bundledPackageMetadata.ProjectUrl.ToString(),
-                        BundledRelease.PackageName, fxVersion);
+                        bundledPackageMetadata.Id, fxVersion);
 
                     return realUpdateManager.CheckForUpdate()
                         .SelectMany(updateInfo => {
@@ -210,7 +211,7 @@ namespace Shimmer.WiXUi.ViewModels
                 .ObserveOn(RxApp.DeferredScheduler);
         }
 
-        IObservable<Unit> executeUninstall(IWiXEvents wixEvents)
+        IObservable<Unit> executeUninstall()
         {
             var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40);
 
