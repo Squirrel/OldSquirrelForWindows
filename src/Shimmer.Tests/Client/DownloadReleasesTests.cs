@@ -146,7 +146,7 @@ namespace Shimmer.Tests.Client
                 using (fixture.AcquireUpdateLock()) {
                     var progress = new ReplaySubject<int>();
 
-                    fixture.DownloadReleases(entriesToDownload).First();
+                    fixture.DownloadReleases(entriesToDownload, progress).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
 
                     progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();
@@ -187,7 +187,7 @@ namespace Shimmer.Tests.Client
                 using (fixture.AcquireUpdateLock()) {
                     var progress = new ReplaySubject<int>();
 
-                    fixture.DownloadReleases(entriesToDownload).First();
+                    fixture.DownloadReleases(entriesToDownload, progress).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
 
                     progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();

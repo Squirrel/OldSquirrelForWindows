@@ -61,7 +61,7 @@ namespace Shimmer.Client
                             of.Write(x.Content, 0, x.Content.Length);
                         }
                     }, RxApp.TaskpoolScheduler))
-                 .Publish();
+                .Multicast(new ReplaySubject<Unit>());
 
             ret.Scan(0.0, (acc, _) => acc + toIncrement).Select(x => (int) x).Subscribe(progress);
 

@@ -169,6 +169,7 @@ namespace Shimmer.Client
                     Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
                 .Do(_ => progress.OnNext(95), progress.OnError)
                 .SelectMany(_ => UpdateLocalReleasesFile())
+                .Do(_ => progress.OnNext(100)).Finally(() => progress.OnCompleted())
                 .PublishLast();
 
             ret.Connect();
