@@ -4,6 +4,7 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using Moq;
 using ReactiveUI;
@@ -143,9 +144,12 @@ namespace Shimmer.Tests.Client
 
                 var fixture = new UpdateManager("http://localhost:30405", "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture.AcquireUpdateLock()) {
-                    var progress = fixture.DownloadReleases(entriesToDownload).ToList().First();
+                    var progress = new ReplaySubject<int>();
+
+                    fixture.DownloadReleases(entriesToDownload).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
-                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).ShouldBeTrue();
+
+                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();
                     progress.Last().ShouldEqual(100);
                 }
 
@@ -181,9 +185,12 @@ namespace Shimmer.Tests.Client
 
                 var fixture = new UpdateManager(updateDir.FullName, "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture.AcquireUpdateLock()) {
-                    var progress = fixture.DownloadReleases(entriesToDownload).ToList().First();
+                    var progress = new ReplaySubject<int>();
+
+                    fixture.DownloadReleases(entriesToDownload).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
-                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).ShouldBeTrue();
+
+                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();
                     progress.Last().ShouldEqual(100);
                 }
 

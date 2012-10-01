@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Shimmer.Tests.Client
 {
+#if FALSE
     public class BitsManagerTests
     {
         [Fact(Skip = "Reenable this once we have proper BITS bindings")]
@@ -67,4 +68,5 @@ namespace Shimmer.Tests.Client
             }
         }
     }
+#endif
 }
