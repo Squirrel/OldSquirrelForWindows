@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading;
 using Moq;
@@ -23,14 +24,22 @@ namespace Shimmer.Tests.Client
         [Serializable]
         public class FakeUrlDownloader : IUrlDownloader
         {
-            public IObservable<string> DownloadUrl(string url)
+            public IObservable<string> DownloadUrl(string url, IObserver<int> progress = null)
             {
-                return Observable.Empty<string>();
+                progress = progress ?? new Subject<int>();
+
+                progress.OnNext(100);
+                progress.OnCompleted();
+                return Observable.Return("");
             }
 
-            public IObservable<int> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+            public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress = null)
             {
-                return Observable.Empty<int>();
+                progress = progress ?? new Subject<int>();
+
+                progress.OnNext(100);
+                progress.OnCompleted();
+                return Observable.Return(Unit.Default);
             }
         }
 
@@ -57,9 +66,11 @@ namespace Shimmer.Tests.Client
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                 using (fixture.AcquireUpdateLock()) {
-                    var progress = fixture.ApplyReleases(updateInfo).ToList().First();
+                    var progress = new ReplaySubject<int>();
+                    fixture.ApplyReleases(updateInfo, progress).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
-                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).ShouldBeTrue();
+
+                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();
                     progress.Last().ShouldEqual(100);
                 }
 
@@ -105,9 +116,12 @@ namespace Shimmer.Tests.Client
                 updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
                 using (fixture.AcquireUpdateLock()) {
-                    var progress = fixture.ApplyReleases(updateInfo).ToList().First();
+                    var progress = new ReplaySubject<int>();
+
+                    fixture.ApplyReleases(updateInfo, progress).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
-                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).ShouldBeTrue();
+
+                    progress.Buffer(2,1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();
                     progress.Last().ShouldEqual(100);
                 }
 

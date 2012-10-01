@@ -15,8 +15,8 @@ namespace Shimmer.Client
 {
     public interface IUrlDownloader : IEnableLogger
     {
-        IObservable<string> DownloadUrl(string url);
-        IObservable<int> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths);
+        IObservable<string> DownloadUrl(string url, IObserver<int> progress);
+        IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress);
     }
 
     [Serializable]
@@ -29,28 +29,44 @@ namespace Shimmer.Client
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
         }
 
-        public IObservable<string> DownloadUrl(string url)
+        public IObservable<string> DownloadUrl(string url, IObserver<int> progress = null)
         {
-            return Http.DownloadUrl(url).Select(x => Encoding.UTF8.GetString(x));
+            progress = progress ?? new Subject<int>();
+
+            var ret = Http.DownloadUrl(url)
+                .Select(x => Encoding.UTF8.GetString(x))
+                .PublishLast();
+
+            // NB: We don't actually have progress, fake it out
+            ret.Select(_ => 100).Subscribe(progress);
+
+            ret.Connect();
+            return ret;
         }
 
-        public IObservable<int> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths)
+        public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress = null)
         {
             var fileCount = urls.Count();
             double toIncrement = 100.0 / fileCount;
+            progress = progress ?? new Subject<int>();
 
-            return urls.Zip(localPaths, (u, p) => new { Url = u, Path = p }).ToObservable()
-                .Select(x => Http.DownloadUrl(x.Url).Select(Content => new { x.Url, x.Path, Content })).Merge(4)
+            var ret = urls.Zip(localPaths, (u, p) => new { Url = u, Path = p }).ToObservable()
+                .Select(x => Http.DownloadUrl(x.Url).Select(Content => new { x.Url, x.Path, Content }))
+                .Merge(4)
                 .SelectMany(x => Observable.Start(() => {
-                    var fi = fileSystem.GetFileInfo(x.Path);
-                    if (fi.Exists) fi.Delete();
+                        var fi = fileSystem.GetFileInfo(x.Path);
+                        if (fi.Exists) fi.Delete();
 
-                    using (var of = fi.OpenWrite()) {
-                        of.Write(x.Content, 0, x.Content.Length);
-                    }
-                }, RxApp.TaskpoolScheduler))
-                .Scan(0.0, (acc, _) => acc + toIncrement)
-                .Select(x => (int)x);
+                        using (var of = fi.OpenWrite()) {
+                            of.Write(x.Content, 0, x.Content.Length);
+                        }
+                    }, RxApp.TaskpoolScheduler))
+                .Multicast(new ReplaySubject<Unit>());
+
+            ret.Scan(0.0, (acc, _) => acc + toIncrement).Select(x => (int) x).Subscribe(progress);
+
+            ret.Connect();
+            return ret.TakeLast(1).Select(_ => Unit.Default);
         }
 
         public void Dispose()
@@ -58,6 +74,8 @@ namespace Shimmer.Client
         }
     }
 
+    // NB: This code is hella wrong
+#if FALSE
     public class BitsException : Exception
     {
         public BitsError Error { get; protected set; }
@@ -123,4 +141,5 @@ namespace Shimmer.Client
             }
         }
     }
+#endif
 }

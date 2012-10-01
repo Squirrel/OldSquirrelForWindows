@@ -177,38 +177,48 @@ namespace Shimmer.WiXUi.ViewModels
             var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
             var eigenLock = eigenUpdater.AcquireUpdateLock();
+            var eigenCheckProgress = new Subject<int>();
+            var eigenCopyFileProgress = new Subject<int>();
+            var eigenApplyProgress = new Subject<int>();
 
-            var eigenUpdateProgress = eigenUpdater.CheckForUpdate()
-                .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply))
-                .Finally(eigenLock.Dispose)
-                .Select(x => x/2)
-                .Multicast(new Subject<int>());
+            var eigenUpdateResult = eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
+                .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
+                .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
+                .Finally(eigenLock.Dispose);
 
-            eigenUpdateProgress.Subscribe(progress);
-            eigenUpdateProgress.Connect();
+            var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
+            var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
-            var realUpdateProgress = eigenUpdateProgress.TakeLast(1)
-                .SelectMany(_ => {
-                    var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
-                    var realUpdateManager = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory); 
+            var realLock = realUpdater.AcquireUpdateLock();
+            var realCheckProgress = new Subject<int>();
+            var realCopyFileProgress = new Subject<int>();
+            var realApplyProgress = new Subject<int>();
 
-                    return realUpdateManager.CheckForUpdate()
-                        .SelectMany(updateInfo => {
-                            return Observable.Concat(
-                                realUpdateManager.DownloadReleases(updateInfo.ReleasesToApply).Select(x => x*0.75),
-                                realUpdateManager.ApplyReleases(updateInfo).Select(x => x*0.25 + 75))
-                                .Select(x => (int) x);
-                        }).LoggedCatch(this, Observable.Return(100), "Failed to update to latest remote version");
-                })
-                .Select(x => x/2 + 50)
-                .Multicast(new Subject<int>());
+            var realUpdateResult = eigenUpdateResult
+                .SelectMany(_ => realUpdater.CheckForUpdate(progress: realCheckProgress))
+                .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
+                .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
+                .Finally(realLock.Dispose)
+                .LoggedCatch<Unit, WixUiBootstrapper, Exception>(this, ex => {
+                    // NB: If we don't do this, we won't Collapse the Wave 
+                    // Function(tm) below on 'progress' and it will never complete
+                    realCheckProgress.OnError(ex);
+                    return Observable.Return(Unit.Default);
+                }, "Failed to update to latest remote version");
 
-            realUpdateProgress.Subscribe(progress);
-            realUpdateProgress.Connect();
+            // The real update takes longer than the eigenupdate because we're
+            // downloading from the Internet instead of doing everything 
+            // locally, so give it more weight
+            Observable.Concat(
+                    Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress).Select(x => (x / 3.0) * 0.33),
+                    Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress).Select(x => (x / 3.0) * 0.67))
+                .Select(x => (int)x)
+                .Subscribe(progress);
 
-            return realUpdateProgress
-                .TakeLast(1).Select(_ => Unit.Default)
-                .ObserveOn(RxApp.DeferredScheduler);
+            var ret = Observable.Concat(eigenUpdateResult, realUpdateResult).PublishLast();
+            ret.Connect();
+
+            return ret.ObserveOn(RxApp.DeferredScheduler);
         }
 
         IObservable<Unit> executeUninstall()

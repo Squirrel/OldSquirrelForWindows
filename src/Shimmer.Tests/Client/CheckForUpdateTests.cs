@@ -28,7 +28,7 @@ namespace Shimmer.Tests.Client
 
             var urlDownloader = new Mock<IUrlDownloader>();
             var dlPath = IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOne");
-            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
+            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>(), It.IsAny<IObserver<int>>()))
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
@@ -63,7 +63,7 @@ namespace Shimmer.Tests.Client
 
             var urlDownloader = new Mock<IUrlDownloader>();
             var dlPath = IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOne");
-            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
+            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>(), It.IsAny<IObserver<int>>()))
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
@@ -94,7 +94,7 @@ namespace Shimmer.Tests.Client
 
             var urlDownloader = new Mock<IUrlDownloader>();
             var dlPath = IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOne");
-            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
+            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>(), It.IsAny<IObserver<int>>()))
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
@@ -127,7 +127,7 @@ namespace Shimmer.Tests.Client
 
             var urlDownloader = new Mock<IUrlDownloader>();
             var dlPath = IntegrationTestHelper.GetPath("fixtures", "RELEASES-OnePointOne");
-            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
+            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>(), It.IsAny<IObserver<int>>()))
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
@@ -158,7 +158,7 @@ namespace Shimmer.Tests.Client
             fs.Setup(x => x.GetDirectoryInfo(localPackagesDir)).Returns(dirInfo.Object);
 
             var urlDownloader = new Mock<IUrlDownloader>();
-            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>()))
+            urlDownloader.Setup(x => x.DownloadUrl(It.IsAny<string>(), It.IsAny<IObserver<int>>()))
                 .Returns(Observable.Return("lol this isn't right"));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
