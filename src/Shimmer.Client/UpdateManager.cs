@@ -497,8 +497,15 @@ namespace Shimmer.Client
         IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(string fullDirectoryPath)
         {
             var dirName = Path.GetFileName(fullDirectoryPath);
-            var apps = findAppSetupsToRun(fullDirectoryPath);
             var ver = new Version(dirName.Replace("app-", ""));
+
+            var apps = default(IEnumerable<IAppSetup>);
+            try {
+                apps = findAppSetupsToRun(fullDirectoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                this.Log().ErrorException("Couldn't run cleanups", ex);
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
 
             var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
 
@@ -547,7 +554,15 @@ namespace Shimmer.Client
             };
 
             AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, info => {
-                var appSetups = findAppSetupsToRun(info.NewAppDirectoryRoot) ?? Enumerable.Empty<IAppSetup>();
+                var appSetups = default(IEnumerable<IAppSetup>);
+
+                try {
+                    appSetups = findAppSetupsToRun(info.NewAppDirectoryRoot);
+                } catch (UnauthorizedAccessException ex) {
+                    this.Log().ErrorException("Failed to load IAppSetups in post-install due to access denied", ex);
+                    return;
+                }
+
                 appSetups.ForEach(app =>
                     installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall));
             });
@@ -607,7 +622,7 @@ namespace Shimmer.Client
                 throw;
             }
 
-            return allExeFiles
+            var locatedAppSetups = allExeFiles
                 .Select(x => {
                     try {
                         var ret = Assembly.LoadFile(x.FullName);
@@ -631,6 +646,8 @@ namespace Shimmer.Client
                 })
                 .Where(x => x != null)
                 .ToArray();
+
+            return locatedAppSetups;
         }
 
         // NB: Once we uninstall the old version of the app, we try to schedule
