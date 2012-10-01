@@ -623,31 +623,36 @@ namespace Shimmer.Client
             }
 
             var locatedAppSetups = allExeFiles
-                .Select(x => {
-                    try {
-                        var ret = Assembly.LoadFile(x.FullName);
-                        return ret;
-                    } catch (Exception ex) {
-                        this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
-                        return null;
-                    }
-                })
-                .Where(x => x != null)
+                .Select(x => loadAssemblyOrWhine(x.FullName)).Where(x => x != null)
                 .SelectMany(x => x.GetModules())
-                .SelectMany(x => x.GetTypes()
-                    .Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
-                .Select(x => {
-                    try {
-                        return (IAppSetup)Activator.CreateInstance(x);
-                    } catch (Exception ex) {
-                        this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
-                        return null;
-                    }
-                })
-                .Where(x => x != null)
+                .SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                .Select(createInstanceOrWhine).Where(x => x != null)
                 .ToArray();
 
             return locatedAppSetups;
+        }
+
+        IAppSetup createInstanceOrWhine(Type typeToCreate)
+        {
+            try {
+                return (IAppSetup) Activator.CreateInstance(typeToCreate);
+            }
+            catch (Exception ex) {
+                this.Log().WarnException("Post-install: Failed to create type " + typeToCreate.FullName, ex);
+                return null;
+            }
+        }
+
+        Assembly loadAssemblyOrWhine(string fileToLoad)
+        {
+            try {
+                var ret = Assembly.LoadFile(fileToLoad);
+                return ret;
+            }
+            catch (Exception ex) {
+                this.Log().WarnException("Post-install: load failed for " + fileToLoad, ex);
+                return null;
+            }
         }
 
         // NB: Once we uninstall the old version of the app, we try to schedule
