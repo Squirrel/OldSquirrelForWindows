@@ -67,9 +67,10 @@ namespace Shimmer.Client
             get { return Path.Combine(PackageDirectory, "RELEASES"); }
         }
 
-        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false)
+        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null)
         {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
+            progress = progress ?? new Subject<int>();
 
             var noLock = checkForLock<UpdateInfo>();
             if (noLock != null) return noLock;
@@ -92,7 +93,7 @@ namespace Shimmer.Client
             // Fetch the remote RELEASES file, whether it's a local dir or an 
             // HTTP URL
             if (isHttpUrl(updateUrlOrPath)) {
-                releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"));
+                releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
             } else {
                 var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
 
@@ -100,70 +101,78 @@ namespace Shimmer.Client
                     var text = sr.ReadToEnd();
                     releaseFile = Observable.Return(text);
                 }
+
+                progress.OnNext(100);
+                progress.OnCompleted();
             }
 
             var ret = releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
                 .SelectMany(releases => determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates))
-                .Multicast(new AsyncSubject<UpdateInfo>());
+                .PublishLast();
 
             ret.Connect();
             return ret;
         }
 
-        public IObservable<int> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
+        public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress = null)
         {
-            var noLock = checkForLock<int>();
+            var noLock = checkForLock<Unit>();
             if (noLock != null) return noLock;
 
-            IObservable<int> downloadResult;
+            progress = progress ?? new Subject<int>();
+            IObservable<Unit> downloadResult = null;
 
             if (isHttpUrl(updateUrlOrPath)) {
                 var urls = releasesToDownload.Select(x => String.Format("{0}/{1}", updateUrlOrPath, x.Filename));
                 var paths = releasesToDownload.Select(x => Path.Combine(rootAppDirectory, "packages", x.Filename));
 
-                downloadResult = urlDownloader.QueueBackgroundDownloads(urls, paths);
+                downloadResult = urlDownloader.QueueBackgroundDownloads(urls, paths, progress);
             } else {
                 var toIncrement = 100.0 / releasesToDownload.Count();
 
                 // Do a parallel copy from the remote directory to the local
-                downloadResult = releasesToDownload.ToObservable()
+                var downloads = releasesToDownload.ToObservable()
                     .Select(x => fileSystem.CopyAsync(
                         Path.Combine(updateUrlOrPath, x.Filename),
                         Path.Combine(rootAppDirectory, "packages", x.Filename)))
                     .Merge(4)
+                    .Publish();
+
+                downloads
                     .Scan(0.0, (acc, _) => acc + toIncrement)
-                    .Select(x => (int)x);
+                    .Select(x => (int) x)
+                    .Subscribe(progress);
+
+                downloadResult = downloads.TakeLast(1);
+                downloads.Connect();
             }
 
-            return downloadResult
-                .Select(x => (int)(x * 0.95))
-                .Concat(checksumAllPackages(releasesToDownload).Select(_ => 100));
+            return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
         }
 
-        public IObservable<int> ApplyReleases(UpdateInfo updateInfo)
+        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
-            var noLock = checkForLock<int>();
+            var noLock = checkForLock<Unit>();
             if (noLock != null) return noLock;
-
-            // NB: This is so gross, but reporting accurate progress here is 
-            // just too damn hard.
-            var ret = new ReplaySubject<int>();
+            progress = progress ?? new Subject<int>();
 
             // NB: It's important that we update the local releases file *only* 
             // once the entire operation has completed, even though we technically
             // could do it after DownloadUpdates finishes. We do this so that if
             // we get interrupted / killed during this operation, we'll start over
-            cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
-                .Do(_ => ret.OnNext(10), ret.OnError)
+            var ret = cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
+                .Do(_ => progress.OnNext(10), progress.OnError)
                 .SelectMany(_ => createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion))
-                .Do(_ => ret.OnNext(50), ret.OnError)
+                .Do(_ => progress.OnNext(50), progress.OnError)
                 .SelectMany(release =>
                     Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
-                .Do(_ => ret.OnNext(95), ret.OnError)
+                .Do(_ => progress.OnNext(95), progress.OnError)
                 .SelectMany(_ => UpdateLocalReleasesFile())
-                .Subscribe(_ => ret.OnNext(100), ret.OnError, ret.OnCompleted);
+                .Do(_ => progress.OnNext(100)).Finally(() => progress.OnCompleted())
+                .PublishLast();
 
+            ret.Connect();
             return ret;
         }
 

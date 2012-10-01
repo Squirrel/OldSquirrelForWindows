@@ -143,6 +143,8 @@ namespace Shimmer.WiXUi.ViewModels
                 var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
                 var eigenUpdater = new UpdateManager(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), BundledRelease.PackageName, fxVersion);
 
+#if FALSE
+                // XXX: This all changes soon, no sense in fixing it up
                 var eigenLock = eigenUpdater.AcquireUpdateLock();
 
                 var eigenUpdateProgress = eigenUpdater.CheckForUpdate()
@@ -178,6 +180,7 @@ namespace Shimmer.WiXUi.ViewModels
                     .Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw("Failed to install application", ex));
+#endif
             });
 
             wixEvents.ApplyCompleteObs.Subscribe(eventArgs => {
