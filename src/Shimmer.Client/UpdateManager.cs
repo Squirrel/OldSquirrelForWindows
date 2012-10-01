@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -497,8 +498,15 @@ namespace Shimmer.Client
         IEnumerable<ShortcutCreationRequest> runAppSetupCleanups(string fullDirectoryPath)
         {
             var dirName = Path.GetFileName(fullDirectoryPath);
-            var apps = findAppSetupsToRun(fullDirectoryPath);
             var ver = new Version(dirName.Replace("app-", ""));
+
+            var apps = default(IEnumerable<IAppSetup>);
+            try {
+                apps = findAppSetupsToRun(fullDirectoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                this.Log().ErrorException("Couldn't run cleanups", ex);
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
 
             var ret = apps.SelectMany(app => uninstallAppVersion(app, ver)).ToArray();
 
@@ -547,7 +555,16 @@ namespace Shimmer.Client
             };
 
             AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, info => {
-                findAppSetupsToRun(info.NewAppDirectoryRoot).ForEach(app =>
+                var appSetups = default(IEnumerable<IAppSetup>);
+
+                try {
+                    appSetups = findAppSetupsToRun(info.NewAppDirectoryRoot);
+                } catch (UnauthorizedAccessException ex) {
+                    this.Log().ErrorException("Failed to load IAppSetups in post-install due to access denied", ex);
+                    return;
+                }
+
+                appSetups.ForEach(app =>
                     installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall));
             });
         }
@@ -595,33 +612,48 @@ namespace Shimmer.Client
 
         IEnumerable<IAppSetup> findAppSetupsToRun(string appDirectory)
         {
+            var allExeFiles = default(FileInfoBase[]);
+
             try {
-                return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
-                    .Select(x => {
-                        try {
-                            var ret = Assembly.LoadFile(x.FullName);
-                            return ret;
-                        } catch (Exception ex) {
-                            this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
-                            return null;
-                        }
-                    })
-                    .Where(x => x != null)
-                    .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
-                    .Select(x => {
-                        try {
-                            return (IAppSetup)Activator.CreateInstance(x);
-                        } catch (Exception ex) {
-                            this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
-                            return null;
-                        }
-                    })
-                    .Where(x => x != null)
-                    .ToArray();
+                allExeFiles = fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe");
             } catch (UnauthorizedAccessException ex) {
                 // NB: This can happen if we run into a MoveFileEx'd directory,
                 // where we can't even get the list of files in it.
                 this.Log().WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
+                throw;
+            }
+
+            var locatedAppSetups = allExeFiles
+                .Select(x => loadAssemblyOrWhine(x.FullName)).Where(x => x != null)
+                .SelectMany(x => x.GetModules())
+                .SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                .Select(createInstanceOrWhine).Where(x => x != null)
+                .ToArray();
+
+            return locatedAppSetups.Length > 0
+                ? locatedAppSetups
+                : allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName)).ToArray();
+        }
+
+        IAppSetup createInstanceOrWhine(Type typeToCreate)
+        {
+            try {
+                return (IAppSetup) Activator.CreateInstance(typeToCreate);
+            }
+            catch (Exception ex) {
+                this.Log().WarnException("Post-install: Failed to create type " + typeToCreate.FullName, ex);
+                return null;
+            }
+        }
+
+        Assembly loadAssemblyOrWhine(string fileToLoad)
+        {
+            try {
+                var ret = Assembly.LoadFile(fileToLoad);
+                return ret;
+            }
+            catch (Exception ex) {
+                this.Log().WarnException("Post-install: load failed for " + fileToLoad, ex);
                 return null;
             }
         }
@@ -647,6 +679,24 @@ namespace Shimmer.Client
                 .MapReduce(x => Observable.Start(() => Utility.DeleteDirectory(x.FullName), RxApp.TaskpoolScheduler)
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default)))
                 .Aggregate(Unit.Default, (acc, x) => acc);
+        }
+    }
+
+    public class DidntFollowInstructionsAppSetup : AppSetup
+    {
+        readonly string shortCutName;
+        public override string ShortcutName {
+            get { return shortCutName; }
+        }
+
+        readonly string target;
+        protected override string Target { get { return target; } }
+
+        public DidntFollowInstructionsAppSetup(string exeFile)
+        {
+            var fvi = FileVersionInfo.GetVersionInfo(exeFile);
+            shortCutName = fvi.ProductName ?? fvi.FileDescription ?? fvi.FileName.Replace(".exe", "");
+            target = exeFile;
         }
     }
 }
