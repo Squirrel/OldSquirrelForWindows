@@ -67,7 +67,7 @@ namespace Shimmer.Client
             get { return Path.Combine(PackageDirectory, "RELEASES"); }
         }
 
-        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false)
+        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null)
         {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
 
