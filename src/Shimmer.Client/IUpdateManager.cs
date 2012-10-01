@@ -30,18 +30,22 @@ namespace Shimmer.Client
         /// <param name="ignoreDeltaUpdates">Set this flag if applying a release
         /// fails to fall back to a full release, which takes longer to download
         /// but is less error-prone.</param>
+        /// <param name="progress">A Observer which can be used to report Progress - 
+        /// will return values from 0-100 and Complete, or Throw</param>
         /// <returns>An UpdateInfo object representing the updates to install.
         /// </returns>
-        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false);
+        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null);
 
         /// <summary>
         /// Download a list of releases into the local package directory.
         /// </summary>
         /// <param name="releasesToDownload">The list of releases to download, 
         /// almost always from UpdateInfo.ReleasesToApply.</param>
-        /// <returns>A progress Observable - will return values from 0-100 and
-        /// Complete, or Throw</returns>
-        IObservable<int> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload);
+        /// <param name="progress">A Observer which can be used to report Progress - 
+        /// will return values from 0-100 and Complete, or Throw</param>
+        /// <returns>A completion Observable - either returns a single 
+        /// Unit.Default then Complete, or Throw</returns>
+        IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress = null);
 
         /// <summary>
         /// Take an already downloaded set of releases and apply them, 
@@ -50,9 +54,11 @@ namespace Shimmer.Client
         /// </summary>
         /// <param name="updateInfo">The UpdateInfo instance acquired from 
         /// CheckForUpdate</param>
+        /// <param name="progress">A Observer which can be used to report Progress - 
+        /// will return values from 0-100 and Complete, or Throw</param>
         /// <returns>A progress Observable - will return values from 0-100 and
         /// Complete, or Throw</returns>
-        IObservable<int> ApplyReleases(UpdateInfo updateInfo);
+        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null);
     }
 
     [ContractClassFor(typeof(IUpdateManager))]
@@ -63,23 +69,23 @@ namespace Shimmer.Client
             return default(IDisposable);
         }
 
-        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false)
+        public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null)
         {
             return default(IObservable<UpdateInfo>);
         }
 
-        public IObservable<int> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload)
+        public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress = null)
         {
             // XXX: Why doesn't this work?
             Contract.Requires(releasesToDownload != null);
             Contract.Requires(releasesToDownload.Any());
-            return default(IObservable<int>);
+            return default(IObservable<Unit>);
         }
 
-        public IObservable<int> ApplyReleases(UpdateInfo updateInfo)
+        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
             Contract.Requires(updateInfo != null);
-            return default(IObservable<int>);
+            return default(IObservable<Unit>);
         }
     }
 
