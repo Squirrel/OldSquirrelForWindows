@@ -195,11 +195,20 @@ namespace Shimmer.Core
 
     public sealed class SingleGlobalInstance : IDisposable
     {
-        readonly bool HasHandle = false;
+        readonly static object gate = 42;
+        bool HasHandle = false;
         Mutex mutex;
 
         public SingleGlobalInstance(string key, int timeOut)
         {
+            if (RxApp.InUnitTestRunner()) {
+                HasHandle = Monitor.TryEnter(gate, timeOut);
+
+                if (HasHandle == false)
+                    throw new TimeoutException("Timeout waiting for exclusive access on SingleInstance");
+                return;
+            }
+
             initMutex(key);
             try
             {
@@ -230,8 +239,15 @@ namespace Shimmer.Core
 
         public void Dispose()
         {
-            if (HasHandle && mutex != null)
+            if (RxApp.InUnitTestRunner() && HasHandle) {
+                Monitor.Exit(gate);
+                HasHandle = false;
+            }
+
+            if (HasHandle && mutex != null) {
                 mutex.ReleaseMutex();
+                HasHandle = false;
+            }
         }
     }
 }
