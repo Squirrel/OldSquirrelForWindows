@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
@@ -629,7 +630,9 @@ namespace Shimmer.Client
                 .Select(createInstanceOrWhine).Where(x => x != null)
                 .ToArray();
 
-            return locatedAppSetups;
+            return locatedAppSetups.Length > 0
+                ? locatedAppSetups
+                : allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName)).ToArray();
         }
 
         IAppSetup createInstanceOrWhine(Type typeToCreate)
@@ -676,6 +679,24 @@ namespace Shimmer.Client
                 .MapReduce(x => Observable.Start(() => Utility.DeleteDirectory(x.FullName), RxApp.TaskpoolScheduler)
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default)))
                 .Aggregate(Unit.Default, (acc, x) => acc);
+        }
+    }
+
+    public class DidntFollowInstructionsAppSetup : AppSetup
+    {
+        readonly string shortCutName;
+        public override string ShortcutName {
+            get { return shortCutName; }
+        }
+
+        readonly string target;
+        protected override string Target { get { return target; } }
+
+        public DidntFollowInstructionsAppSetup(string exeFile)
+        {
+            var fvi = FileVersionInfo.GetVersionInfo(exeFile);
+            shortCutName = fvi.ProductName ?? fvi.FileDescription ?? fvi.FileName.Replace(".exe", "");
+            target = exeFile;
         }
     }
 }
