@@ -34,7 +34,7 @@ namespace Shimmer.Client
         /// will return values from 0-100 and Complete, or Throw</param>
         /// <returns>An UpdateInfo object representing the updates to install.
         /// </returns>
-        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null);
+        IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates, IObserver<int> progress);
 
         /// <summary>
         /// Download a list of releases into the local package directory.
@@ -45,7 +45,7 @@ namespace Shimmer.Client
         /// will return values from 0-100 and Complete, or Throw</param>
         /// <returns>A completion Observable - either returns a single 
         /// Unit.Default then Complete, or Throw</returns>
-        IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress = null);
+        IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress);
 
         /// <summary>
         /// Take an already downloaded set of releases and apply them, 
@@ -58,7 +58,7 @@ namespace Shimmer.Client
         /// will return values from 0-100 and Complete, or Throw</param>
         /// <returns>A progress Observable - will return values from 0-100 and
         /// Complete, or Throw</returns>
-        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null);
+        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress);
     }
 
     [ContractClassFor(typeof(IUpdateManager))]
@@ -104,9 +104,9 @@ namespace Shimmer.Client
                 return Observable.Throw<ReleaseEntry>(ex);
             }
 
-            var ret = This.CheckForUpdate()
-                .SelectMany(x => This.DownloadReleases(x.ReleasesToApply).TakeLast(1).Select(_ => x))
-                .SelectMany(x => This.ApplyReleases(x).TakeLast(1).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).LastOrDefault()))
+            var ret = This.CheckForUpdate(false, null)
+                .SelectMany(x => This.DownloadReleases(x.ReleasesToApply, null).TakeLast(1).Select(_ => x))
+                .SelectMany(x => This.ApplyReleases(x, null).TakeLast(1).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).LastOrDefault()))
                 .Finally(() => theLock.Dispose())
                 .Multicast(new AsyncSubject<ReleaseEntry>());
 

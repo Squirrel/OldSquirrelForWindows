@@ -15,8 +15,8 @@ namespace Shimmer.Client
 {
     public interface IUrlDownloader : IEnableLogger
     {
-        IObservable<string> DownloadUrl(string url, IObserver<int> progress = null);
-        IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress = null);
+        IObservable<string> DownloadUrl(string url, IObserver<int> progress);
+        IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress);
     }
 
     [Serializable]
