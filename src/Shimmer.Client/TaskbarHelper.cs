@@ -3,9 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Shimmer.Client {
-    public static class TaskbarHelper {
-        public static bool IsPinnedToTaskbar(string executablePath) {
+namespace Shimmer.Client 
+{
+    public static class TaskbarHelper 
+    {
+        public static bool IsPinnedToTaskbar(string executablePath) 
+        {
             var taskbarPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
@@ -15,7 +18,8 @@ namespace Shimmer.Client {
                 .Any(shortcut => String.Equals(shortcut.Target, executablePath, StringComparison.OrdinalIgnoreCase));
         }
 
-        public static void PinToTaskbar(string executablePath) {
+        public static void PinToTaskbar(string executablePath) 
+        {
             pinUnpin(executablePath, "pin to taskbar");
 
             if (!IsPinnedToTaskbar(executablePath)) {
@@ -23,7 +27,8 @@ namespace Shimmer.Client {
             }
         }
 
-        public static void UnpinFromTaskbar(string executablePath) {
+        public static void UnpinFromTaskbar(string executablePath) 
+        {
             pinUnpin(executablePath, "unpin from taskbar");
 
             if (IsPinnedToTaskbar(executablePath)) {
@@ -31,12 +36,14 @@ namespace Shimmer.Client {
             }
         }
 
-        private static void pinUnpin(string executablePath, string verbToExecute) {
+        static void pinUnpin(string executablePath, string verbToExecute) 
+        {
             if (!File.Exists(executablePath)) {
                 throw new FileNotFoundException(executablePath);
             }
 
             dynamic shellApplication = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application"));
+
             try {
                 var path = Path.GetDirectoryName(executablePath);
                 var fileName = Path.GetFileName(executablePath);
@@ -53,8 +60,7 @@ namespace Shimmer.Client {
                         verb.DoIt();
                     }
                 }
-            }
-            finally {
+            } finally {
                 Marshal.ReleaseComObject(shellApplication);
             }
         }
