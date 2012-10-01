@@ -547,7 +547,8 @@ namespace Shimmer.Client
             };
 
             AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, info => {
-                findAppSetupsToRun(info.NewAppDirectoryRoot).ForEach(app =>
+                var appSetups = findAppSetupsToRun(info.NewAppDirectoryRoot) ?? Enumerable.Empty<IAppSetup>();
+                appSetups.ForEach(app =>
                     installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall));
             });
         }
@@ -595,35 +596,41 @@ namespace Shimmer.Client
 
         IEnumerable<IAppSetup> findAppSetupsToRun(string appDirectory)
         {
+            var allExeFiles = default(FileInfoBase[]);
+
             try {
-                return fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe")
-                    .Select(x => {
-                        try {
-                            var ret = Assembly.LoadFile(x.FullName);
-                            return ret;
-                        } catch (Exception ex) {
-                            this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
-                            return null;
-                        }
-                    })
-                    .Where(x => x != null)
-                    .SelectMany(x => x.GetModules()).SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
-                    .Select(x => {
-                        try {
-                            return (IAppSetup)Activator.CreateInstance(x);
-                        } catch (Exception ex) {
-                            this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
-                            return null;
-                        }
-                    })
-                    .Where(x => x != null)
-                    .ToArray();
+                allExeFiles = fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe");
             } catch (UnauthorizedAccessException ex) {
                 // NB: This can happen if we run into a MoveFileEx'd directory,
                 // where we can't even get the list of files in it.
                 this.Log().WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
-                return null;
+                throw;
             }
+
+            return allExeFiles
+                .Select(x => {
+                    try {
+                        var ret = Assembly.LoadFile(x.FullName);
+                        return ret;
+                    } catch (Exception ex) {
+                        this.Log().WarnException("Post-install: load failed for " + x.FullName, ex);
+                        return null;
+                    }
+                })
+                .Where(x => x != null)
+                .SelectMany(x => x.GetModules())
+                .SelectMany(x => x.GetTypes()
+                    .Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                .Select(x => {
+                    try {
+                        return (IAppSetup)Activator.CreateInstance(x);
+                    } catch (Exception ex) {
+                        this.Log().WarnException("Post-install: Failed to create type " + x.FullName, ex);
+                        return null;
+                    }
+                })
+                .Where(x => x != null)
+                .ToArray();
         }
 
         // NB: Once we uninstall the old version of the app, we try to schedule
