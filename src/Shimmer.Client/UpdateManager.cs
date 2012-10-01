@@ -450,18 +450,18 @@ namespace Shimmer.Client
                 });
         }
 
-        void fixPinnedExecutables(Version newCurrentVersion) {
+        void fixPinnedExecutables(Version newCurrentVersion) 
+        {
             if (Environment.OSVersion.Version < new Version(6, 1)) {
                 return;
             }
 
-            var oldAppDirectories = fileSystem
-                .GetDirectoryInfo(rootAppDirectory)
-                .GetDirectories()
+            var oldAppDirectories = fileSystem.GetDirectoryInfo(rootAppDirectory).GetDirectories()
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
                 .Select(x => x.FullName)
                 .ToArray();
+
             var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
 
             var taskbarPath = Path.Combine(
@@ -470,25 +470,26 @@ namespace Shimmer.Client
 
             foreach (var shortcut in fileSystem.GetDirectoryInfo(taskbarPath).GetFiles("*.lnk").Select(x => new ShellLink(x.FullName))) {
                 foreach (var oldAppDirectory in oldAppDirectories) {
-                    if (shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                    if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) continue;
 
-                        // replace old app path with new app path and check, if executable still exists
-                        var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
-                        if (fileSystem.GetFileInfo(newTarget).Exists) {
-                            shortcut.Target = newTarget;
+                    // replace old app path with new app path and check, if executable still exists
+                    var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
 
-                            // replace working directory too if appropriate
-                            if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
-                                shortcut.WorkingDirectory = Path.Combine(newAppPath,
-                                    shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
-                            }
+                    if (fileSystem.GetFileInfo(newTarget).Exists) {
+                        shortcut.Target = newTarget;
 
-                            shortcut.Save();
-                        } else {
-                            TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
+                        // replace working directory too if appropriate
+                        if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                            shortcut.WorkingDirectory = Path.Combine(newAppPath,
+                                shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
                         }
-                        break;
+
+                        shortcut.Save();
+                    } else {
+                        TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
                     }
+
+                    break;
                 }
             }
         }
