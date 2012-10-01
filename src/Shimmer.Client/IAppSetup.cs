@@ -153,11 +153,15 @@ namespace Shimmer.Client
             }
         }
 
+        protected virtual string Target {
+            get { return null; }
+        }
+
         public virtual IEnumerable<ShortcutCreationRequest> GetAppShortcutList()
         {
             // XXX: Make sure this trick actually works; we want the derived 
             // type's assembly
-            var target = this.GetType().Assembly.Location;
+            var target = Target ?? this.GetType().Assembly.Location;
 
             return new[] {
                 new ShortcutCreationRequest() {
