@@ -7,12 +7,14 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using NuGet;
 using ReactiveUI;
 using Shimmer.Core;
@@ -28,7 +30,7 @@ using StreamReader = System.IO.StreamReader;
 namespace Shimmer.Client
 {
     [Serializable]
-    public class UpdateManager : IEnableLogger, IUpdateManager
+    public sealed class UpdateManager : IEnableLogger, IUpdateManager, IDisposable
     {
         readonly IFileSystemFactory fileSystem;
         readonly string rootAppDirectory;
@@ -36,6 +38,7 @@ namespace Shimmer.Client
         readonly IUrlDownloader urlDownloader;
         readonly string updateUrlOrPath;
         readonly FrameworkVersion appFrameworkVersion;
+        EventLoopScheduler lockScheduler = new EventLoopScheduler();
 
         bool hasUpdateLock;
 
@@ -179,11 +182,11 @@ namespace Shimmer.Client
         public IDisposable AcquireUpdateLock()
         {
             var key = Utility.CalculateStreamSHA1(new MemoryStream(Encoding.UTF8.GetBytes(rootAppDirectory)));
-            var ret = new SingleGlobalInstance(key, 500);
+            var ret = Observable.Start(() => new SingleGlobalInstance(key, 500), lockScheduler).First();
 
             hasUpdateLock = true;
             return Disposable.Create(() => {
-                ret.Dispose();
+                Observable.Start(ret.Dispose, lockScheduler).First();
                 hasUpdateLock = false;
             });
         }
@@ -206,6 +209,14 @@ namespace Shimmer.Client
                 cleanUpOldVersions(new Version(255, 255, 255, 255));
                 Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
             }, RxApp.TaskpoolScheduler);
+        }
+
+        public void Dispose()
+        {
+            var disp = Interlocked.Exchange(ref lockScheduler, null);
+            if (disp != null) {
+                disp.Dispose();
+            }
         }
 
         IObservable<TRet> checkForLock<TRet>()
