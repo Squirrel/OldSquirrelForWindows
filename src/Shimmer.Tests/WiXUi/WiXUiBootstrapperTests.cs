@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -152,7 +153,7 @@ namespace Shimmer.Tests.WiXUi
 
             using (Utility.WithTempDirectory(out outDir))
             using (withFakeInstallDirectory(out dir)) {
-                var fixture = ExposedObject.From(new WixUiBootstrapper(events.Object, currentAssemblyDir: dir));
+                var fixture = new WixUiBootstrapper(events.Object, currentAssemblyDir: dir);
                 var pkg = new ZipPackage(Path.Combine(dir, "SampleUpdatingApp.1.1.0.0.nupkg"));
                 var progress = new Subject<int>();
 
@@ -161,7 +162,8 @@ namespace Shimmer.Tests.WiXUi
 
                 // NB: The casts are here so that the dynamic binder doens't get
                 // fooled into trying to match against the wrong signature
-                IObservable<Unit> ret = fixture.executeInstall(dir, (IPackage) pkg, (IObserver<int>) progress, outDir);
+                var mi = fixture.GetType().GetMethod("executeInstall", BindingFlags.Instance | BindingFlags.NonPublic);
+                var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] {dir, pkg, progress, outDir});
                 ret.First();
 
                 // Progress should be monotonically increasing

@@ -189,16 +189,17 @@ namespace Shimmer.WiXUi.ViewModels
             var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
             var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
-            var realLock = realUpdater.AcquireUpdateLock();
+            IDisposable realLock = null;
             var realCheckProgress = new Subject<int>();
             var realCopyFileProgress = new Subject<int>();
             var realApplyProgress = new Subject<int>();
 
             var realUpdateResult = eigenUpdateResult
+                .Do(_ => realLock = realUpdater.AcquireUpdateLock())
                 .SelectMany(_ => realUpdater.CheckForUpdate(progress: realCheckProgress))
                 .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
                 .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
-                .Finally(realLock.Dispose)
+                .Do(_ => realLock.Dispose())
                 .LoggedCatch<Unit, WixUiBootstrapper, Exception>(this, ex => {
                     // NB: If we don't do this, we won't Collapse the Wave 
                     // Function(tm) below on 'progress' and it will never complete
