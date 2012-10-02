@@ -166,6 +166,14 @@ namespace Shimmer.Tests.WiXUi
                 var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] {dir, pkg, progress, outDir});
                 ret.First();
 
+                var filesToLookFor = new[] {
+                    "SampleUpdatingApp\\app-1.1.0.0\\SampleUpdatingApp.exe",
+                    "SampleUpdatingApp\\packages\\RELEASES",
+                    "SampleUpdatingApp\\packages\\SampleUpdatingApp.1.1.0.0.nupkg",
+                };
+
+                filesToLookFor.All(x => File.Exists(Path.Combine(outDir, x))).ShouldBeTrue();
+
                 // Progress should be monotonically increasing
                 progressValues.Count.ShouldBeGreaterThan(2);
                 progressValues.Zip(progressValues.Skip(1), (prev, cur) => cur - prev).All(x => x > 0).ShouldBeTrue();
