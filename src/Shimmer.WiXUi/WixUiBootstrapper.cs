@@ -173,53 +173,51 @@ namespace Shimmer.WiXUi.ViewModels
             // this rigamarole is so that developers don't have to rebuild the 
             // installer as often (never, technically).
 
-            var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-            var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
+            return Observable.Start(() => {
+                var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
+                var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
-            var eigenLock = eigenUpdater.AcquireUpdateLock();
-            var eigenCheckProgress = new Subject<int>();
-            var eigenCopyFileProgress = new Subject<int>();
-            var eigenApplyProgress = new Subject<int>();
+                var eigenCheckProgress = new Subject<int>();
+                var eigenCopyFileProgress = new Subject<int>();
+                var eigenApplyProgress = new Subject<int>();
 
-            var eigenUpdateResult = eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
-                .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
-                .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
-                .Finally(eigenLock.Dispose);
+                var realCheckProgress = new Subject<int>();
+                var realCopyFileProgress = new Subject<int>();
+                var realApplyProgress = new Subject<int>();
 
-            var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
-            var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
+                // The real update takes longer than the eigenupdate because we're
+                // downloading from the Internet instead of doing everything 
+                // locally, so give it more weight
+                Observable.Concat(
+                        Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress).Select(x => (x / 3.0) * 0.33),
+                        Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress).Select(x => (x / 3.0) * 0.67))
+                    .Select(x => (int)x)
+                    .Subscribe(progress);
 
-            IDisposable realLock = null;
-            var realCheckProgress = new Subject<int>();
-            var realCopyFileProgress = new Subject<int>();
-            var realApplyProgress = new Subject<int>();
+                using (eigenUpdater.AcquireUpdateLock()) {
+                    eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
+                        .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
+                        .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
+                        .First();
+                }
 
-            var realUpdateResult = eigenUpdateResult
-                .Do(_ => realLock = realUpdater.AcquireUpdateLock())
-                .SelectMany(_ => realUpdater.CheckForUpdate(progress: realCheckProgress))
-                .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
-                .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
-                .Do(_ => realLock.Dispose())
-                .LoggedCatch<Unit, WixUiBootstrapper, Exception>(this, ex => {
-                    // NB: If we don't do this, we won't Collapse the Wave 
-                    // Function(tm) below on 'progress' and it will never complete
-                    realCheckProgress.OnError(ex);
-                    return Observable.Return(Unit.Default);
-                }, "Failed to update to latest remote version");
+                var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
+                var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
-            // The real update takes longer than the eigenupdate because we're
-            // downloading from the Internet instead of doing everything 
-            // locally, so give it more weight
-            Observable.Concat(
-                    Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress).Select(x => (x / 3.0) * 0.33),
-                    Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress).Select(x => (x / 3.0) * 0.67))
-                .Select(x => (int)x)
-                .Subscribe(progress);
+                using (realUpdater.AcquireUpdateLock()) {
+                    realUpdater.CheckForUpdate(progress: realCheckProgress)
+                        .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
+                        .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
+                        .LoggedCatch<Unit, WixUiBootstrapper, Exception>(this, ex => {
+                            // NB: If we don't do this, we won't Collapse the Wave 
+                            // Function(tm) below on 'progress' and it will never complete
+                            realCheckProgress.OnError(ex);
+                            return Observable.Return(Unit.Default);
+                        }, "Failed to update to latest remote version")
+                        .First();
+                }
 
-            var ret = Observable.Concat(eigenUpdateResult, realUpdateResult).PublishLast();
-            ret.Connect();
-
-            return ret.ObserveOn(RxApp.DeferredScheduler);
+            }).ObserveOn(RxApp.DeferredScheduler);
         }
 
         IObservable<Unit> executeUninstall()
