@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -198,11 +199,12 @@ namespace Shimmer.Core
         readonly static object gate = 42;
         bool HasHandle = false;
         Mutex mutex;
+        EventLoopScheduler lockScheduler = new EventLoopScheduler();
 
         public SingleGlobalInstance(string key, int timeOut)
         {
             if (RxApp.InUnitTestRunner()) {
-                HasHandle = Monitor.TryEnter(gate, timeOut);
+                HasHandle = Observable.Start(() => Monitor.TryEnter(gate, timeOut), lockScheduler).First();
 
                 if (HasHandle == false)
                     throw new TimeoutException("Timeout waiting for exclusive access on SingleInstance");
@@ -213,9 +215,9 @@ namespace Shimmer.Core
             try
             {
                 if (timeOut <= 0)
-                    HasHandle = mutex.WaitOne(Timeout.Infinite, false);
+                    HasHandle = Observable.Start(() => mutex.WaitOne(Timeout.Infinite, false), lockScheduler).First();
                 else
-                    HasHandle = mutex.WaitOne(timeOut, false);
+                    HasHandle = Observable.Start(() => mutex.WaitOne(timeOut, false), lockScheduler).First();
 
                 if (HasHandle == false)
                     throw new TimeoutException("Timeout waiting for exclusive access on SingleInstance");
@@ -239,15 +241,17 @@ namespace Shimmer.Core
 
         public void Dispose()
         {
-            if (RxApp.InUnitTestRunner() && HasHandle) {
-                Monitor.Exit(gate);
+            if (HasHandle && RxApp.InUnitTestRunner()) {
+                Observable.Start(() => Monitor.Exit(gate), lockScheduler).First();
                 HasHandle = false;
             }
 
             if (HasHandle && mutex != null) {
-                mutex.ReleaseMutex();
+                Observable.Start(() => mutex.ReleaseMutex(), lockScheduler).First();
                 HasHandle = false;
             }
+
+            lockScheduler.Dispose();
         }
     }
 }
