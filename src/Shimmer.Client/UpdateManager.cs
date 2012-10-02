@@ -7,14 +7,12 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using NuGet;
 using ReactiveUI;
 using Shimmer.Core;
@@ -30,7 +28,7 @@ using StreamReader = System.IO.StreamReader;
 namespace Shimmer.Client
 {
     [Serializable]
-    public sealed class UpdateManager : IEnableLogger, IUpdateManager, IDisposable
+    public class UpdateManager : IEnableLogger, IUpdateManager
     {
         readonly IFileSystemFactory fileSystem;
         readonly string rootAppDirectory;
@@ -38,7 +36,6 @@ namespace Shimmer.Client
         readonly IUrlDownloader urlDownloader;
         readonly string updateUrlOrPath;
         readonly FrameworkVersion appFrameworkVersion;
-        EventLoopScheduler lockScheduler = new EventLoopScheduler();
 
         bool hasUpdateLock;
 
@@ -95,18 +92,23 @@ namespace Shimmer.Client
 
             // Fetch the remote RELEASES file, whether it's a local dir or an 
             // HTTP URL
-            if (isHttpUrl(updateUrlOrPath)) {
-                releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
-            } else {
-                var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
+            try {
+                if (isHttpUrl(updateUrlOrPath)) {
+                    releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
+                } else {
+                    var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
 
-                using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
-                    var text = sr.ReadToEnd();
-                    releaseFile = Observable.Return(text);
-                }
+                    using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
+                        var text = sr.ReadToEnd();
+                        releaseFile = Observable.Return(text);
+                    }
 
-                progress.OnNext(100);
+                    progress.OnNext(100);
+                    progress.OnCompleted();
+                }               
+            } catch (Exception ex) {
                 progress.OnCompleted();
+                return Observable.Throw<UpdateInfo>(ex);
             }
 
             var ret = releaseFile
@@ -182,11 +184,11 @@ namespace Shimmer.Client
         public IDisposable AcquireUpdateLock()
         {
             var key = Utility.CalculateStreamSHA1(new MemoryStream(Encoding.UTF8.GetBytes(rootAppDirectory)));
-            var ret = Observable.Start(() => new SingleGlobalInstance(key, 500), lockScheduler).First();
+            var ret = new SingleGlobalInstance(key, 500);
 
             hasUpdateLock = true;
             return Disposable.Create(() => {
-                Observable.Start(ret.Dispose, lockScheduler).First();
+                ret.Dispose();
                 hasUpdateLock = false;
             });
         }
@@ -209,14 +211,6 @@ namespace Shimmer.Client
                 cleanUpOldVersions(new Version(255, 255, 255, 255));
                 Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
             }, RxApp.TaskpoolScheduler);
-        }
-
-        public void Dispose()
-        {
-            var disp = Interlocked.Exchange(ref lockScheduler, null);
-            if (disp != null) {
-                disp.Dispose();
-            }
         }
 
         IObservable<TRet> checkForLock<TRet>()
