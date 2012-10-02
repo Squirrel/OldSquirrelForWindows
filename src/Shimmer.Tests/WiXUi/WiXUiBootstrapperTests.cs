@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Ionic.Zip;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using Moq;
 using NuGet;
@@ -160,8 +161,6 @@ namespace Shimmer.Tests.WiXUi
                 var progressValues = new List<int>();
                 progress.Subscribe(progressValues.Add);
 
-                // NB: The casts are here so that the dynamic binder doens't get
-                // fooled into trying to match against the wrong signature
                 var mi = fixture.GetType().GetMethod("executeInstall", BindingFlags.Instance | BindingFlags.NonPublic);
                 var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] {dir, pkg, progress, outDir});
                 ret.First();
@@ -201,7 +200,36 @@ namespace Shimmer.Tests.WiXUi
         [Fact]
         public void UninstallRemovesEverything()
         {
-            throw new NotImplementedException();
+            string dir;
+
+            var events = new Mock<IWiXEvents>();
+            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(Observable.Never<DetectPackageCompleteEventArgs>());
+            events.SetupGet(x => x.ErrorObs).Returns(Observable.Never<ErrorEventArgs>());
+            events.SetupGet(x => x.PlanCompleteObs).Returns(Observable.Never<PlanCompleteEventArgs>());
+            events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
+
+            events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+            events.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
+
+            var engine = new Mock<IEngine>();
+            engine.Setup(x => x.Plan(LaunchAction.Uninstall)).Verifiable();
+            events.SetupGet(x => x.Engine).Returns(engine.Object);
+
+            using (withFakeAlreadyInstalledApp(out dir)) {
+                var fixture = new WixUiBootstrapper(events.Object, currentAssemblyDir: dir);
+                var progress = new Subject<int>();
+
+                var progressValues = new List<int>();
+                progress.Subscribe(progressValues.Add);
+
+                var mi = fixture.GetType().GetMethod("executeUninstall", BindingFlags.Instance | BindingFlags.NonPublic);
+                var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] {});
+                ret.First();
+
+                var di = new DirectoryInfo(dir);
+                di.GetDirectories().Any().ShouldBeFalse();
+                di.GetFiles().Any().ShouldBeFalse();
+            }
         }
 
         //
@@ -239,6 +267,17 @@ namespace Shimmer.Tests.WiXUi
             // NB: This is a temporary hack. The reason we serialize the tests
             // like this, is to make sure that we don't have two tests registering
             // their Service Locators with RxApp.
+            Monitor.Enter(gate);
+            return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
+        }
+
+        static IDisposable withFakeAlreadyInstalledApp(out string path)
+        {
+            var ret = Utility.WithTempDirectory(out path);
+
+            var zf = new ZipFile(IntegrationTestHelper.GetPath("fixtures", "InstalledSampleUpdatingApp-1.1.0.0.zip"));
+            zf.ExtractAll(path);
+
             Monitor.Enter(gate);
             return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
         }
