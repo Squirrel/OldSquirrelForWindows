@@ -30,6 +30,8 @@ namespace Shimmer.WiXUi.ViewModels
         readonly Lazy<ReleaseEntry> _BundledRelease;
         public ReleaseEntry BundledRelease { get { return _BundledRelease.Value; } }
 
+        readonly Lazy<IPackage> bundledPackageMetadata;
+
         readonly IFileSystemFactory fileSystem;
         readonly string currentAssemblyDir;
 
@@ -76,7 +78,7 @@ namespace Shimmer.WiXUi.ViewModels
                 return Observable.Return(RecoveryOptionResult.CancelOperation);
             });
 
-            var bundledPackageMetadata = openBundledPackage();
+            bundledPackageMetadata = new Lazy<IPackage>(openBundledPackage);
 
             wixEvents.DetectPackageCompleteObs.Subscribe(eventArgs => {
                 var error = convertHResultToError(eventArgs.Status);
@@ -102,7 +104,7 @@ namespace Shimmer.WiXUi.ViewModels
                     }
 
                     var welcomeVm = RxApp.GetService<IWelcomeViewModel>();
-                    welcomeVm.PackageMetadata = bundledPackageMetadata;
+                    welcomeVm.PackageMetadata = bundledPackageMetadata.Value;
                     welcomeVm.ShouldProceed.Subscribe(_ => wixEvents.Engine.Plan(LaunchAction.Install));
                     Router.Navigate.Execute(welcomeVm);
                 }
@@ -127,11 +129,11 @@ namespace Shimmer.WiXUi.ViewModels
                 if (wixEvents.DisplayMode == Display.Full) {
                     var installingVm = RxApp.GetService<IInstallingViewModel>();
                     progress = installingVm.ProgressValue;
-                    installingVm.PackageMetadata = bundledPackageMetadata;
+                    installingVm.PackageMetadata = bundledPackageMetadata.Value;
                     Router.Navigate.Execute(installingVm);
                 }
 
-                executeInstall(currentAssemblyDir, bundledPackageMetadata, progress).Subscribe(
+                executeInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
                     _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                     ex => UserError.Throw("Failed to install application", ex));
             });
@@ -220,14 +222,14 @@ namespace Shimmer.WiXUi.ViewModels
             }).ObserveOn(RxApp.DeferredScheduler);
         }
 
-        IObservable<Unit> executeUninstall()
+        IObservable<Unit> executeUninstall(string targetRootDirectory = null)
         {
-            var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40);
+            var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40, targetRootDirectory);
 
             var updateLock = updateManager.AcquireUpdateLock();
             return updateManager.FullUninstall()
                 .ObserveOn(RxApp.DeferredScheduler)
-                .Log(this, "Full uninstall")
+                //.Log(this, "Full uninstall")  // XXX: Bug in RxUI 4
                 .Finally(updateLock.Dispose);
         }
 
