@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -168,7 +169,7 @@ namespace Shimmer.Core
 
             // NB: MoveFileEx blows up if you're a non-admin, so you always need a backup plan
             di.GetFiles().ForEach(x => safeDeleteFileAtNextDir(x.FullName));
-            di.GetDirectories().ForEach(x => DeleteDirectoryAtNextReboot(di.FullName));
+            di.GetDirectories().ForEach(x => DeleteDirectoryAtNextReboot(x.FullName));
 
             safeDeleteFileAtNextDir(directoryPath);
         }
@@ -195,18 +196,28 @@ namespace Shimmer.Core
 
     public sealed class SingleGlobalInstance : IDisposable
     {
-        readonly bool HasHandle = false;
+        readonly static object gate = 42;
+        bool HasHandle = false;
         Mutex mutex;
+        EventLoopScheduler lockScheduler = new EventLoopScheduler();
 
         public SingleGlobalInstance(string key, int timeOut)
         {
+            if (RxApp.InUnitTestRunner()) {
+                HasHandle = Observable.Start(() => Monitor.TryEnter(gate, timeOut), lockScheduler).First();
+
+                if (HasHandle == false)
+                    throw new TimeoutException("Timeout waiting for exclusive access on SingleInstance");
+                return;
+            }
+
             initMutex(key);
             try
             {
                 if (timeOut <= 0)
-                    HasHandle = mutex.WaitOne(Timeout.Infinite, false);
+                    HasHandle = Observable.Start(() => mutex.WaitOne(Timeout.Infinite, false), lockScheduler).First();
                 else
-                    HasHandle = mutex.WaitOne(timeOut, false);
+                    HasHandle = Observable.Start(() => mutex.WaitOne(timeOut, false), lockScheduler).First();
 
                 if (HasHandle == false)
                     throw new TimeoutException("Timeout waiting for exclusive access on SingleInstance");
@@ -230,8 +241,17 @@ namespace Shimmer.Core
 
         public void Dispose()
         {
-            if (HasHandle && mutex != null)
-                mutex.ReleaseMutex();
+            if (HasHandle && RxApp.InUnitTestRunner()) {
+                Observable.Start(() => Monitor.Exit(gate), lockScheduler).First();
+                HasHandle = false;
+            }
+
+            if (HasHandle && mutex != null) {
+                Observable.Start(() => mutex.ReleaseMutex(), lockScheduler).First();
+                HasHandle = false;
+            }
+
+            lockScheduler.Dispose();
         }
     }
 }

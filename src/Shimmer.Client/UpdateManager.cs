@@ -92,18 +92,23 @@ namespace Shimmer.Client
 
             // Fetch the remote RELEASES file, whether it's a local dir or an 
             // HTTP URL
-            if (isHttpUrl(updateUrlOrPath)) {
-                releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
-            } else {
-                var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
+            try {
+                if (isHttpUrl(updateUrlOrPath)) {
+                    releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
+                } else {
+                    var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
 
-                using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
-                    var text = sr.ReadToEnd();
-                    releaseFile = Observable.Return(text);
-                }
+                    using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
+                        var text = sr.ReadToEnd();
+                        releaseFile = Observable.Return(text);
+                    }
 
-                progress.OnNext(100);
+                    progress.OnNext(100);
+                    progress.OnCompleted();
+                }               
+            } catch (Exception ex) {
                 progress.OnCompleted();
+                return Observable.Throw<UpdateInfo>(ex);
             }
 
             var ret = releaseFile
@@ -204,6 +209,14 @@ namespace Shimmer.Client
 
             return Observable.Start(() => {
                 cleanUpOldVersions(new Version(255, 255, 255, 255));
+
+                try {
+                    Utility.DeleteDirectory(rootAppDirectory);
+                    return;
+                } catch (Exception ex) {
+                    this.Log().WarnException("Full Uninstall tried to delete root dir but failed, punting until next reboot", ex);
+                }
+                
                 Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
             }, RxApp.TaskpoolScheduler);
         }

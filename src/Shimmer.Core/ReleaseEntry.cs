@@ -65,7 +65,7 @@ namespace Shimmer.Core
 
         public string PackageName {
             get {
-                return Filename.Substring(0, Filename.IndexOf('-'));
+                return Filename.Substring(0, Filename.IndexOfAny(new[] { '-', '.' }));
             }
         }
 
