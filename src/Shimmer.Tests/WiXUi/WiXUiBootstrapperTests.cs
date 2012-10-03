@@ -198,6 +198,12 @@ namespace Shimmer.Tests.WiXUi
         }
 
         [Fact]
+        public void UninstallRunsHooks()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
         public void UninstallRemovesEverything()
         {
             string dir;
