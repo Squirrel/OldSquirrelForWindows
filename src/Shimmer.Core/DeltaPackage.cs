@@ -49,44 +49,8 @@ namespace Shimmer.Core
 
                 var newLibDir = tempInfo.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
 
-                // NB: There are three cases here that we'll handle:
-                //
-                // 1. Exists only in new => leave it alone, we'll use it directly.
-                // 2. Exists in both old and new => write a dummy file so we know 
-                //    to keep it.
-                // 3. Exists in old but changed in new => create a delta file
-                //
-                // The fourth case of "Exists only in old => delete it in new" 
-                // is handled when we apply the delta package
-                newLibDir.GetAllFilesRecursively().ForEach(libFile => {
-                    var relativePath = libFile.FullName.Replace(tempInfo.FullName, "");
-
-                    if (!baseLibFiles.ContainsKey(relativePath)) {
-                        this.Log().Info("{0} not found in base package, marking as new", relativePath);
-                        return;
-                    }
-
-                    var oldData = File.ReadAllBytes(baseLibFiles[relativePath]);
-                    var newData = File.ReadAllBytes(libFile.FullName);
-
-                    if (bytesAreIdentical(oldData, newData)) {
-                        this.Log().Info("{0} hasn't changed, writing dummy file", relativePath);
-
-                        File.Create(libFile.FullName + ".diff").Dispose();
-                        File.Create(libFile.FullName + ".shasum").Dispose();
-                        libFile.Delete();
-                        return;
-                    }
-
-                    this.Log().Info("Delta patching {0} => {1}", baseLibFiles[relativePath], libFile.FullName);
-                    using (var of = File.Create(libFile.FullName + ".diff")) {
-                        BinaryPatchUtility.Create(oldData, newData, of);
-
-                        var rl = ReleaseEntry.GenerateFromFile(new MemoryStream(newData), libFile.Name + ".shasum");
-                        File.WriteAllText(libFile.FullName + ".shasum", rl.EntryAsString, Encoding.UTF8);
-                        libFile.Delete();
-                    }
-                });
+                newLibDir.GetAllFilesRecursively()
+                    .ForEach(libFile => createDeltaForSingleFile(libFile, tempInfo, baseLibFiles));
 
                 ReleasePackage.addDeltaFilesToContentTypes(tempInfo.FullName);
 
@@ -155,6 +119,47 @@ namespace Shimmer.Core
 
             return new ReleasePackage(outputFile);
         }
+
+        void createDeltaForSingleFile(FileInfo targetFile, DirectoryInfo workingDirectory, Dictionary<string, string> baseFileListing)
+        {
+            // NB: There are three cases here that we'll handle:
+            //
+            // 1. Exists only in new => leave it alone, we'll use it directly.
+            // 2. Exists in both old and new => write a dummy file so we know 
+            //    to keep it.
+            // 3. Exists in old but changed in new => create a delta file
+            //
+            // The fourth case of "Exists only in old => delete it in new" 
+            // is handled when we apply the delta package
+            var relativePath = targetFile.FullName.Replace(workingDirectory.FullName, "");
+
+            if (!baseFileListing.ContainsKey(relativePath)) {
+                this.Log().Info("{0} not found in base package, marking as new", relativePath);
+                return;
+            }
+
+            var oldData = File.ReadAllBytes(baseFileListing[relativePath]);
+            var newData = File.ReadAllBytes(targetFile.FullName);
+
+            if (bytesAreIdentical(oldData, newData)) {
+                this.Log().Info("{0} hasn't changed, writing dummy file", relativePath);
+
+                File.Create(targetFile.FullName + ".diff").Dispose();
+                File.Create(targetFile.FullName + ".shasum").Dispose();
+                targetFile.Delete();
+                return;
+            }
+
+            this.Log().Info("Delta patching {0} => {1}", baseFileListing[relativePath], targetFile.FullName);
+            using (var of = File.Create(targetFile.FullName + ".diff")) {
+                BinaryPatchUtility.Create(oldData, newData, of);
+
+                var rl = ReleaseEntry.GenerateFromFile(new MemoryStream(newData), targetFile.Name + ".shasum");
+                File.WriteAllText(targetFile.FullName + ".shasum", rl.EntryAsString, Encoding.UTF8);
+                targetFile.Delete();
+            }
+        }
+
 
         void applyDiffToFile(string deltaPath, string relativeFilePath, string workingDirectory)
         {
