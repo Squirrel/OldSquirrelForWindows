@@ -16,7 +16,16 @@ using ReactiveUI;
 
 namespace Shimmer.Core
 {
-    public class ReleasePackage : IEnableLogger
+    public interface IReleasePackage
+    {
+        string InputPackageFile { get; }
+        string ReleasePackageFile { get; }
+        string SuggestedReleaseFileName { get; }
+
+        string CreateReleasePackage(string outputFile, string packagesRootDir = null);
+    }
+
+    public class ReleasePackage : IEnableLogger, IReleasePackage
     {
         public ReleasePackage(string inputPackageFile, bool isReleasePackage = false)
         {
@@ -168,6 +177,7 @@ namespace Shimmer.Core
             package = package ?? new ZipPackage(InputPackageFile);
 
             var deps = package.DependencySets.SelectMany(x => x.Dependencies);
+
             return deps.SelectMany(dependency => {
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
 
