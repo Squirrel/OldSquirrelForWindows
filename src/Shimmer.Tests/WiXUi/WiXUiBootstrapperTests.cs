@@ -201,6 +201,7 @@ namespace Shimmer.Tests.WiXUi
         public void UninstallRemovesEverything()
         {
             string dir;
+            string appDir;
 
             var events = new Mock<IWiXEvents>();
             events.SetupGet(x => x.DetectPackageCompleteObs).Returns(Observable.Never<DetectPackageCompleteEventArgs>());
@@ -215,7 +216,8 @@ namespace Shimmer.Tests.WiXUi
             engine.Setup(x => x.Plan(LaunchAction.Uninstall)).Verifiable();
             events.SetupGet(x => x.Engine).Returns(engine.Object);
 
-            using (withFakeAlreadyInstalledApp(out dir)) {
+            using (withFakeInstallDirectory(out dir))
+            using (withFakeAlreadyInstalledApp(out appDir)) {
                 var fixture = new WixUiBootstrapper(events.Object, currentAssemblyDir: dir);
                 var progress = new Subject<int>();
 
@@ -223,10 +225,10 @@ namespace Shimmer.Tests.WiXUi
                 progress.Subscribe(progressValues.Add);
 
                 var mi = fixture.GetType().GetMethod("executeUninstall", BindingFlags.Instance | BindingFlags.NonPublic);
-                var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] {});
+                var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] { appDir });
                 ret.First();
 
-                var di = new DirectoryInfo(dir);
+                var di = new DirectoryInfo(appDir);
                 di.GetDirectories().Any().ShouldBeFalse();
                 di.GetFiles().Any().ShouldBeFalse();
             }
