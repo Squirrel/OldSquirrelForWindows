@@ -113,6 +113,7 @@
   <ItemGroup>
     <Compile Include="AppDomainHelper.cs" />
     <Compile Include="BinaryPatchUtility.cs" />
+    <Compile Include="DeltaPackage.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="IFileSystemFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
