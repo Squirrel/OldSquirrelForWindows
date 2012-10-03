@@ -11,7 +11,20 @@ using ReactiveUI;
 
 namespace Shimmer.Core
 {
-    public class ReleaseEntry : IEnableLogger
+    public interface IReleaseEntry
+    {
+        string SHA1 { get; }
+        string Filename { get; }
+        long Filesize { get; }
+        bool IsDelta { get; }
+        string EntryAsString { get; }
+        Version Version { get; }
+        string PackageName { get; }
+
+        string GetReleaseNotes(string packageDirectory);
+    }
+
+    public class ReleaseEntry : IEnableLogger, IReleaseEntry
     {
         public string SHA1 { get; protected set; }
         public string Filename { get; protected set; }

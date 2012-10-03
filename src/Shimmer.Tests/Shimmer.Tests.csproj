@@ -152,6 +152,7 @@
     <Compile Include="Client\DownloadReleasesTests.cs" />
     <Compile Include="Client\UpdateManagerTests.cs" />
     <Compile Include="Core\AppDomainHelperTests.cs" />
+    <Compile Include="Core\DeltaPackageTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

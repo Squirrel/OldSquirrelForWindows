@@ -40,7 +40,9 @@ namespace CreateReleasePackage
 
                 var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
                 Console.WriteLine("{0} {1}", latestFullRelease.InputPackageFile, deltaFile);
-                package.CreateDeltaPackage(latestFullRelease, deltaFile);
+
+                var deltaBuilder = new DeltaPackageBuilder();
+                deltaBuilder.CreateDeltaPackage(package, latestFullRelease, deltaFile);
             }
                 
             ReleaseEntry.BuildReleasesFile(targetDir);
