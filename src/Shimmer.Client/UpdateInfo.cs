@@ -11,7 +11,18 @@ namespace Shimmer.Client
         Net45,
     }
 
-    public class UpdateInfo
+    public interface IUpdateInfo
+    {
+        ReleaseEntry CurrentlyInstalledVersion { get; }
+        ReleaseEntry FutureReleaseEntry { get; }
+        IEnumerable<ReleaseEntry> ReleasesToApply { get; }
+        FrameworkVersion AppFrameworkVersion { get; }
+        bool IsBootstrapping { get; }
+
+        Dictionary<ReleaseEntry, string> FetchReleaseNotes();
+    }
+
+    public class UpdateInfo : IUpdateInfo
     {
         public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
         public ReleaseEntry FutureReleaseEntry { get; protected set; }

@@ -180,20 +180,29 @@ namespace Shimmer.WiXUi.ViewModels
                 var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
                 var eigenCheckProgress = new Subject<int>();
+                eigenCheckProgress.Logg(this, "e check progress").Subscribe(_ => { });
                 var eigenCopyFileProgress = new Subject<int>();
+                eigenCopyFileProgress.Logg(this, "e copy progress").Subscribe(_ => { });
                 var eigenApplyProgress = new Subject<int>();
+                eigenApplyProgress.Logg(this, "e apply progress").Subscribe(_ => { });
 
                 var realCheckProgress = new Subject<int>();
+                realCheckProgress.Logg(this, "r check progress").Subscribe(_ => { });
                 var realCopyFileProgress = new Subject<int>();
+                realCopyFileProgress.Logg(this, "r copy progress").Subscribe(_ => { });
                 var realApplyProgress = new Subject<int>();
+                realApplyProgress.Logg(this, "r apply progress").Subscribe(_ => { });
 
-                // The real update takes longer than the eigenupdate because we're
+                // The real update takes longer than the realupdate because we're
                 // downloading from the Internet instead of doing everything 
                 // locally, so give it more weight
                 Observable.Concat(
-                        Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress).Select(x => (x / 3.0) * 0.33),
-                        Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress).Select(x => (x / 3.0) * 0.67))
-                    .Select(x => (int)x)
+                        Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress)
+                            .Scan(0, (acc, x) => (int)(x / (300.0/33.0))).Logg(this, "first half"),
+                        Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress)
+                            .Scan(33, (acc, x) => (int)(x / (300.0/67.0)))
+                            .Catch(Observable.Return(67))
+                            .Logg(this, "2nd half"))
                     .Subscribe(progress);
 
                 using (eigenUpdater.AcquireUpdateLock()) {
@@ -207,6 +216,7 @@ namespace Shimmer.WiXUi.ViewModels
                 var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
 
                 using (realUpdater.AcquireUpdateLock()) {
+
                     realUpdater.CheckForUpdate(progress: realCheckProgress)
                         .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
                         .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
@@ -338,6 +348,31 @@ namespace Shimmer.WiXUi.ViewModels
         {
             var ret = new TinyIoCContainer();
             return ret;
+        }
+    }
+
+    public static class ObservableLoggingMixinn
+    {
+        public static IObservable<T> Logg<T, TObj>(this IObservable<T> This,
+            TObj klass,
+            string message = null,
+            Func<T, string> stringifier = null)
+            where TObj : IEnableLogger
+        {
+            message = message ?? "";
+
+            if (stringifier != null) {
+                return This.Do(
+                    x => klass.Log().Info("{0} OnNext: {1}", message, stringifier(x)),
+                    ex => klass.Log().WarnException(message + " " + "OnError", ex),
+                    () => klass.Log().Info("{0} OnCompleted", message));
+            }
+            else {
+                return This.Do(
+                    x => Console.WriteLine("{0} OnNext: {1}", message, x),
+                    ex => Console.WriteLine(message + " " + "OnError: {0}", ex),
+                    () => Console.WriteLine("{0} OnCompleted", message));
+            }
         }
     }
 }
