@@ -648,38 +648,15 @@ namespace Shimmer.Client
             }
 
             var locatedAppSetups = allExeFiles
-                .Select(x => loadAssemblyOrWhine(x.FullName)).Where(x => x != null)
+                .Select(x => Utility.LoadAssemblyOrWhine(x.FullName, "Post-Install")).Where(x => x != null)
                 .SelectMany(x => x.GetModules())
                 .SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
-                .Select(createInstanceOrWhine).Where(x => x != null)
+                .Select(x => Utility.CreateInstanceOrWhine<IAppSetup>(x, "Post-Install")).Where(x => x != null)
                 .ToArray();
 
             return locatedAppSetups.Length > 0
                 ? locatedAppSetups
                 : allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName)).ToArray();
-        }
-
-        IAppSetup createInstanceOrWhine(Type typeToCreate)
-        {
-            try {
-                return (IAppSetup) Activator.CreateInstance(typeToCreate);
-            }
-            catch (Exception ex) {
-                this.Log().WarnException("Post-install: Failed to create type " + typeToCreate.FullName, ex);
-                return null;
-            }
-        }
-
-        Assembly loadAssemblyOrWhine(string fileToLoad)
-        {
-            try {
-                var ret = Assembly.LoadFile(fileToLoad);
-                return ret;
-            }
-            catch (Exception ex) {
-                this.Log().WarnException("Post-install: load failed for " + fileToLoad, ex);
-                return null;
-            }
         }
 
         // NB: Once we uninstall the old version of the app, we try to schedule

@@ -151,6 +151,35 @@ namespace Shimmer.Core
             return Tuple.Create(path, (Stream) File.OpenWrite(path));
         }
 
+        public static T CreateInstanceOrWhine<T>(Type typeToCreate, string messageIfFailed = null)
+        {
+            messageIfFailed = messageIfFailed ?? "";
+
+            try {
+                return (T) Activator.CreateInstance(typeToCreate);
+            }
+            catch (Exception ex) {
+                LogHost.Default.WarnException(messageIfFailed + ": Failed to create type " + typeToCreate.FullName, ex);
+                return default(T);
+            }
+        }
+
+        public static Assembly LoadAssemblyOrWhine(string fileToLoad, string messageIfFailed = null)
+        {
+            messageIfFailed = messageIfFailed ?? "";
+
+            try {
+                var ret = Assembly.LoadFile(fileToLoad);
+                return ret;
+            }
+            catch (Exception ex) {
+                LogHost.Default.WarnException(messageIfFailed + ": load failed for " + fileToLoad, ex);
+                return null;
+            }
+        }
+
+
+
         static TAcc scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)
         {
             TAcc acc = initialValue;
