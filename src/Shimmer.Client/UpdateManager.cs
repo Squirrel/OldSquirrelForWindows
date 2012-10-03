@@ -209,6 +209,14 @@ namespace Shimmer.Client
 
             return Observable.Start(() => {
                 cleanUpOldVersions(new Version(255, 255, 255, 255));
+
+                try {
+                    Utility.DeleteDirectory(rootAppDirectory);
+                    return;
+                } catch (Exception ex) {
+                    this.Log().WarnException("Full Uninstall tried to delete root dir but failed, punting until next reboot", ex);
+                }
+                
                 Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
             }, RxApp.TaskpoolScheduler);
         }
