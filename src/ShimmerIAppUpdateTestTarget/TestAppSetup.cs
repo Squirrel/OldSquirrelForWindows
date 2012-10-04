@@ -18,6 +18,14 @@ namespace ShimmerIAppUpdateTestTarget
     // work.
     public class TestAppSetup : IAppSetup
     {
+        public string Target {
+            get { return Assembly.GetExecutingAssembly().Location; }
+        }
+
+        public bool LaunchOnSetup {
+            get { return true; }
+        }
+
         public IEnumerable<ShortcutCreationRequest> GetAppShortcutList()
         {
             if (shouldThrow()) {

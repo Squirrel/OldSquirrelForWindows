@@ -56,9 +56,9 @@ namespace Shimmer.Client
         /// CheckForUpdate</param>
         /// <param name="progress">A Observer which can be used to report Progress - 
         /// will return values from 0-100 and Complete, or Throw</param>
-        /// <returns>A progress Observable - will return values from 0-100 and
-        /// Complete, or Throw</returns>
-        IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress);
+        /// <returns>A list of EXEs that should be started if this is a new 
+        /// installation.</returns>
+        IObservable<List<string>> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress);
     }
 
     [ContractClassFor(typeof(IUpdateManager))]
@@ -82,10 +82,10 @@ namespace Shimmer.Client
             return default(IObservable<Unit>);
         }
 
-        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
+        public IObservable<List<string>> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
             Contract.Requires(updateInfo != null);
-            return default(IObservable<Unit>);
+            return default(IObservable<List<string>>);
         }
     }
 

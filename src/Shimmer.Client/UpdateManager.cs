@@ -155,9 +155,9 @@ namespace Shimmer.Client
             return downloadResult.SelectMany(_ => checksumAllPackages(releasesToDownload));
         }
 
-        public IObservable<Unit> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
+        public IObservable<List<string>> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
-            var noLock = checkForLock<Unit>();
+            var noLock = checkForLock<List<string>>();
             if (noLock != null) return noLock;
             progress = progress ?? new Subject<int>();
 
@@ -172,7 +172,7 @@ namespace Shimmer.Client
                 .SelectMany(release =>
                     Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
                 .Do(_ => progress.OnNext(95), progress.OnError)
-                .SelectMany(_ => UpdateLocalReleasesFile())
+                .SelectMany(x => UpdateLocalReleasesFile().Select(_ => x))
                 .Do(_ => progress.OnNext(100)).Finally(() => progress.OnCompleted())
                 .PublishLast();
 
@@ -350,7 +350,7 @@ namespace Shimmer.Client
         // ApplyReleases methods
         //
 
-        void installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
+        List<string> installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
         {
             var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
             var target = getDirectoryForRelease(release.Version);
@@ -386,10 +386,10 @@ namespace Shimmer.Client
             // Perform post-install; clean up the previous version by asking it
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
-            runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
+            return runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
         }
 
-        void runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
+        List<string> runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
         {
             this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
 
@@ -398,7 +398,7 @@ namespace Shimmer.Client
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             var targetPath = getDirectoryForRelease(newCurrentVersion);
 
-            runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
+            return runPostInstallOnDirectory(targetPath.FullName, isBootstrapping, newCurrentVersion, shortcutsToIgnore);
         }
 
         static bool pathIsInFrameworkProfile(IPackageFile packageFile, FrameworkVersion appFrameworkVersion)
@@ -568,7 +568,7 @@ namespace Shimmer.Client
             });
         }
 
-        void runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
+        List<string> runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
             var postInstallInfo = new PostInstallInfo {
                 NewAppDirectoryRoot = newAppDirectoryRoot,
@@ -577,22 +577,24 @@ namespace Shimmer.Client
                 ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
             };
 
-            AppDomainHelper.ExecuteActionInNewAppDomain(postInstallInfo, info => {
+            return AppDomainHelper.ExecuteInNewAppDomain(postInstallInfo, info => {
                 var appSetups = default(IEnumerable<IAppSetup>);
 
                 try {
                     appSetups = findAppSetupsToRun(info.NewAppDirectoryRoot);
                 } catch (UnauthorizedAccessException ex) {
                     this.Log().ErrorException("Failed to load IAppSetups in post-install due to access denied", ex);
-                    return;
+                    return new string[0];
                 }
 
-                appSetups.ForEach(app =>
-                    installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall));
-            });
+                return appSetups
+                    .Select(app => installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall))
+                    .Where(x => x != null)
+                    .ToArray();
+            }).ToList();
         }
 
-        void installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
+        string installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
         {
             try {
                 if (isFirstInstall) app.OnAppInstall();
@@ -631,6 +633,8 @@ namespace Shimmer.Client
 
                     sl.Save(shortcut);
                 });
+
+            return app.LaunchOnSetup ? app.Target : null;
         }
 
         IEnumerable<IAppSetup> findAppSetupsToRun(string appDirectory)

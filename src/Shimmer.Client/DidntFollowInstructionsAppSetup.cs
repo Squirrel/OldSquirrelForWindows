@@ -10,14 +10,11 @@ namespace Shimmer.Client
             get { return shortCutName; }
         }
 
-        readonly string target;
-        protected override string Target { get { return target; } }
-
         public DidntFollowInstructionsAppSetup(string exeFile)
         {
             var fvi = FileVersionInfo.GetVersionInfo(exeFile);
             shortCutName = fvi.ProductName ?? fvi.FileDescription ?? fvi.FileName.Replace(".exe", "");
-            target = exeFile;
+            Target = exeFile;
         }
     }
 }
