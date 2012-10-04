@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -111,6 +112,8 @@ namespace Shimmer.WiXUi.ViewModels
                 }
             });
 
+            var executablesToStart = Enumerable.Empty<string>();
+
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
@@ -135,7 +138,10 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 executeInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
-                    _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
+                    toStart => {
+                        executablesToStart = toStart ?? executablesToStart;
+                        wixEvents.Engine.Apply(wixEvents.MainWindowHwnd);
+                    },
                     ex => UserError.Throw("Failed to install application", ex));
             });
 
@@ -150,13 +156,13 @@ namespace Shimmer.WiXUi.ViewModels
                     wixEvents.ShouldQuit();
                 }
 
-                // TODO: Figure out what the "main app" is and run it
+                foreach (var path in executablesToStart) { Process.Start(path); }
             });
 
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
         }
 
-        IObservable<Unit> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null, string targetRootDirectory = null)
+        IObservable<List<string>> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null, string targetRootDirectory = null)
         {
             progress = progress ?? new Subject<int>();
 
@@ -197,8 +203,9 @@ namespace Shimmer.WiXUi.ViewModels
                     .Select(x => (int)x)
                     .Subscribe(progress);
 
+                List<string> ret = null;
                 using (eigenUpdater.AcquireUpdateLock()) {
-                    eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
+                    ret = eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
                         .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
                         .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
                         .First();
@@ -220,6 +227,7 @@ namespace Shimmer.WiXUi.ViewModels
                         .First();
                 }
 
+                return ret;
             }).ObserveOn(RxApp.DeferredScheduler);
         }
 
