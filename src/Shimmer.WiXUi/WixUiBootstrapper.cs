@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -210,11 +211,11 @@ namespace Shimmer.WiXUi.ViewModels
                     realUpdater.CheckForUpdate(progress: realCheckProgress)
                         .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
                         .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
-                        .LoggedCatch<Unit, WixUiBootstrapper, Exception>(this, ex => {
+                        .LoggedCatch<List<string>, WixUiBootstrapper, Exception>(this, ex => {
                             // NB: If we don't do this, we won't Collapse the Wave 
                             // Function(tm) below on 'progress' and it will never complete
                             realCheckProgress.OnError(ex);
-                            return Observable.Return(Unit.Default);
+                            return Observable.Return(Enumerable.Empty<string>().ToList());
                         }, "Failed to update to latest remote version")
                         .First();
                 }

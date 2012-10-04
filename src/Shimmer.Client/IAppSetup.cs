@@ -105,6 +105,12 @@ namespace Shimmer.Client
         bool LaunchOnSetup { get; }
 
         /// <summary>
+        /// Returns the EXE file associated with this application. This is 
+        /// almost always the Assembly.Location of the entry assembly.
+        /// </summary>
+        string Target { get; }
+
+        /// <summary>
         /// Get the list of shortcuts the EXE should install. Usually you would
         /// return a shortcut at least for the currently executing assembly (i.e.
         /// your own EXE).
@@ -164,7 +170,7 @@ namespace Shimmer.Client
         }
 
         string target;
-        protected virtual string Target {
+        public virtual string Target {
             // XXX: Make sure this trick actually works; we want the derived 
             // type's assembly
             get { return target ?? this.GetType().Assembly.Location; }
