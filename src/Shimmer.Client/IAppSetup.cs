@@ -99,6 +99,12 @@ namespace Shimmer.Client
     public interface IAppSetup
     {
         /// <summary>
+        /// If this is 'true', this application will be launched when the 
+        /// application is initially installed.
+        /// </summary>
+        bool LaunchOnSetup { get; }
+
+        /// <summary>
         /// Get the list of shortcuts the EXE should install. Usually you would
         /// return a shortcut at least for the currently executing assembly (i.e.
         /// your own EXE).
@@ -153,32 +159,36 @@ namespace Shimmer.Client
             }
         }
 
+        public virtual bool LaunchOnSetup {
+            get { return true; }
+        }
+
+        string target;
         protected virtual string Target {
-            get { return null; }
+            // XXX: Make sure this trick actually works; we want the derived 
+            // type's assembly
+            get { return target ?? this.GetType().Assembly.Location; }
+            set { target = value; }
         }
 
         public virtual IEnumerable<ShortcutCreationRequest> GetAppShortcutList()
         {
-            // XXX: Make sure this trick actually works; we want the derived 
-            // type's assembly
-            var target = Target ?? this.GetType().Assembly.Location;
-
             return new[] {
                 new ShortcutCreationRequest() {
                     CreationLocation = ShortcutCreationLocation.Desktop,
                     Title = ShortcutName,
                     Description =  AppDescription,
-                    IconLibrary = target,
+                    IconLibrary = Target,
                     IconIndex = 0,
-                    TargetPath = target,
+                    TargetPath = Target,
                 },
                 new ShortcutCreationRequest() {
                     CreationLocation = ShortcutCreationLocation.StartMenu,
                     Title = ShortcutName,
                     Description =  AppDescription,
-                    IconLibrary = target,
+                    IconLibrary = Target,
                     IconIndex = 0,
-                    TargetPath = target,
+                    TargetPath = Target,
                 }
             };
         }
