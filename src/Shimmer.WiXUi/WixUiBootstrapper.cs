@@ -154,6 +154,7 @@ namespace Shimmer.WiXUi.ViewModels
 
                 if (wixEvents.DisplayMode != Display.Full || wixEvents.Action != LaunchAction.Install) {
                     wixEvents.ShouldQuit();
+                    return;
                 }
 
                 foreach (var path in executablesToStart) { Process.Start(path); }
