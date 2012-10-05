@@ -177,6 +177,10 @@
       <Project>{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}</Project>
       <Name>Shimmer.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Shimmer.WiXUiClient\Shimmer.WiXUiClient.csproj">
+      <Project>{c8ab928d-0990-4a84-bb06-beede0c7ab14}</Project>
+      <Name>Shimmer.WiXUiClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shimmer.WiXUi\Shimmer.WiXUi.csproj">
       <Project>{5f84c302-8216-47e0-b822-b83b65d81309}</Project>
       <Name>Shimmer.WiXUi</Name>
