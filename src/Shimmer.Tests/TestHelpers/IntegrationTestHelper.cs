@@ -7,8 +7,10 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
+using Ionic.Zip;
 using Shimmer.Core;
 using ReactiveUI;
+using Shimmer.Tests.WiXUi;
 
 namespace Shimmer.Tests.TestHelpers
 {
@@ -56,6 +58,34 @@ namespace Shimmer.Tests.TestHelpers
                 // NB: If we don't do this, the test silently passes
                 throw new Exception("", ex);
             }
+        }
+
+        static object gate = 42;
+        public static IDisposable WithFakeInstallDirectory(out string path)
+        {
+            var ret = Utility.WithTempDirectory(out path);
+
+            const string pkg = "SampleUpdatingApp.1.1.0.0.nupkg";
+            File.Copy(GetPath("fixtures", pkg), Path.Combine(path, pkg));
+            var rp = ReleaseEntry.GenerateFromFile(Path.Combine(path, pkg));
+            ReleaseEntry.WriteReleaseFile(new[] {rp}, Path.Combine(path, "RELEASES"));
+
+            // NB: This is a temporary hack. The reason we serialize the tests
+            // like this, is to make sure that we don't have two tests registering
+            // their Service Locators with RxApp.
+            Monitor.Enter(gate);
+            return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
+        }
+
+        public static IDisposable WithFakeAlreadyInstalledApp(out string path)
+        {
+            var ret = Utility.WithTempDirectory(out path);
+
+            var zf = new ZipFile(GetPath("fixtures", "InstalledSampleUpdatingApp-1.1.0.0.zip"));
+            zf.ExtractAll(path);
+
+            Monitor.Enter(gate);
+            return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
         }
     }
 }

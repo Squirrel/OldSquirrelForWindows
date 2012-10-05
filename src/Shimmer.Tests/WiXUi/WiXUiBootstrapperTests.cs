@@ -44,7 +44,7 @@ namespace Shimmer.Tests.WiXUi
             events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
 
             string dir;
-            using (withFakeInstallDirectory(out dir)) {
+            using (IntegrationTestHelper.WithFakeInstallDirectory(out dir)) {
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
@@ -81,7 +81,7 @@ namespace Shimmer.Tests.WiXUi
             events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
 
             string dir;
-            using (withFakeInstallDirectory(out dir)) {
+            using (IntegrationTestHelper.WithFakeInstallDirectory(out dir)) {
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
@@ -112,7 +112,7 @@ namespace Shimmer.Tests.WiXUi
             events.SetupGet(x => x.Engine).Returns(engine.Object);
 
             string dir;
-            using (withFakeInstallDirectory(out dir)) {
+            using (IntegrationTestHelper.WithFakeInstallDirectory(out dir)) {
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
@@ -132,113 +132,6 @@ namespace Shimmer.Tests.WiXUi
         //
         // PlanComplete
         //
-
-        [Fact]
-        public void EigenUpdateWithoutUpdateURL()
-        {
-            string dir;
-            string outDir;
-
-            var events = new Mock<IWiXEvents>();
-            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(Observable.Never<DetectPackageCompleteEventArgs>());
-            events.SetupGet(x => x.ErrorObs).Returns(Observable.Never<ErrorEventArgs>());
-            events.SetupGet(x => x.PlanCompleteObs).Returns(Observable.Never<PlanCompleteEventArgs>());
-            events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
-
-            events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-            events.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
-
-            var engine = new Mock<IEngine>();
-            engine.Setup(x => x.Plan(LaunchAction.Uninstall)).Verifiable();
-            events.SetupGet(x => x.Engine).Returns(engine.Object);
-
-            using (Utility.WithTempDirectory(out outDir))
-            using (withFakeInstallDirectory(out dir)) {
-                var fixture = new WixUiBootstrapper(events.Object, currentAssemblyDir: dir);
-                var pkg = new ZipPackage(Path.Combine(dir, "SampleUpdatingApp.1.1.0.0.nupkg"));
-                var progress = new Subject<int>();
-
-                var progressValues = new List<int>();
-                progress.Subscribe(progressValues.Add);
-
-                var mi = fixture.GetType().GetMethod("executeInstall", BindingFlags.Instance | BindingFlags.NonPublic);
-                var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] {dir, pkg, progress, outDir});
-                ret.First();
-
-                var filesToLookFor = new[] {
-                    "SampleUpdatingApp\\app-1.1.0.0\\SampleUpdatingApp.exe",
-                    "SampleUpdatingApp\\packages\\RELEASES",
-                    "SampleUpdatingApp\\packages\\SampleUpdatingApp.1.1.0.0.nupkg",
-                };
-
-                filesToLookFor.All(x => File.Exists(Path.Combine(outDir, x))).ShouldBeTrue();
-
-                // Progress should be monotonically increasing
-                progressValues.Count.ShouldBeGreaterThan(2);
-                progressValues.Zip(progressValues.Skip(1), (prev, cur) => cur - prev).All(x => x > 0).ShouldBeTrue();
-            }
-        }
-
-        [Fact]
-        public void EigenUpdateWithUpdateURL()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        public void UpdateReportsProgress()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        public void InstallHandlesAccessDenied()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        public void UninstallRunsHooks()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        public void UninstallRemovesEverything()
-        {
-            string dir;
-            string appDir;
-
-            var events = new Mock<IWiXEvents>();
-            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(Observable.Never<DetectPackageCompleteEventArgs>());
-            events.SetupGet(x => x.ErrorObs).Returns(Observable.Never<ErrorEventArgs>());
-            events.SetupGet(x => x.PlanCompleteObs).Returns(Observable.Never<PlanCompleteEventArgs>());
-            events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
-
-            events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-            events.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
-
-            var engine = new Mock<IEngine>();
-            engine.Setup(x => x.Plan(LaunchAction.Uninstall)).Verifiable();
-            events.SetupGet(x => x.Engine).Returns(engine.Object);
-
-            using (withFakeInstallDirectory(out dir))
-            using (withFakeAlreadyInstalledApp(out appDir)) {
-                var fixture = new WixUiBootstrapper(events.Object, currentAssemblyDir: dir);
-                var progress = new Subject<int>();
-
-                var progressValues = new List<int>();
-                progress.Subscribe(progressValues.Add);
-
-                var mi = fixture.GetType().GetMethod("executeUninstall", BindingFlags.Instance | BindingFlags.NonPublic);
-                var ret = (IObservable<Unit>) mi.Invoke(fixture, new object[] { appDir });
-                ret.First();
-
-                var di = new DirectoryInfo(appDir);
-                di.GetDirectories().Any().ShouldBeFalse();
-                di.GetFiles().Any().ShouldBeFalse();
-            }
-        }
 
         //
         // Helper methods
@@ -263,32 +156,6 @@ namespace Shimmer.Tests.WiXUi
         }
 
         static object gate = 42;
-        static IDisposable withFakeInstallDirectory(out string path)
-        {
-            var ret = Utility.WithTempDirectory(out path);
-
-            const string pkg = "SampleUpdatingApp.1.1.0.0.nupkg";
-            File.Copy(IntegrationTestHelper.GetPath("fixtures", pkg), Path.Combine(path, pkg));
-            var rp = ReleaseEntry.GenerateFromFile(Path.Combine(path, pkg));
-            ReleaseEntry.WriteReleaseFile(new[] {rp}, Path.Combine(path, "RELEASES"));
-
-            // NB: This is a temporary hack. The reason we serialize the tests
-            // like this, is to make sure that we don't have two tests registering
-            // their Service Locators with RxApp.
-            Monitor.Enter(gate);
-            return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
-        }
-
-        static IDisposable withFakeAlreadyInstalledApp(out string path)
-        {
-            var ret = Utility.WithTempDirectory(out path);
-
-            var zf = new ZipFile(IntegrationTestHelper.GetPath("fixtures", "InstalledSampleUpdatingApp-1.1.0.0.zip"));
-            zf.ExtractAll(path);
-
-            Monitor.Enter(gate);
-            return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
-        }
 
         static int packHResultIntoIntEvenThoughItShouldntBeThere(uint hr)
         {

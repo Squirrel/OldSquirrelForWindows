@@ -115,6 +115,7 @@ namespace Shimmer.WiXUi.ViewModels
             var executablesToStart = Enumerable.Empty<string>();
 
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
+                var installManager = new InstallManager(BundledRelease);
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -122,7 +123,7 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
-                    executeUninstall().Subscribe(
+                    installManager.ExecuteUninstall().Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
                     return;
@@ -137,7 +138,7 @@ namespace Shimmer.WiXUi.ViewModels
                     Router.Navigate.Execute(installingVm);
                 }
 
-                executeInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
+                installManager.ExecuteInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
                     toStart => {
                         executablesToStart = toStart ?? executablesToStart;
                         wixEvents.Engine.Apply(wixEvents.MainWindowHwnd);
@@ -163,86 +164,6 @@ namespace Shimmer.WiXUi.ViewModels
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
         }
 
-        IObservable<List<string>> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null, string targetRootDirectory = null)
-        {
-            progress = progress ?? new Subject<int>();
-
-            // NB: This bit of code is a bit clever. The binaries that WiX 
-            // has installed *itself* meets the qualifications for being a
-            // Shimmer update directory (a RELEASES file and the corresponding 
-            // NuGet packages). 
-            //
-            // So, in order to reuse some code and not write the same things 
-            // twice we're going to "Eigenupdate" from our own directory; 
-            // UpdateManager will operate in bootstrap mode and create a 
-            // local directory for us. 
-            //
-            // Then, we create a *new* UpdateManager whose target is the normal 
-            // update URL - we can then apply delta updates against the bundled 
-            // NuGet package to get up to vCurrent. The reason we go through
-            // this rigamarole is so that developers don't have to rebuild the 
-            // installer as often (never, technically).
-
-            return Observable.Start(() => {
-                var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-                var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
-
-                var eigenCheckProgress = new Subject<int>();
-                var eigenCopyFileProgress = new Subject<int>();
-                var eigenApplyProgress = new Subject<int>();
-
-                var realCheckProgress = new Subject<int>();
-                var realCopyFileProgress = new Subject<int>();
-                var realApplyProgress = new Subject<int>();
-
-                // The real update takes longer than the eigenupdate because we're
-                // downloading from the Internet instead of doing everything 
-                // locally, so give it more weight
-                Observable.Concat(
-                        Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress).Select(x => (x / 3.0) * 0.33),
-                        Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress).Select(x => (x / 3.0) * 0.67))
-                    .Select(x => (int)x)
-                    .Subscribe(progress);
-
-                List<string> ret = null;
-                using (eigenUpdater.AcquireUpdateLock()) {
-                    ret = eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
-                        .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
-                        .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
-                        .First();
-                }
-
-                var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
-                var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, targetRootDirectory);
-
-                using (realUpdater.AcquireUpdateLock()) {
-                    realUpdater.CheckForUpdate(progress: realCheckProgress)
-                        .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
-                        .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
-                        .LoggedCatch<List<string>, WixUiBootstrapper, Exception>(this, ex => {
-                            // NB: If we don't do this, we won't Collapse the Wave 
-                            // Function(tm) below on 'progress' and it will never complete
-                            realCheckProgress.OnError(ex);
-                            return Observable.Return(Enumerable.Empty<string>().ToList());
-                        }, "Failed to update to latest remote version")
-                        .First();
-                }
-
-                return ret;
-            }).ObserveOn(RxApp.DeferredScheduler);
-        }
-
-        IObservable<Unit> executeUninstall(string targetRootDirectory = null)
-        {
-            var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40, targetRootDirectory);
-
-            var updateLock = updateManager.AcquireUpdateLock();
-            return updateManager.FullUninstall()
-                .ObserveOn(RxApp.DeferredScheduler)
-                //.Log(this, "Full uninstall")  // XXX: Bug in RxUI 4
-                .Finally(updateLock.Dispose);
-        }
-
         UserError convertHResultToError(int status)
         {
             // NB: WiX passes this as an int which makes it impossible for us to
@@ -258,15 +179,7 @@ namespace Shimmer.WiXUi.ViewModels
         IPackage openBundledPackage()
         {
             var fi = fileSystem.GetFileInfo(Path.Combine(currentAssemblyDir, BundledRelease.Filename));
-
             return new ZipPackage(fi.FullName);
-        }
-
-        static FrameworkVersion determineFxVersionFromPackage(IPackage package)
-        {
-            return package.GetFiles().Any(x => x.Path.Contains("lib") && x.Path.Contains("45"))
-                ? FrameworkVersion.Net45
-                : FrameworkVersion.Net40;
         }
 
         ReleaseEntry readBundledReleasesFile()
