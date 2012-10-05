@@ -115,13 +115,13 @@ namespace Shimmer.WiXUi.ViewModels
             var executablesToStart = Enumerable.Empty<string>();
 
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
+                var installManager = new InstallManager(BundledRelease);
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
                     return;
                 }
 
-                var installManager = new InstallManager(BundledRelease);
                 if (wixEvents.Action == LaunchAction.Uninstall) {
                     installManager.ExecuteUninstall().Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
@@ -138,7 +138,7 @@ namespace Shimmer.WiXUi.ViewModels
                     Router.Navigate.Execute(installingVm);
                 }
 
-                executeInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
+                installManager.ExecuteInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
                     toStart => {
                         executablesToStart = toStart ?? executablesToStart;
                         wixEvents.Engine.Apply(wixEvents.MainWindowHwnd);
