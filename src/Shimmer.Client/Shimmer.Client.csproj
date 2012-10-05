@@ -119,20 +119,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitsManager.cs" />
-    <Compile Include="WiXUi\EngineWrapper.cs" />
     <Compile Include="IAppSetup.cs" />
     <Compile Include="IUpdateManager.cs" />
-    <Compile Include="WiXUi\IWiXCustomUi.cs" />
-    <Compile Include="WiXUi\IWiXEvents.cs" />
-    <Compile Include="WiXUi\IWixUiBootstrapper.cs" />
     <Compile Include="PostInstallInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShellFile.cs" />
     <Compile Include="TaskbarHelper.cs" />
     <Compile Include="UpdateInfo.cs" />
     <Compile Include="UpdateManager.cs" />
-    <Compile Include="WiXUi\ViewModels.cs" />
-    <Compile Include="WiXUi\Views.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shimmer.Core\Shimmer.Core.csproj">

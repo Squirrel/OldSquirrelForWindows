@@ -197,11 +197,11 @@ namespace ReactiveUIMicro
         }
 
         public static IObservable<T> LoggedCatch<T, TObj, TException>(this IObservable<T> This, TObj klass, Func<TException, IObservable<T>> next, string message = null)
-            where TObj : IEnableLogger
             where TException : Exception
         {
             return This.Catch<T, TException>(ex => {
-                klass.Log().WarnException(message ?? "", ex);
+                var log = LogManager.GetLogger<TObj>();
+                log.WarnException(message ?? "", ex);
                 return next(ex);
             });
         }
