@@ -169,20 +169,20 @@ namespace ReactiveUIMicro
             TObj klass, 
             string message = null,
             Func<T, string> stringifier = null)
-            where TObj : IEnableLogger
         {
             message = message ?? "";
 
+            var log = LogManager.GetLogger<TObj>();
             if (stringifier != null) {
                 return This.Do(
-                    x => klass.Log().Info("{0} OnNext: {1}", message, stringifier(x)),
-                    ex => klass.Log().WarnException(message + " " + "OnError", ex),
-                    () => klass.Log().Info("{0} OnCompleted", message));
+                    x => log.Info("{0} OnNext: {1}", message, stringifier(x)),
+                    ex => log.WarnException(message + " " + "OnError", ex),
+                    () => log.Info("{0} OnCompleted", message));
             } else {
                 return This.Do(
-                    x => klass.Log().Info("{0} OnNext: {1}", message, x),
-                    ex => klass.Log().WarnException(message + " " + "OnError", ex),
-                    () => klass.Log().Info("{0} OnCompleted", message));
+                    x => log.Info("{0} OnNext: {1}", message, x),
+                    ex => log.WarnException(message + " " + "OnError", ex),
+                    () => log.Info("{0} OnCompleted", message));
             }
         }
 
