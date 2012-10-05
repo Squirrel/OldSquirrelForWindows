@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,8 @@ namespace CreateReleasePackage
         static int Main(string[] args)
         {
             RxApp.LoggerFactory = _ => new NullLogger();
+
+            Debugger.Launch();
 
             var optParams = parseOptions(args);
             if (optParams == null) {
@@ -94,7 +97,11 @@ namespace CreateReleasePackage
 
                 Console.WriteLine("Options:");
                 foreach(var v in opts) {
-                    Console.WriteLine("  -{0}/--{1} - {2}", v.GetNames()[0], v.GetNames()[1], v.Description);
+                    if (v.GetNames().Length != 2) {
+                        Console.WriteLine("  --{0} - {1}", v.GetNames()[0], v.Description);
+                    } else {
+                        Console.WriteLine("  -{0}/--{1} - {2}", v.GetNames()[0], v.GetNames()[1], v.Description);
+                    }
                 }
 
                 return null;
