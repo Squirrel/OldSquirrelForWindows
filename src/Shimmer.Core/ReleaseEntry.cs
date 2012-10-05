@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NuGet;
-using ReactiveUI;
+using ReactiveUIMicro;
 
 namespace Shimmer.Core
 {

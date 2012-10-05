@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Ionic.Zip;
-using ReactiveUI;
+using ReactiveUIMicro;
 
 namespace Shimmer.Core
 {
