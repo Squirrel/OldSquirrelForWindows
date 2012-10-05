@@ -14,7 +14,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using NuGet;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Shimmer.Core;
 
 // NB: These are whitelisted types from System.IO, so that we always end up 
@@ -28,8 +28,9 @@ using StreamReader = System.IO.StreamReader;
 namespace Shimmer.Client
 {
     [Serializable]
-    public class UpdateManager : IEnableLogger, IUpdateManager
+    public class UpdateManager : IUpdateManager
     {
+        readonly IRxUIFullLogger log;
         readonly IFileSystemFactory fileSystem;
         readonly string rootAppDirectory;
         readonly string applicationName;
@@ -48,6 +49,8 @@ namespace Shimmer.Client
         {
             Contract.Requires(!String.IsNullOrEmpty(urlOrPath));
             Contract.Requires(!String.IsNullOrEmpty(applicationName));
+
+            log = LogManager.GetLogger<UpdateManager>();
 
             updateUrlOrPath = urlOrPath;
             this.applicationName = applicationName;
@@ -84,7 +87,7 @@ namespace Shimmer.Client
                 }
             } catch (Exception ex) {
                 // Something has gone wrong, we'll start from scratch.
-                this.Log().WarnException("Failed to load local release list", ex);
+                log.WarnException("Failed to load local release list", ex);
                 initializeClientAppDirectory();
             }
 
@@ -214,7 +217,7 @@ namespace Shimmer.Client
                     Utility.DeleteDirectory(rootAppDirectory);
                     return;
                 } catch (Exception ex) {
-                    this.Log().WarnException("Full Uninstall tried to delete root dir but failed, punting until next reboot", ex);
+                    log.WarnException("Full Uninstall tried to delete root dir but failed, punting until next reboot", ex);
                 }
                 
                 Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
@@ -260,12 +263,12 @@ namespace Shimmer.Client
             localReleases = localReleases ?? Enumerable.Empty<ReleaseEntry>();
 
             if (remoteReleases == null) {
-                this.Log().Warn("Release information couldn't be determined due to remote corrupt RELEASES file");
+                log.Warn("Release information couldn't be determined due to remote corrupt RELEASES file");
                 return Observable.Throw<UpdateInfo>(new Exception("Corrupt remote RELEASES file"));
             }
 
             if (localReleases.Count() == remoteReleases.Count()) {
-                this.Log().Info("No updates, remote and local are the same");
+                log.Info("No updates, remote and local are the same");
                 return Observable.Return<UpdateInfo>(null);
             }
 
@@ -274,14 +277,14 @@ namespace Shimmer.Client
             }
 
             if (localReleases.IsEmpty()) {
-                this.Log().Warn("First run or local directory is corrupt, starting from scratch");
+                log.Warn("First run or local directory is corrupt, starting from scratch");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
                 return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory, appFrameworkVersion));
             }
 
             if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
-                this.Log().Warn("hwhat, local version is greater than remote version");
+                log.Warn("hwhat, local version is greater than remote version");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
                 return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory, appFrameworkVersion));
@@ -326,12 +329,12 @@ namespace Shimmer.Client
                 Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
 
             if (!targetPackage.Exists) {
-                this.Log().Error("File should exist but doesn't", targetPackage.FullName);
+                log.Error("File should exist but doesn't", targetPackage.FullName);
                 throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
             }
 
             if (targetPackage.Length != downloadedRelease.Filesize) {
-                this.Log().Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
+                log.Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
                 targetPackage.Delete();
                 throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
             } 
@@ -339,7 +342,7 @@ namespace Shimmer.Client
             using (var file = targetPackage.OpenRead()) {
                 var hash = Utility.CalculateStreamSHA1(file);
                 if (hash != downloadedRelease.SHA1) {
-                    this.Log().Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
+                    log.Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
                     targetPackage.Delete();
                     throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
                 }
@@ -377,7 +380,7 @@ namespace Shimmer.Client
 
                     using (var inf = x.GetStream())
                     using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
-                        this.Log().Info("Writing {0} to app directory", targetPath);
+                        log.Info("Writing {0} to app directory", targetPath);
                         inf.CopyTo(of);
                     }
                 });
@@ -392,7 +395,7 @@ namespace Shimmer.Client
 
         List<string> runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
         {
-            this.Log().Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
+            log.Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
 
             fixPinnedExecutables(newCurrentVersion);
 
@@ -469,7 +472,7 @@ namespace Shimmer.Client
                     try {
                         Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
                     } catch (Exception ex) {
-                        this.Log().WarnException("Couldn't delete old app directory on next reboot", ex);
+                        log.WarnException("Couldn't delete old app directory on next reboot", ex);
                     }
                     return ret;
                 });
@@ -528,7 +531,7 @@ namespace Shimmer.Client
             try {
                 apps = findAppSetupsToRun(fullDirectoryPath);
             } catch (UnauthorizedAccessException ex) {
-                this.Log().ErrorException("Couldn't run cleanups", ex);
+                log.ErrorException("Couldn't run cleanups", ex);
                 return Enumerable.Empty<ShortcutCreationRequest>();
             }
 
@@ -542,14 +545,14 @@ namespace Shimmer.Client
             try {
                 app.OnVersionUninstalling(ver);
             } catch (Exception ex) {
-                this.Log().ErrorException("App threw exception on uninstall:  " + app.GetType().FullName, ex);
+                log.ErrorException("App threw exception on uninstall:  " + app.GetType().FullName, ex);
             }
 
             var shortcuts = Enumerable.Empty<ShortcutCreationRequest>();
             try {
                 shortcuts = app.GetAppShortcutList();
             } catch (Exception ex) {
-                this.Log().ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+                log.ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
             }
 
             // Get the list of shortcuts that *should've* been there, but aren't;
@@ -584,7 +587,7 @@ namespace Shimmer.Client
                 try {
                     appSetups = findAppSetupsToRun(info.NewAppDirectoryRoot);
                 } catch (UnauthorizedAccessException ex) {
-                    this.Log().ErrorException("Failed to load IAppSetups in post-install due to access denied", ex);
+                    log.ErrorException("Failed to load IAppSetups in post-install due to access denied", ex);
                     return new string[0];
                 }
 
@@ -601,7 +604,7 @@ namespace Shimmer.Client
                 if (isFirstInstall) app.OnAppInstall();
                 app.OnVersionInstalled(newCurrentVersion);
             } catch (Exception ex) {
-                this.Log().ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
+                log.ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
                 throw;
             }
 
@@ -609,7 +612,7 @@ namespace Shimmer.Client
             try {
                 shortcutList = app.GetAppShortcutList();
             } catch (Exception ex) {
-                this.Log().ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+                log.ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
                 throw;
             }
 
@@ -647,7 +650,7 @@ namespace Shimmer.Client
             } catch (UnauthorizedAccessException ex) {
                 // NB: This can happen if we run into a MoveFileEx'd directory,
                 // where we can't even get the list of files in it.
-                this.Log().WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
+                log.WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
                 throw;
             }
 
@@ -669,7 +672,7 @@ namespace Shimmer.Client
                 return (IAppSetup) Activator.CreateInstance(typeToCreate);
             }
             catch (Exception ex) {
-                this.Log().WarnException("Post-install: Failed to create type " + typeToCreate.FullName, ex);
+                log.WarnException("Post-install: Failed to create type " + typeToCreate.FullName, ex);
                 return null;
             }
         }
@@ -681,7 +684,7 @@ namespace Shimmer.Client
                 return ret;
             }
             catch (Exception ex) {
-                this.Log().WarnException("Post-install: load failed for " + fileToLoad, ex);
+                log.WarnException("Post-install: load failed for " + fileToLoad, ex);
                 return null;
             }
         }

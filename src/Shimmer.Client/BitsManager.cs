@@ -7,13 +7,13 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
-using ReactiveUI;
+using ReactiveUIMicro;
 using SharpBits.Base;
 using Shimmer.Core;
 
 namespace Shimmer.Client
 {
-    public interface IUrlDownloader : IEnableLogger
+    public interface IUrlDownloader
     {
         IObservable<string> DownloadUrl(string url, IObserver<int> progress);
         IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress);

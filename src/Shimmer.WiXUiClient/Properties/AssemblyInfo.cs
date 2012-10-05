@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Shimmer.Core")]
-[assembly: AssemblyDescription("Core routines for manipulating and creating Shimmer release packages")]
+[assembly: AssemblyTitle("Shimmer.WiXUiClient")]
+[assembly: AssemblyDescription("Shimmer library for creating custom Setup UIs")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GitHub")]
 [assembly: AssemblyProduct("Shimmer")]
@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c1175afc-25a1-4fd7-9615-5b233762cf02")]
+[assembly: Guid("df7541af-f05d-47ff-ad41-8582c41c9406")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -30,7 +30,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.5.0")]
-[assembly: AssemblyFileVersion("0.5.0")]
-
-[assembly: InternalsVisibleTo("Shimmer.Client")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

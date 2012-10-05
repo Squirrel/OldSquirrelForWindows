@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5F84C302-8216-47E0-B822-B83B65D81309}</ProjectGuid>
+    <ProjectGuid>{C8AB928D-0990-4A84-BB06-BEEDE0C7AB14}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shimmer.WiXUi</RootNamespace>
-    <AssemblyName>Shimmer.WiXUi</AssemblyName>
+    <RootNamespace>Shimmer.WiXUiClient</RootNamespace>
+    <AssemblyName>Shimmer.WiXUiClient</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -36,38 +36,30 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\wix\sdk\BootstrapperCore.dll</HintPath>
     </Reference>
-    <Reference Include="Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Core">
       <HintPath>..\..\ext\Core.dll</HintPath>
     </Reference>
-    <Reference Include="NuGetPackageExplorer.Types, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b33e3c54f0b885e9, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="NuGetPackageExplorer.Types">
       <HintPath>..\..\ext\NuGetPackageExplorer.Types.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="ReactiveUI, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-core.3.99.3-beta\lib\Net40\ReactiveUI.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.3.99.4-beta\lib\Net40\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Blend, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.3.99.3-beta\lib\Net40\ReactiveUI.Blend.dll</HintPath>
+    <Reference Include="ReactiveUI.Blend">
+      <HintPath>..\packages\reactiveui-xaml.3.99.4-beta\lib\Net40\ReactiveUI.Blend.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.3.99.3-beta\lib\Net40\ReactiveUI.Routing.dll</HintPath>
+    <Reference Include="ReactiveUI.Routing">
+      <HintPath>..\packages\reactiveui-xaml.3.99.4-beta\lib\Net40\ReactiveUI.Routing.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.3.99.3-beta\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
+    <Reference Include="ReactiveUI.Xaml">
+      <HintPath>..\packages\reactiveui-xaml.3.99.4-beta\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpBITS.Base">
+      <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.IO.Abstractions, Version=1.4.0.20, Culture=neutral, PublicKeyToken=d480b5b72fb413da, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\System.IO.Abstractions.1.4.0.20\lib\net35\System.IO.Abstractions.dll</HintPath>
-    </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.0.20823\lib\Net40\System.Reactive.Core.dll</HintPath>
     </Reference>
@@ -80,11 +72,9 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\packages\Rx-PlatformServices.2.0.20823\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Windows.Threading, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Reactive.Windows.Threading">
       <HintPath>..\packages\Rx-XAML.2.0.20823\lib\Net40\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -93,34 +83,16 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="App.cs" />
+    <Compile Include="EngineWrapper.cs" />
+    <Compile Include="IWiXCustomUi.cs" />
+    <Compile Include="IWiXEvents.cs" />
+    <Compile Include="IWixUiBootstrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ViewModels\ErrorViewModel.cs" />
-    <Compile Include="ViewModels\InstallingViewModel.cs" />
-    <Compile Include="ViewModels\UninstallingViewModel.cs" />
-    <Compile Include="ViewModels\WelcomeViewModel.cs" />
-    <Compile Include="WixUiBootstrapper.cs" />
-    <Compile Include="Views\ErrorView.xaml.cs">
-      <DependentUpon>ErrorView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\InstallingView.xaml.cs">
-      <DependentUpon>InstallingView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="RootWindow.xaml.cs">
-      <DependentUpon>RootWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\UninstallingView.xaml.cs">
-      <DependentUpon>UninstallingView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\WelcomeView.xaml.cs">
-      <DependentUpon>WelcomeView.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="ViewModels.cs" />
+    <Compile Include="Views.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Shimmer.WixUi.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shimmer.Client\Shimmer.Client.csproj">
@@ -131,33 +103,6 @@
       <Project>{3d17d46a-a411-4922-b932-9ebe2aae0ed7}</Project>
       <Name>Shimmer.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shimmer.WiXUiClient\Shimmer.WiXUiClient.csproj">
-      <Project>{c8ab928d-0990-4a84-bb06-beede0c7ab14}</Project>
-      <Name>Shimmer.WiXUiClient</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <Page Include="Views\ErrorView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\InstallingView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="RootWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\UninstallingView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\WelcomeView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
