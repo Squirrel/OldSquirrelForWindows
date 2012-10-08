@@ -1,12 +1,14 @@
 [CmdletBinding()]
 param (
-    [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
-    [string] $Param_ProjectNameToBuild = ''
+    [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$false)]
+    [string] $ProjectNameToBuild = '',
+	[Parameter(Mandatory=$false)]
+	[string] $SolutionDir,
+	[Parameter(Mandatory=$false)]
+	[string] $BuildDirectory
 )
 
 Set-PSDebug -Strict
-#$ErrorActionPreference = "Stop"
-
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $support = Join-Path $toolsDir "support.ps1"
@@ -24,17 +26,6 @@ function Get-ProjectBuildOutputDir {
 	Join-Path $projDir $buildSuffix
 }
 
-<# DEBUG:
-function Get-ProjectBuildOutputDir {
-    param(
-        [parameter(Mandatory = $true)]
-        [string]$ProjectName
-    )
-
-    "$toolsDir\..\..\SampleUpdatingApp\bin\Debug"
-}
-#>
-
 function Generate-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -50,23 +41,28 @@ function Generate-TemplateFromPackage {
 function Create-ReleaseForProject {
 	param(
 		[Parameter(Mandatory = $true)]
-		[string]$name
+		[string]$solutionDir,
+		[Parameter(Mandatory = $true)]
+		[string]$buildDirectory
 	)
 
-	$buildDir = Get-ProjectBuildOutputDir $name
+	$releaseDir = Join-Path $solutionDir "Releases"
+	if ({ Test-Path $releaseDir } -eq $false) { mkdir -p $releaseDir }
 
-	echo "Creating Release for $name"
+	echo "Creating Release for $solutionDir => $releaseDir`n"
 
-	$nugetPackages = ls "$buildDir\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
+	$nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 	foreach($pkg in $nugetPackages) {
 		$packageDir = Join-Path $solutionDir "packages"
 		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkg.FullName 
 
         ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
+		echo "Full release file at $fullRelease"
         $fullRelease = $fullRelease.Split(" ")[0]
+		echo "Full release file at $fullRelease"
 
         $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
-        $wixTemplate = Join-Path $buildDir "template.wxs"
+        $wixTemplate = Join-Path $buildDirectory "template.wxs"
         rm $wixTemplate
         mv $candleTemplate $wixTemplate
 
@@ -76,25 +72,39 @@ function Create-ReleaseForProject {
 		$candleExe = Join-Path $wixDir "candle.exe"
 		$lightExe = Join-Path $wixDir "light.exe"
 		
-		rm "$buildDir\template.wixobj"
-        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
-		& $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDir\template.wixobj"
+		rm "$buildDirectory\template.wixobj"
+        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
+		& $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 	}
 }
 
-$solutionDir = Get-SolutionDir
-##$solutionDir = "$toolsDir\..\.."
+if (-not $SolutionDir) {
+	if (Test-Path variable:Dte) {
+		$SolutionDir = Get-SolutionDir
+	} else {
+		throw "Cannot determine the Solution directory - either run this script`n" +
+			  "inside the NuGet Package Console, or specify a directory as a parameter"
+	}
+}
+
+if ($Configuration) {
+	$BuildDirectory = "$SolutionDir\bin\$Configuration"
+}
+
+if (-not $BuildDirectory) {
+	if (Test-Path variable:Dte) { 
+		$BuildDirectory = Get-ProjectBuildOutputDir $name
+	} else {
+		throw "Cannot determine the Build directory - either run this script`n" +
+			  "inside the NuGet Package Console, or specify a directory as a parameter"
+	}
+}
 
 ### DEBUG:
-$createReleasePackageExe = [IO.Path]::Combine($solutionDir, 'CreateReleasePackage', 'bin', 'Debug', 'CreateReleasePackage.exe')
-$wixDir = [IO.Path]::Combine($solutionDir, '..', 'ext', 'wix')
+$createReleasePackageExe = [IO.Path]::Combine($toolsDir, '..', 'bin', 'Debug', 'CreateReleasePackage.exe')
+$wixDir = [IO.Path]::Combine($toolsDir, '..', '..', '..', 'ext', 'wix')
 ### End DEBUG
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$releaseDir = Join-Path $solutionDir "Releases"
-if ({ Test-Path $releaseDir } -eq $false) { mkdir -p $releaseDir }
-	
-Create-ReleaseForProject $Param_ProjectName
 
-### DEBUG:
-#Create-ReleaseForProject SampleUpdatingApp
+Create-ReleaseForProject $SolutionDir $BuildDirectory
