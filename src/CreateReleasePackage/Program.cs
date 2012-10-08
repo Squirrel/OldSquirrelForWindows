@@ -18,8 +18,6 @@ namespace CreateReleasePackage
         {
             RxApp.LoggerFactory = _ => new NullLogger();
 
-            Debugger.Launch();
-
             var optParams = parseOptions(args);
             if (optParams == null) {
                 return -1;
@@ -123,7 +121,7 @@ namespace CreateReleasePackage
                 new {Name = "Authors", Value = String.Join(", ", zp.Authors ?? Enumerable.Empty<string>())},
                 new {Name = "Description", Value = zp.Description},
                 new {Name = "IconUrl", Value = zp.IconUrl != null ? zp.IconUrl.ToString() : ""},
-                new {Name = "LicenseUrl", Value = zp.LicenseUrl != null ? zp.IconUrl.ToString() : ""},
+                new {Name = "LicenseUrl", Value = zp.LicenseUrl != null ? zp.LicenseUrl.ToString() : ""},
                 new {Name = "ProjectUrl", Value = zp.ProjectUrl != null ? zp.ProjectUrl.ToString() : ""},
                 new {Name = "Summary", Value = zp.Summary ?? zp.Title },
                 new {Name = "Title", Value = zp.Title},
