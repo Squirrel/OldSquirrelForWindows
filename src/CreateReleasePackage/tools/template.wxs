@@ -19,6 +19,7 @@
       <Payload SourceFile="$(var.ToolsDir)\Shimmer.Client.dll" />
       <Payload SourceFile="$(var.ToolsDir)\Shimmer.Core.dll" />
       <Payload SourceFile="$(var.ToolsDir)\Shimmer.WiXUi.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Shimmer.WiXUiClient.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Interactive.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.IO.Abstractions.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Core.dll" />
