@@ -71,14 +71,18 @@
     <Reference Include="Core">
       <HintPath>..\..\ext\Core.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\packages\DotNetZip.1.9.1.8\lib\net20\Ionic.Zip.dll</HintPath>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ext\Ionic.Zip.dll</HintPath>
     </Reference>
     <Reference Include="MarkdownSharp">
       <HintPath>..\packages\MarkdownSharp.1.13.0.0\lib\35\MarkdownSharp.dll</HintPath>
     </Reference>
     <Reference Include="NuGetPackageExplorer.Types">
       <HintPath>..\..\ext\NuGetPackageExplorer.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpBITS.Base">
+      <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
