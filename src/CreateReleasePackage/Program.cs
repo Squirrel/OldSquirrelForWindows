@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Mono.Options;
 using NuGet;
-using ReactiveUI;
 using Shimmer.Core;
 
 namespace CreateReleasePackage
@@ -16,8 +15,6 @@ namespace CreateReleasePackage
     {
         static int Main(string[] args)
         {
-            RxApp.LoggerFactory = _ => new NullLogger();
-
             var optParams = parseOptions(args);
             if (optParams == null) {
                 return -1;
