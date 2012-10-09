@@ -57,7 +57,6 @@ function Create-ReleaseForProject {
 		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkg.FullName 
 
         ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
-		echo "Full release file at $fullRelease"
         $fullRelease = $fullRelease.Split(" ")[0]
 		echo "Full release file at $fullRelease"
 
