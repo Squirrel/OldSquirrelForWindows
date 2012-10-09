@@ -162,6 +162,8 @@ namespace Shimmer.WiXUi.ViewModels
             });
 
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
+
+            wixEvents.Engine.Detect();
         }
 
         UserError convertHResultToError(int status)
