@@ -58,7 +58,7 @@ namespace ReactiveUIMicro
                     throw new Exception("An exception occurred on an object that would destabilize ReactiveUI. To prevent this, Subscribe to the ThrownExceptions property of your objects", ex);
                 }));
 
-            LoggerFactory = t => new DebugLogger();
+            LoggerFactory = t => new NullLogger();
 
             if (InUnitTestRunner()) {
                 Console.Error.WriteLine("*** Detected Unit Test Runner, setting Scheduler to Immediate ***");
