@@ -16,7 +16,7 @@
         <TextBlock Text="{Binding Title}" FontWeight="ExtraLight" FontSize="32" Margin="8,0,0,0"/>
         <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
             <StackPanel VerticalAlignment="Center" Margin="32,0,32,0">
-                <ProgressBar Height="16" Value="50"/>
+                <ProgressBar x:Name="ProgressValue" Height="16" />
                 <TextBlock Text="Installing Application..." FontSize="14" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>

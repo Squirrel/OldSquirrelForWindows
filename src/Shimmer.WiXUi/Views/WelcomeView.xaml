@@ -13,13 +13,13 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding Title}" FontWeight="ExtraLight" FontSize="32" Margin="8,0,0,0"/>
+        <TextBlock x:Name="Title" FontWeight="ExtraLight" FontSize="32" Margin="8,0,0,0"/>
         <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
-            <TextBlock Text="{Binding Description}" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
+            <TextBlock x:Name="Description" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
         </Border>
 
         <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontWeight="Light" FontSize="36" Margin="0,8,0,0">
-            <Hyperlink Command="{Binding ShouldProceed}">Install</Hyperlink>
+            <Hyperlink x:Name="ShouldProceed">Install</Hyperlink>
         </TextBlock>
     </Grid>
 </UserControl>

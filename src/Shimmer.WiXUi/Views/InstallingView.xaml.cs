@@ -25,6 +25,8 @@ namespace Shimmer.WiXUi.Views
         public InstallingView()
         {
             InitializeComponent();
+
+            this.OneWayBind(ViewModel, x => x.ProgressValue);
         }
 
         public IInstallingViewModel ViewModel {

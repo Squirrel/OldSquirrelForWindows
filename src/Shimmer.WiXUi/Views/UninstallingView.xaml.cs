@@ -25,6 +25,8 @@ namespace Shimmer.WiXUi.Views
         public UninstallingView()
         {
             InitializeComponent();
+
+            this.OneWayBind(ViewModel, x => x.ProgressValue);
         }
 
         public IUninstallingViewModel ViewModel {

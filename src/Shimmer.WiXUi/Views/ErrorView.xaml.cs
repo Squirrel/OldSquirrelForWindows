@@ -25,6 +25,10 @@ namespace Shimmer.WiXUi.Views
         public ErrorView()
         {
             InitializeComponent();
+
+            this.WhenAny(x => x.ViewModel.Error.ErrorMessage, x => x.ViewModel.Error.ErrorCauseOrResolution,
+                    (msg, details) => String.Format("{0}\n{1}", msg, details))
+                .BindTo(this, x => x.ErrorMessage.Text);
         }
 
         public IErrorViewModel ViewModel {

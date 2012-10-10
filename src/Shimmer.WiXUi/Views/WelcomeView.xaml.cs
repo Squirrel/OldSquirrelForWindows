@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
+using ReactiveUI.Xaml;
 using Shimmer.Client.WiXUi;
 using Shimmer.WiXUi.ViewModels;
 
@@ -25,6 +26,10 @@ namespace Shimmer.WiXUi.Views
         public WelcomeView()
         {
             InitializeComponent();
+
+            this.OneWayBind(ViewModel, x => x.PackageMetadata.Title);
+            this.OneWayBind(ViewModel, x => x.PackageMetadata.Title);
+            this.BindCommand(ViewModel, x => x.ShouldProceed);
         }
 
         public IWelcomeViewModel ViewModel {
