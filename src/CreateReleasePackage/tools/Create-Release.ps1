@@ -86,7 +86,7 @@ if (-not $SolutionDir) {
 	}
 }
 
-if ($Configuration) {
+if (Test-Path variable:Configuration) {
 	$BuildDirectory = "$SolutionDir\bin\$Configuration"
 }
 
