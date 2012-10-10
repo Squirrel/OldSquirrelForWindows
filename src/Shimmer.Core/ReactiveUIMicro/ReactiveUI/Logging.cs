@@ -118,12 +118,14 @@ namespace ReactiveUIMicro
         }
     }
 
+    [Serializable]
     internal class NullLogger : IRxUILogger
     {
         public void Write(string message, LogLevel logLevel) {}
         public LogLevel Level { get; set; }
     }
 
+    [Serializable]
     internal class DebugLogger : IRxUILogger
     {
         public void Write(string message, LogLevel logLevel)
@@ -143,6 +145,7 @@ namespace ReactiveUIMicro
     /// </summary>
     internal interface IEnableLogger { }
 
+    [Serializable]
     internal static class LogHost
     {
         /// <summary>
@@ -208,6 +211,7 @@ namespace ReactiveUIMicro
     }
 
     #region Extremely Dull Code Ahead
+    [Serializable]
     internal class WrappingFullLogger : IRxUIFullLogger
     {
         readonly IRxUILogger _inner;
