@@ -47,7 +47,7 @@ function Create-ReleaseForProject {
 	)
 
 	$releaseDir = Join-Path $solutionDir "Releases"
-	if ({ Test-Path $releaseDir } -eq $false) { mkdir -p $releaseDir }
+	if (!(Test-Path $releaseDir)) { mkdir -p $releaseDir }
 
 	echo "Creating Release for $solutionDir => $releaseDir`n"
 
@@ -92,7 +92,7 @@ if (Test-Path variable:Configuration) {
 
 if (-not $BuildDirectory) {
 	if (Test-Path variable:Dte) { 
-		$BuildDirectory = Get-ProjectBuildOutputDir $name
+		$BuildDirectory = Get-ProjectBuildOutputDir $ProjectNameToBuild
 	} else {
 		throw "Cannot determine the Build directory - either run this script`n" +
 			  "inside the NuGet Package Console, or specify a directory as a parameter"
