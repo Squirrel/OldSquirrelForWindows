@@ -19,12 +19,14 @@ namespace Shimmer.Client.WiXUi
     {
         IPackage PackageMetadata { get; set; }
         IObserver<int> ProgressValue { get; }
+        int LatestProgress { get; }
     }
 
     public interface IUninstallingViewModel : IRoutableViewModel
     {
         IPackage PackageMetadata { get; set; }
         IObserver<int> ProgressValue { get; }
+        int LatestProgress { get; }
     }
 
     public interface IErrorViewModel : IRoutableViewModel

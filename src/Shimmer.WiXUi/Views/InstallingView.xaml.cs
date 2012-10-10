@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,7 +27,9 @@ namespace Shimmer.WiXUi.Views
         {
             InitializeComponent();
 
-            this.OneWayBind(ViewModel, x => x.ProgressValue);
+            this.WhenAny(x => x.ViewModel.LatestProgress, x => (double) x.Value)
+                .ObserveOn(RxApp.DeferredScheduler) // XXX: WHYYYYY
+                .BindTo(ProgressValue, x => x.Value);
         }
 
         public IInstallingViewModel ViewModel {

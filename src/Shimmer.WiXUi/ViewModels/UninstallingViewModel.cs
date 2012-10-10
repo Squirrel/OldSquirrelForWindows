@@ -43,7 +43,7 @@ namespace Shimmer.WiXUi.ViewModels
         {
             HostScreen = hostScreen;
 
-            var progress = new Subject<int>();
+            var progress = new ScheduledSubject<int>(RxApp.DeferredScheduler);
             ProgressValue = progress;
 
             progress.ToProperty(this, x => x.LatestProgress, 0);
