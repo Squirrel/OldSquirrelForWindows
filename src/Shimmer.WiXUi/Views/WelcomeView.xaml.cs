@@ -21,7 +21,7 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for WelcomeView.xaml
     /// </summary>
-    public partial class WelcomeView : UserControl, IWelcomeView
+    public partial class WelcomeView : UserControl, IViewFor<IWelcomeViewModel>
     {
         public WelcomeView()
         {

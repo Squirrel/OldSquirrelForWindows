@@ -57,6 +57,8 @@ namespace Shimmer.WiXUi.ViewModels
                     }
                 });
 
+            RxRouting.ViewModelToViewFunc = findViewClassNameForViewModelName;
+
             Kernel.Register<IWixUiBootstrapper>(this);
             Kernel.Register<IScreen>(this);
             Kernel.Register(wixEvents);
@@ -76,7 +78,7 @@ namespace Shimmer.WiXUi.ViewModels
 
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
-
+                    
                 RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(errorVm));
                 return Observable.Return(RecoveryOptionResult.CancelOperation);
             });
@@ -109,8 +111,8 @@ namespace Shimmer.WiXUi.ViewModels
                     var welcomeVm = RxApp.GetService<IWelcomeViewModel>();
                     welcomeVm.PackageMetadata = bundledPackageMetadata.Value;
                     welcomeVm.ShouldProceed.Subscribe(_ => wixEvents.Engine.Plan(LaunchAction.Install));
-
-                    // NB: WiX runs a "Main thread" that all of these events
+                    
+                    // NB: WiX runs a "Main thread" that all of these events 
                     // come back on, and a "UI thread" where it actually runs
                     // the WPF window. Gotta proxy to the UI thread.
                     RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(welcomeVm));
@@ -143,7 +145,7 @@ namespace Shimmer.WiXUi.ViewModels
                     RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(installingVm));
                 }
 
-                installManager.ExecuteInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
+                installManager.ExecuteInstall(this.currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
                     toStart => {
                         executablesToStart = toStart ?? executablesToStart;
                         wixEvents.Engine.Apply(wixEvents.MainWindowHwnd);
@@ -253,15 +255,25 @@ namespace Shimmer.WiXUi.ViewModels
                 new { Interface = typeof(IWelcomeViewModel), Impl = typeof(WelcomeViewModel) },
                 new { Interface = typeof(IInstallingViewModel), Impl = typeof(InstallingViewModel) },
                 new { Interface = typeof(IUninstallingViewModel), Impl = typeof(UninstallingViewModel) },
-                new { Interface = typeof(IErrorView), Impl = typeof(ErrorView) },
-                new { Interface = typeof(IWelcomeView), Impl = typeof(WelcomeView) },
-                new { Interface = typeof(IInstallingView), Impl = typeof(InstallingView) },
-                new { Interface = typeof(IUninstallingView), Impl = typeof(UninstallingView) }
+                new { Interface = typeof(IViewFor<IErrorViewModel>), Impl = typeof(ErrorView) },
+                new { Interface = typeof(IViewFor<IWelcomeViewModel>), Impl = typeof(WelcomeView) },
+                new { Interface = typeof(IViewFor<IInstallingViewModel>), Impl = typeof(InstallingView) },
+                new { Interface = typeof(IViewFor<IUninstallingViewModel>), Impl = typeof(UninstallingView) },
             };
 
             foreach (var pair in toRegister.Where(pair => !kernel.CanResolve(pair.Interface))) {
                 kernel.Register(pair.Interface, pair.Impl);
             }
+        }
+
+        static string findViewClassNameForViewModelName(string viewModelName)
+        {
+            if (viewModelName.Contains("ErrorViewModel")) return typeof (IViewFor<IErrorViewModel>).AssemblyQualifiedName;
+            if (viewModelName.Contains("WelcomeViewModel")) return typeof (IViewFor<IWelcomeViewModel>).AssemblyQualifiedName;
+            if (viewModelName.Contains("InstallingViewModel")) return typeof (IViewFor<IInstallingViewModel>).AssemblyQualifiedName;
+            if (viewModelName.Contains("UninstallingViewModel")) return typeof (IViewFor<IUninstallingViewModel>).AssemblyQualifiedName;
+
+            throw new Exception("Unknown View");
         }
 
         TinyIoCContainer createDefaultKernel()

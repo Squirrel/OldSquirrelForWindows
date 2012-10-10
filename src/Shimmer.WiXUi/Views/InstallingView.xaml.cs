@@ -20,7 +20,7 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for InstallingView.xaml
     /// </summary>
-    public partial class InstallingView : UserControl, IInstallingView
+    public partial class InstallingView : UserControl, IViewFor<IInstallingViewModel>
     {
         public InstallingView()
         {

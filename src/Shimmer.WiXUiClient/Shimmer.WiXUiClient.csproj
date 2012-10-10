@@ -89,7 +89,6 @@
     <Compile Include="IWixUiBootstrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels.cs" />
-    <Compile Include="Views.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

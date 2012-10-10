@@ -20,7 +20,7 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for ErrorView.xaml
     /// </summary>
-    public partial class ErrorView : UserControl, IErrorView
+    public partial class ErrorView : UserControl, IViewFor<IErrorViewModel>
     {
         public ErrorView()
         {

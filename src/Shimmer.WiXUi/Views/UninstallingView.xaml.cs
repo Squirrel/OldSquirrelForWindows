@@ -20,7 +20,7 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for UninstallingView.xaml
     /// </summary>
-    public partial class UninstallingView : UserControl, IUninstallingView
+    public partial class UninstallingView : UserControl, IViewFor<IUninstallingViewModel>
     {
         public UninstallingView()
         {
