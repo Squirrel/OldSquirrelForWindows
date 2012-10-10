@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Windows;
@@ -75,8 +76,8 @@ namespace Shimmer.WiXUi.ViewModels
 
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
-                Router.Navigate.Execute(errorVm);
 
+                RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(errorVm));
                 return Observable.Return(RecoveryOptionResult.CancelOperation);
             });
 
@@ -108,7 +109,11 @@ namespace Shimmer.WiXUi.ViewModels
                     var welcomeVm = RxApp.GetService<IWelcomeViewModel>();
                     welcomeVm.PackageMetadata = bundledPackageMetadata.Value;
                     welcomeVm.ShouldProceed.Subscribe(_ => wixEvents.Engine.Plan(LaunchAction.Install));
-                    Router.Navigate.Execute(welcomeVm);
+
+                    // NB: WiX runs a "Main thread" that all of these events
+                    // come back on, and a "UI thread" where it actually runs
+                    // the WPF window. Gotta proxy to the UI thread.
+                    RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(welcomeVm));
                 }
             });
 
@@ -135,7 +140,7 @@ namespace Shimmer.WiXUi.ViewModels
                     var installingVm = RxApp.GetService<IInstallingViewModel>();
                     progress = installingVm.ProgressValue;
                     installingVm.PackageMetadata = bundledPackageMetadata.Value;
-                    Router.Navigate.Execute(installingVm);
+                    RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(installingVm));
                 }
 
                 installManager.ExecuteInstall(currentAssemblyDir, bundledPackageMetadata.Value, progress).Subscribe(
