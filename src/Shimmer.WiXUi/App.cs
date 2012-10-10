@@ -1,23 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
+using ReactiveUI;
 using ReactiveUI.Routing;
 using Shimmer.Client.WiXUi;
 using Shimmer.WiXUi.ViewModels;
 using Shimmer.WiXUi.Views;
+using LogLevel = Microsoft.Tools.WindowsInstallerXml.Bootstrapper.LogLevel;
 
 namespace Shimmer.WiXUi
 {
-    public class App : BootstrapperApplication, IWiXEvents
+    public class App : BootstrapperApplication, IWiXEvents, IEnableLogger
     {
         protected override void Run()
         {
             var app = new Application();
+
+            RxApp.LoggerFactory = _ => new DebugLogger();
+            RxApp.DeferredScheduler = DispatcherScheduler.Current;
 
             // NB: These are mirrored instead of just exposing Command because
             // Command is impossible to mock, since there is no way to set any
@@ -35,9 +42,11 @@ namespace Shimmer.WiXUi
 
             MainWindowHwnd = IntPtr.Zero;
             if (Command.Display == Display.Full) {
-                app.MainWindow.ShowDialog();
                 MainWindowHwnd = new WindowInteropHelper(app.MainWindow).Handle;
+                app.Run(app.MainWindow);
             }
+
+            Engine.Quit(0);
         }
 
         public new IEngine Engine { get; protected set; }
