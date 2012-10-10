@@ -657,7 +657,14 @@ namespace Shimmer.Client
             var locatedAppSetups = allExeFiles
                 .Select(x => loadAssemblyOrWhine(x.FullName)).Where(x => x != null)
                 .SelectMany(x => x.GetModules())
-                .SelectMany(x => x.GetTypes().Where(y => typeof(IAppSetup).IsAssignableFrom(y)))
+                .SelectMany(x => {
+                    try {
+                        return x.GetTypes().Where(y => typeof (IAppSetup).IsAssignableFrom(y));
+                    } catch (ReflectionTypeLoadException ex) {
+                        log.WarnException("Couldn't load types from module", ex);
+                        return Enumerable.Empty<Type>();
+                    }
+                })
                 .Select(createInstanceOrWhine).Where(x => x != null)
                 .ToArray();
 
