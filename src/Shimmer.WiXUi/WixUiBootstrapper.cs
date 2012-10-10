@@ -160,12 +160,11 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                if (wixEvents.DisplayMode != Display.Full || wixEvents.Action != LaunchAction.Install) {
-                    wixEvents.ShouldQuit();
-                    return;
+                if (wixEvents.DisplayMode == Display.Full && wixEvents.Action == LaunchAction.Install) {
+                    foreach (var path in executablesToStart) { Process.Start(path); }
                 }
 
-                foreach (var path in executablesToStart) { Process.Start(path); }
+                wixEvents.ShouldQuit();
             });
 
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
