@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Threading;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using ReactiveUI;
 using ReactiveUI.Routing;
@@ -19,12 +20,15 @@ namespace Shimmer.WiXUi
 {
     public class App : BootstrapperApplication, IWiXEvents, IEnableLogger
     {
+        Application theApp;
+        Dispatcher uiDispatcher;
+
         protected override void Run()
         {
-            var app = new Application();
-
             RxApp.LoggerFactory = _ => new DebugLogger();
             RxApp.DeferredScheduler = DispatcherScheduler.Current;
+
+            theApp = new Application();
 
             // NB: These are mirrored instead of just exposing Command because
             // Command is impossible to mock, since there is no way to set any
@@ -32,18 +36,24 @@ namespace Shimmer.WiXUi
             DisplayMode = Command.Display;
             Action = Command.Action;
 
+            // NB: If you want to debug through Setup.exe, uncommenting this
+            // will make your life much easier
+            //Debugger.Launch();
+
             setupWiXEventHooks();
 
             var bootstrapper = new WixUiBootstrapper(this);
 
-            app.MainWindow = new RootWindow {
+            theApp.MainWindow = new RootWindow {
                 viewHost = {Router = bootstrapper.Router}
             };
 
+            uiDispatcher = theApp.MainWindow.Dispatcher;
+
             MainWindowHwnd = IntPtr.Zero;
             if (Command.Display == Display.Full) {
-                MainWindowHwnd = new WindowInteropHelper(app.MainWindow).Handle;
-                app.Run(app.MainWindow);
+                MainWindowHwnd = new WindowInteropHelper(theApp.MainWindow).Handle;
+                theApp.Run(theApp.MainWindow);
             }
 
             Engine.Quit(0);
@@ -57,7 +67,13 @@ namespace Shimmer.WiXUi
 
         public void ShouldQuit()
         {
-            Application.Current.Shutdown();
+            // NB: For some reason, we can't get DispatcherScheduler.Current
+            // here, WiX is doing something very strange post-apply
+            uiDispatcher.Invoke(new Action(() => {
+                theApp.MainWindow.Close();
+                theApp.Shutdown();
+                Engine.Quit(0);
+            }));
         }
 
         #region Extremely dull code to set up IWiXEvents
