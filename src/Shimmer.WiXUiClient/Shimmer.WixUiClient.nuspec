@@ -13,5 +13,9 @@
     <description>$description$</description>
     <copyright>Copyright 2012 GitHub</copyright>
     <tags>Installer Desktop WiX</tags>
+
+    <dependencies>
+      <dependency id="Shimmer.Client" version="[$version$]" />
+    </dependencies>
   </metadata>
 </package>
