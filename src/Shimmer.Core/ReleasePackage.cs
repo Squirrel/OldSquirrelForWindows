@@ -10,7 +10,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Ionic.Zip;
-using MarkdownSharp;
 using NuGet;
 using ReactiveUIMicro;
 
@@ -22,7 +21,7 @@ namespace Shimmer.Core
         string ReleasePackageFile { get; }
         string SuggestedReleaseFileName { get; }
 
-        string CreateReleasePackage(string outputFile, string packagesRootDir = null);
+        string CreateReleasePackage(string outputFile, string packagesRootDir = null, Func<string, string> releaseNotesProcessor = null);
     }
 
     public class ReleasePackage : IEnableLogger, IReleasePackage
@@ -46,7 +45,7 @@ namespace Shimmer.Core
             }
         }
 
-        public string CreateReleasePackage(string outputFile, string packagesRootDir = null)
+        public string CreateReleasePackage(string outputFile, string packagesRootDir = null, Func<string, string> releaseNotesProcessor = null)
         {
             Contract.Requires(!String.IsNullOrEmpty(outputFile));
 
@@ -76,7 +75,9 @@ namespace Shimmer.Core
                 removeSilverlightAssemblies(tempDir);
                 removeDeveloperDocumentation(tempDir);
 
-                renderReleaseNotesMarkdown(specPath);
+                if (releaseNotesProcessor != null) {
+                    renderReleaseNotesMarkdown(specPath, releaseNotesProcessor);
+                }
 
                 addDeltaFilesToContentTypes(tempDir.FullName);
 
@@ -133,7 +134,7 @@ namespace Shimmer.Core
                 .ForEach(x => x.Delete(true));
         }
 
-        void renderReleaseNotesMarkdown(string specPath)
+        void renderReleaseNotesMarkdown(string specPath, Func<string, string> releaseNotesProcessor)
         {
             var doc = new XmlDocument();
             doc.Load(specPath);
@@ -152,8 +153,8 @@ namespace Shimmer.Core
                 return;
             }
 
-            var md = new Markdown();
-            releaseNotes.InnerText = String.Format("<![CDATA[\n" + "{0}\n" + "]]>", md.Transform(releaseNotes.InnerText));
+            releaseNotes.InnerText = String.Format("<![CDATA[\n" + "{0}\n" + "]]>",
+                releaseNotesProcessor(releaseNotes.InnerText));
 
             doc.Save(specPath);
         }
