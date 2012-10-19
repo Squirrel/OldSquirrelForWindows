@@ -111,7 +111,7 @@ namespace Shimmer.Core
 
         public static IDisposable WithTempDirectory(out string path)
         {
-            var di = new DirectoryInfo(Environment.GetEnvironmentVariable("TEMP"));
+            var di = new DirectoryInfo(Environment.GetEnvironmentVariable("TEMP") ?? "");
             if (!di.Exists) {
                 throw new Exception("%TEMP% isn't defined, go set it");
             }
