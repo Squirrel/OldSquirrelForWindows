@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using MarkdownSharp;
 using Mono.Options;
 using NuGet;
 using Shimmer.Core;
@@ -24,7 +25,9 @@ namespace CreateReleasePackage
             var package = new ReleasePackage(optParams["input"]);
             var targetFile = Path.Combine(targetDir, package.SuggestedReleaseFileName);
 
-            var fullRelease = package.CreateReleasePackage(targetFile, optParams["pkgdir"] != "" ? optParams["pkgdir"] : null);
+            var fullRelease = package.CreateReleasePackage(targetFile, 
+                optParams["pkgdir"] != "" ? optParams["pkgdir"] : null,
+                input => (new Markdown()).Transform(input));
 
             var releaseFile = Path.Combine(targetDir, "RELEASES");
             if (File.Exists(releaseFile)) {
