@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using MarkdownSharp;
 using ReactiveUI;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;
@@ -135,11 +137,14 @@ namespace Shimmer.Tests.Core
             File.Copy(inputSpec, targetFile, true);
                 
             try {
+                var processor = new Func<string, string>(input =>
+                    (new Markdown()).Transform(input));
+
                 // NB: For No Reason At All, renderReleaseNotesMarkdown is 
                 // invulnerable to ExposedObject. Whyyyyyyyyy
                 var renderMinfo = fixture.GetType().GetMethod("renderReleaseNotesMarkdown", 
                     BindingFlags.NonPublic | BindingFlags.Instance);
-                renderMinfo.Invoke(fixture, new object[] {targetFile});
+                renderMinfo.Invoke(fixture, new object[] {targetFile, processor});
 
                 var doc = XDocument.Load(targetFile);
                 XNamespace ns = "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd";
