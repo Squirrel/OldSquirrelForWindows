@@ -75,9 +75,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\Ionic.Zip.dll</HintPath>
     </Reference>
-    <Reference Include="MarkdownSharp">
-      <HintPath>..\packages\MarkdownSharp.1.13.0.0\lib\35\MarkdownSharp.dll</HintPath>
-    </Reference>
     <Reference Include="NuGetPackageExplorer.Types">
       <HintPath>..\..\ext\NuGetPackageExplorer.Types.dll</HintPath>
     </Reference>
