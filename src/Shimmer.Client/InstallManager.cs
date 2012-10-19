@@ -78,6 +78,15 @@ namespace Shimmer.Client
                 }
 
                 var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
+                updateUrl = null; //XXX REMOVE ME
+                if (updateUrl == null) {
+                    realCheckProgress.OnNext(100); realCheckProgress.OnCompleted();
+                    realCopyFileProgress.OnNext(100); realCopyFileProgress.OnCompleted();
+                    realApplyProgress.OnNext(100); realApplyProgress.OnCompleted();
+
+                    return ret;
+                }
+
                 var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, TargetRootDirectory);
 
                 using (realUpdater.AcquireUpdateLock()) {
