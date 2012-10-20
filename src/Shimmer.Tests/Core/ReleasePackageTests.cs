@@ -113,7 +113,7 @@ namespace Shimmer.Tests.Core
                 var filesToLookFor = new[] {
                     "System.Reactive.Core.dll",
                     "ReactiveUI.dll",
-                    "Ionic.Zip.dll",
+                    "MarkdownSharp.dll",
                     "SampleUpdatingApp.exe",
                 };
 
