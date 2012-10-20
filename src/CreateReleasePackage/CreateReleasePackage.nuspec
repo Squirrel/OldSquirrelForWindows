@@ -21,9 +21,29 @@
   </metadata>
 
   <files>
-    <file src="bin\$configuration$\*.exe" target="tools" />
-    <file src="bin\$configuration$\*.dll" target="tools" />
-    <file src="bin\$configuration$\*.pdb" target="tools" />
-    <file src="tools\*.ps1" target="tools" />
+    <file src="tools\*.*" target="tools" />
+    <file src="..\..\bin\Core.dll" target="tools" />
+    <file src="..\..\bin\CreateReleasePackage.exe" target="tools" />
+    <file src="..\..\bin\Ionic.Zip.dll" target="tools" />
+    <file src="..\..\bin\MarkdownSharp.dll" target="tools" />
+    <file src="..\..\bin\NuGetPackageExplorer.Types.dll" target="tools" />
+    <file src="..\..\bin\ReactiveUI.dll" target="tools" />
+    <file src="..\..\bin\ReactiveUI.Blend.dll" target="tools" />
+    <file src="..\..\bin\ReactiveUI.Routing.dll" target="tools" />
+    <file src="..\..\bin\ReactiveUI.Xaml.dll" target="tools" />
+    <file src="..\..\bin\SharpBITS.Base.dll" target="tools" />
+    <file src="..\..\bin\Shimmer.Client.dll" target="tools" />
+    <file src="..\..\bin\Shimmer.Core.dll" target="tools" />
+    <file src="..\..\bin\Shimmer.WiXUI.config" target="tools" />
+    <file src="..\..\bin\Shimmer.WiXUi.dll" target="tools" />
+    <file src="..\..\bin\Shimmer.WiXUiClient.dll" target="tools" />
+    <file src="..\..\bin\System.Interactive.dll" target="tools" />
+    <file src="..\..\bin\System.IO.Abstractions.dll" target="tools" />
+    <file src="..\..\bin\System.Reactive.Core.dll" target="tools" />
+    <file src="..\..\bin\System.Reactive.Interfaces.dll" target="tools" />
+    <file src="..\..\bin\System.Reactive.Linq.dll" target="tools" />
+    <file src="..\..\bin\System.Reactive.PlatformServices.dll" target="tools" />
+    <file src="..\..\bin\System.Reactive.Windows.Threading.dll" target="tools" />
+    <file src="..\..\bin\System.Windows.Interactivity.dll" target="tools" />
   </files>
 </package>
