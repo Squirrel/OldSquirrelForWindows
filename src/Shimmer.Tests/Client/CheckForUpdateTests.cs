@@ -34,7 +34,7 @@ namespace Shimmer.Tests.Client
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
             var result = default(UpdateInfo);
 
-            using (fixture.AcquireUpdateLock()) {
+            using (fixture) {
                 result = fixture.CheckForUpdate().First();
             }
 
@@ -67,7 +67,7 @@ namespace Shimmer.Tests.Client
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
-            using (fixture.AcquireUpdateLock()) {
+            using (fixture) {
                 fixture.CheckForUpdate().First();
             }
 
@@ -98,7 +98,7 @@ namespace Shimmer.Tests.Client
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
-            using (fixture.AcquireUpdateLock()) {
+            using (fixture) {
                 fixture.CheckForUpdate().First();
             }
 
@@ -131,7 +131,7 @@ namespace Shimmer.Tests.Client
                 .Returns(Observable.Return(File.ReadAllText(dlPath, Encoding.UTF8)));
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
-            using (fixture.AcquireUpdateLock()) {
+            using (fixture) {
                 fixture.CheckForUpdate().First();
             }
 

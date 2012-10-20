@@ -143,7 +143,7 @@ namespace Shimmer.Tests.Client
                 (new DirectoryInfo(Path.Combine(tempDir, "SampleUpdatingApp", "packages"))).CreateRecursive();
 
                 var fixture = new UpdateManager("http://localhost:30405", "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
-                using (fixture.AcquireUpdateLock()) {
+                using (fixture) {
                     var progress = new ReplaySubject<int>();
 
                     fixture.DownloadReleases(entriesToDownload, progress).First();
@@ -184,7 +184,7 @@ namespace Shimmer.Tests.Client
                 (new DirectoryInfo(Path.Combine(tempDir, "SampleUpdatingApp", "packages"))).CreateRecursive();
 
                 var fixture = new UpdateManager(updateDir.FullName, "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
-                using (fixture.AcquireUpdateLock()) {
+                using (fixture) {
                     var progress = new ReplaySubject<int>();
 
                     fixture.DownloadReleases(entriesToDownload, progress).First();

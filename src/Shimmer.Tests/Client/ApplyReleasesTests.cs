@@ -65,7 +65,7 @@ namespace Shimmer.Tests.Client
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
-                using (fixture.AcquireUpdateLock()) {
+                using (fixture) {
                     var progress = new ReplaySubject<int>();
                     fixture.ApplyReleases(updateInfo, progress).First();
                     this.Log().Info("Progress: [{0}]", String.Join(",", progress));
@@ -115,7 +115,7 @@ namespace Shimmer.Tests.Client
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
-                using (fixture.AcquireUpdateLock()) {
+                using (fixture) {
                     var progress = new ReplaySubject<int>();
 
                     fixture.ApplyReleases(updateInfo, progress).First();
@@ -283,7 +283,7 @@ namespace Shimmer.Tests.Client
                 var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "SampleUpdatingApp.1.1.0.0.nupkg"));
 
                 var updateInfo = UpdateInfo.Create(null, new[] { baseEntry }, "dontcare", FrameworkVersion.Net40);
-                using (fixture.AcquireUpdateLock()) {
+                using (fixture) {
                     fixture.ApplyReleases(updateInfo).ToList().First();
                 }
 
@@ -292,7 +292,7 @@ namespace Shimmer.Tests.Client
                 TaskbarHelper.PinToTaskbar(oldExecutable);
 
                 updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
-                using (fixture.AcquireUpdateLock()) {
+                using (fixture) {
                     fixture.ApplyReleases(updateInfo).ToList().First();
                 }
 

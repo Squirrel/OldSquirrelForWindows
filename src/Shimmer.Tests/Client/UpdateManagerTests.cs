@@ -31,7 +31,7 @@ namespace Shimmer.Tests.Client
                     var urlDownloader = new Mock<IUrlDownloader>();
                     var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
-                    using (fixture.AcquireUpdateLock()) {
+                    using (fixture) {
                         fixture.UpdateLocalReleasesFile().Last();
                     }
 
