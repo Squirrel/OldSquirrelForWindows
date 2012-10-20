@@ -36,11 +36,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\wix\sdk\BootstrapperCore.dll</HintPath>
     </Reference>
-    <Reference Include="Core">
-      <HintPath>..\..\ext\Core.dll</HintPath>
-    </Reference>
-    <Reference Include="NuGetPackageExplorer.Types">
-      <HintPath>..\..\ext\NuGetPackageExplorer.Types.dll</HintPath>
+    <Reference Include="NuGet.Core, Version=2.1.31002.9028, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Nuget.Core.2.1.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="ReactiveUI">
