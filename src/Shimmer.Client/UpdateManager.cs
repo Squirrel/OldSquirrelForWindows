@@ -13,6 +13,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using NuGet;
 using ReactiveUIMicro;
 using Shimmer.Core;
@@ -28,7 +29,7 @@ using StreamReader = System.IO.StreamReader;
 namespace Shimmer.Client
 {
     [Serializable]
-    public class UpdateManager : IUpdateManager
+    public sealed class UpdateManager : IUpdateManager
     {
         readonly IRxUIFullLogger log;
         readonly IFileSystemFactory fileSystem;
@@ -38,7 +39,7 @@ namespace Shimmer.Client
         readonly string updateUrlOrPath;
         readonly FrameworkVersion appFrameworkVersion;
 
-        bool hasUpdateLock;
+        IDisposable updateLock;
 
         public UpdateManager(string urlOrPath, 
             string applicationName,
@@ -72,11 +73,13 @@ namespace Shimmer.Client
 
         public IObservable<UpdateInfo> CheckForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null)
         {
+            return acquireUpdateLock().SelectMany(_ => checkForUpdate(ignoreDeltaUpdates, progress));
+        }
+
+        IObservable<UpdateInfo> checkForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null)
+        {
             IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
             progress = progress ?? new Subject<int>();
-
-            var noLock = checkForLock<UpdateInfo>();
-            if (noLock != null) return noLock;
 
             try {
                 var file = fileSystem.GetFileInfo(LocalReleaseFile).OpenRead();
@@ -125,9 +128,11 @@ namespace Shimmer.Client
 
         public IObservable<Unit> DownloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress = null)
         {
-            var noLock = checkForLock<Unit>();
-            if (noLock != null) return noLock;
+            return acquireUpdateLock().SelectMany(_ => downloadReleases(releasesToDownload, progress));
+        }
 
+        IObservable<Unit> downloadReleases(IEnumerable<ReleaseEntry> releasesToDownload, IObserver<int> progress = null)
+        {
             progress = progress ?? new Subject<int>();
             IObservable<Unit> downloadResult = null;
 
@@ -161,8 +166,11 @@ namespace Shimmer.Client
 
         public IObservable<List<string>> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
-            var noLock = checkForLock<List<string>>();
-            if (noLock != null) return noLock;
+            return acquireUpdateLock().SelectMany(_ => applyReleases(updateInfo, progress));
+        }
+
+        IObservable<List<string>> applyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
+        {
             progress = progress ?? new Subject<int>();
 
             // NB: It's important that we update the local releases file *only* 
@@ -184,32 +192,19 @@ namespace Shimmer.Client
             return ret;
         }
 
-        public IDisposable AcquireUpdateLock()
-        {
-            var key = Utility.CalculateStreamSHA1(new MemoryStream(Encoding.UTF8.GetBytes(rootAppDirectory)));
-            var ret = new SingleGlobalInstance(key, 500);
-
-            hasUpdateLock = true;
-            return Disposable.Create(() => {
-                ret.Dispose();
-                hasUpdateLock = false;
-            });
-        }
-
         public IObservable<Unit> UpdateLocalReleasesFile()
         {
-            var noLock = checkForLock<Unit>();
-            if (noLock != null) return noLock;
-
-            return Observable.Start(() => 
-                ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler);
+            return acquireUpdateLock().SelectMany(_ => Observable.Start(() => 
+                ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler));
         }
 
         public IObservable<Unit> FullUninstall()
         {
-            var noLock = checkForLock<Unit>();
-            if (noLock != null) return noLock;
+            return acquireUpdateLock().SelectMany(_ => fullUninstall());
+        }
 
+        IObservable<Unit> fullUninstall()
+        {
             return Observable.Start(() => {
                 cleanUpOldVersions(new Version(255, 255, 255, 255));
 
@@ -224,13 +219,43 @@ namespace Shimmer.Client
             }, RxApp.TaskpoolScheduler);
         }
 
-        IObservable<TRet> checkForLock<TRet>()
+        public void Dispose()
         {
-            if (!hasUpdateLock) {
-                return Observable.Throw<TRet>(new Exception("Call AcquireUpdateLock before using this method"));
+            var disp = Interlocked.Exchange(ref updateLock, null);
+            if (disp != null) {
+                disp.Dispose();
             }
+        }
 
-            return null;
+        ~UpdateManager()
+        {
+            if (updateLock != null) {
+                throw new Exception("You must dispose UpdateManager!");
+            }
+        }
+
+        IObservable<IDisposable> acquireUpdateLock()
+        {
+            if (updateLock != null) return Observable.Return(updateLock);
+
+            return Observable.Start(() => {
+                var key = Utility.CalculateStreamSHA1(new MemoryStream(Encoding.UTF8.GetBytes(rootAppDirectory)));
+
+                SingleGlobalInstance theLock;
+                try {
+                    theLock = new SingleGlobalInstance(key, 2000);
+                } catch (TimeoutException) {
+                    throw new TimeoutException("Couldn't acquire update lock, another instance may be running updates");
+                }
+
+                var ret = Disposable.Create(() => {
+                    theLock.Dispose();
+                    updateLock = null;
+                });
+
+                updateLock = ret;
+                return ret;
+            });
         }
 
         static string getLocalAppDataDirectory()
@@ -718,6 +743,8 @@ namespace Shimmer.Client
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default)))
                 .Aggregate(Unit.Default, (acc, x) => acc);
         }
+
+
     }
 
     public class DidntFollowInstructionsAppSetup : AppSetup

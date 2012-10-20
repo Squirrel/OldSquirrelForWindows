@@ -10,19 +10,8 @@ using Shimmer.Core;
 namespace Shimmer.Client
 {
     [ContractClass(typeof(UpdateManagerContracts))]
-    public interface IUpdateManager
+    public interface IUpdateManager : IDisposable
     {
-        /// <summary>
-        /// Acquire the global lock to start updating. Call this method before
-        /// calling any of the other methods in this interface. Note that this
-        /// lock should be *global* (i.e. it should be a named Mutex that spans
-        /// processes), so that multiple instances don't try to operate on the
-        /// packages directory concurrently.
-        /// </summary>
-        /// <returns>A Disposable that will release the lock, or the method throws
-        /// if the lock cannot be acquired.</returns>
-        IDisposable AcquireUpdateLock();
-
         /// <summary>
         /// Fetch the remote store for updates and compare against the current 
         /// version to determine what updates to download.
