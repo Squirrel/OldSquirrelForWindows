@@ -366,7 +366,7 @@ namespace Shimmer.Client
 
             using (var file = targetPackage.OpenRead()) {
                 var hash = Utility.CalculateStreamSHA1(file);
-                if (hash != downloadedRelease.SHA1) {
+                if (!hash.Equals(downloadedRelease.SHA1,StringComparison.OrdinalIgnoreCase)) {
                     log.Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
                     targetPackage.Delete();
                     throw new Exception("Checksum doesn't match: " + targetPackage.FullName);

@@ -160,6 +160,7 @@
     <Compile Include="Core\DeltaPackageTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
+    <Compile Include="Core\UtilityTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticHttpServer.cs" />
     <Compile Include="TestHelpers\AssertExtensions.cs" />
