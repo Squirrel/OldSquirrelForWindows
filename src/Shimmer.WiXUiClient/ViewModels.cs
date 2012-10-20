@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using NuGet;
 using ReactiveUI.Routing;
 using ReactiveUI.Xaml;
-using Shimmer.Core;
 
 namespace Shimmer.Client.WiXUi
 {
