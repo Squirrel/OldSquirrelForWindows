@@ -64,28 +64,21 @@ namespace SampleUpdatingApp
             this.WhenAny(x => x.UpdatePath, x => x.Value)
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Throttle(TimeSpan.FromMilliseconds(700), RxApp.DeferredScheduler)
-                .Subscribe(x => updateManager = new UpdateManager(UpdatePath, "SampleUpdatingApp", FrameworkVersion.Net40));
+                .Subscribe(x => {
+                    if (updateManager != null)  updateManager.Dispose();
+                    updateManager = new UpdateManager(UpdatePath, "SampleUpdatingApp", FrameworkVersion.Net40);
+                });
 
             CheckForUpdate = new ReactiveAsyncCommand(noneInFlight);
-            CheckForUpdate.RegisterAsyncFunction(_ => {
-                using (updateManager.AcquireUpdateLock()) {
-                    return updateManager.CheckForUpdate().Last();
-                }
-            }).Subscribe(x => { UpdateInfo = x; DownloadedUpdateInfo = null; });
+            CheckForUpdate.RegisterAsyncObservable(_ => updateManager.CheckForUpdate())
+                .Subscribe(x => { UpdateInfo = x; DownloadedUpdateInfo = null; });
 
             DownloadReleases = new ReactiveAsyncCommand(noneInFlight.Where(_ => UpdateInfo != null));
-            DownloadReleases.RegisterAsyncFunction(_ => {
-                using (updateManager.AcquireUpdateLock()) {
-                    return updateManager.DownloadReleases(UpdateInfo.ReleasesToApply).Last();
-                }
-            }).Subscribe(_ => DownloadedUpdateInfo = UpdateInfo);
+            DownloadReleases.RegisterAsyncObservable(_ => updateManager.DownloadReleases(UpdateInfo.ReleasesToApply))
+                .Subscribe(_ => DownloadedUpdateInfo = UpdateInfo);
 
             ApplyReleases = new ReactiveAsyncCommand(noneInFlight.Where(_ => DownloadedUpdateInfo != null));
-            ApplyReleases.RegisterAsyncFunction(_ => {
-                using (updateManager.AcquireUpdateLock()) {
-                    return updateManager.ApplyReleases(DownloadedUpdateInfo).Last();
-                }
-            });
+            ApplyReleases.RegisterAsyncObservable(_ => updateManager.ApplyReleases(DownloadedUpdateInfo));
 
             Observable.CombineLatest(
                 CheckForUpdate.ItemsInflight.StartWith(0),
