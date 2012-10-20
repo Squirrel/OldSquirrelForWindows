@@ -98,7 +98,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="CreateReleasePackage.nuspec" />
+    <None Include="CreateReleasePackage.nuspec">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="tools\Create-Release.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

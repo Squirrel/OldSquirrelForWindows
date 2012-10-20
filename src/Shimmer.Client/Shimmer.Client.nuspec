@@ -14,7 +14,7 @@
     <copyright>Copyright 2012 GitHub</copyright>
     <tags>Installer Desktop WiX</tags>
     <dependencies>
-      <dependency id="Shimmer.Core" version="[$version$]" />
+      <dependency id="Shimmer.Core" version="[$version$-beta]" />
     </dependencies>
   </metadata>
 </package>

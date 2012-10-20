@@ -15,7 +15,7 @@
     <tags>Installer Desktop WiX</tags>
 
     <dependencies>
-      <dependency id="Shimmer.Client" version="[$version$]" />
+      <dependency id="Shimmer.Client" version="[$version$-beta]" />
     </dependencies>
   </metadata>
 </package>
