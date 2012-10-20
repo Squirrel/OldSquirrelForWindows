@@ -87,7 +87,7 @@ namespace Shimmer.Client
 
     public static class RxHatersMixin
     {
-        public static Task<ReleaseEntry> UpdateApp(this IUpdateManager This, Action<int> progress)
+        public static Task<ReleaseEntry> UpdateAppAsync(this IUpdateManager This, Action<int> progress)
         {
             var checkSubj = new Subject<int>();
             var downloadSubj = new Subject<int>();
@@ -121,7 +121,7 @@ namespace Shimmer.Client
         /// will return values from 0-100</param>
         /// <returns>An UpdateInfo object representing the updates to install.
         /// </returns>
-        public static Task<UpdateInfo> CheckForUpdate(this IUpdateManager This, bool ignoreDeltaUpdates, Action<int> progress)
+        public static Task<UpdateInfo> CheckForUpdateAsync(this IUpdateManager This, bool ignoreDeltaUpdates, Action<int> progress)
         {
             var subj = new Subject<int>();
             subj.Subscribe(progress);
@@ -136,7 +136,7 @@ namespace Shimmer.Client
         /// <param name="progress">An Action which can be used to report Progress - 
         /// will return values from 0-100</param>
         /// <returns>A completion Task<returns>
-        public static Task DownloadReleases(this IUpdateManager This, IEnumerable<ReleaseEntry> releasesToDownload, Action<int> progress)
+        public static Task DownloadReleasesAsync(this IUpdateManager This, IEnumerable<ReleaseEntry> releasesToDownload, Action<int> progress)
         {
             var subj = new Subject<int>();
             subj.Subscribe(progress, ex => { });
@@ -155,7 +155,7 @@ namespace Shimmer.Client
         /// will return values from 0-100</param>
         /// <returns>A list of EXEs that should be started if this is a new 
         /// installation.</returns>
-        public static Task<List<string>> ApplyReleases(this IUpdateManager This, UpdateInfo updateInfo, Action<int> progress)
+        public static Task<List<string>> ApplyReleasesAsync(this IUpdateManager This, UpdateInfo updateInfo, Action<int> progress)
         {
             var subj = new Subject<int>();
             subj.Subscribe(progress, ex => { });
