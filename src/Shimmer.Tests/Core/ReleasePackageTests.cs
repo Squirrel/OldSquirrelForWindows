@@ -31,7 +31,7 @@ namespace Shimmer.Tests.Core
                 this.Log().Info("Resulting package is at {0}", outputPackage);
                 var pkg = new ZipPackage(outputPackage);
 
-                int refs = pkg.AssemblyReferences.Count();
+                int refs = pkg.FrameworkAssemblies.Count();
                 this.Log().Info("Found {0} refs", refs);
                 refs.ShouldEqual(0);
 
@@ -103,7 +103,7 @@ namespace Shimmer.Tests.Core
                 this.Log().Info("Resulting package is at {0}", outputPackage);
                 var pkg = new ZipPackage(outputPackage);
 
-                int refs = pkg.AssemblyReferences.Count();
+                int refs = pkg.FrameworkAssemblies.Count();
                 this.Log().Info("Found {0} refs", refs);
                 refs.ShouldEqual(0);
 
