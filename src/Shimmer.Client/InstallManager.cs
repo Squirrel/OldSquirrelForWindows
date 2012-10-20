@@ -70,12 +70,12 @@ namespace Shimmer.Client
                     .Subscribe(progress);
 
                 List<string> ret = null;
-                using (eigenUpdater.AcquireUpdateLock()) {
-                    ret = eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
-                        .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
-                        .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
-                        .First();
-                }
+                ret = eigenUpdater.CheckForUpdate(progress: eigenCheckProgress)
+                    .SelectMany(x => eigenUpdater.DownloadReleases(x.ReleasesToApply, eigenCopyFileProgress).Select(_ => x))
+                    .SelectMany(x => eigenUpdater.ApplyReleases(x, eigenApplyProgress))
+                    .First();
+
+                eigenUpdater.Dispose();
 
                 var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
                 updateUrl = null; //XXX REMOVE ME
@@ -89,18 +89,18 @@ namespace Shimmer.Client
 
                 var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, TargetRootDirectory);
 
-                using (realUpdater.AcquireUpdateLock()) {
-                    realUpdater.CheckForUpdate(progress: realCheckProgress)
-                        .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
-                        .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
-                        .LoggedCatch<List<string>, InstallManager, Exception>(this, ex => {
-                            // NB: If we don't do this, we won't Collapse the Wave 
-                            // Function(tm) below on 'progress' and it will never complete
-                            realCheckProgress.OnError(ex);
-                            return Observable.Return(Enumerable.Empty<string>().ToList());
-                        }, "Failed to update to latest remote version")
-                        .First();
-                }
+                realUpdater.CheckForUpdate(progress: realCheckProgress)
+                    .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
+                    .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
+                    .LoggedCatch<List<string>, InstallManager, Exception>(this, ex => {
+                        // NB: If we don't do this, we won't Collapse the Wave 
+                        // Function(tm) below on 'progress' and it will never complete
+                        realCheckProgress.OnError(ex);
+                        return Observable.Return(Enumerable.Empty<string>().ToList());
+                    }, "Failed to update to latest remote version")
+                    .First();
+
+                realUpdater.Dispose();
 
                 return ret;
             }).ObserveOn(RxApp.DeferredScheduler);
@@ -110,12 +110,10 @@ namespace Shimmer.Client
         {
             var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40, TargetRootDirectory);
 
-            var updateLock = updateManager.AcquireUpdateLock();
-
             return updateManager.FullUninstall()
                 .ObserveOn(RxApp.DeferredScheduler)
-                .Log(this, "Full uninstall") 
-                .Finally(updateLock.Dispose);
+                .Log(this, "Full uninstall")
+                .Finally(updateManager.Dispose);
         }
 
         static FrameworkVersion determineFxVersionFromPackage(IPackage package)

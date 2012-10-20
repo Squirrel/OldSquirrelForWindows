@@ -76,28 +76,20 @@ namespace Shimmer.Client
             Contract.Requires(updateInfo != null);
             return default(IObservable<List<string>>);
         }
+
+        public void Dispose()
+        {
+        }
     }
 
     public static class UpdateManagerMixins
     {
         public static IObservable<ReleaseEntry> UpdateApp(this IUpdateManager This)
         {
-            IDisposable theLock;
-
-            try {
-                theLock = This.AcquireUpdateLock();
-            } catch (TimeoutException _) {
-                // TODO: Bad Programmer!
-                return Observable.Return(default(ReleaseEntry));
-            } catch (Exception ex) {
-                return Observable.Throw<ReleaseEntry>(ex);
-            }
-
             var ret = This.CheckForUpdate(false, null)
                 .SelectMany(x => This.DownloadReleases(x.ReleasesToApply, null).TakeLast(1).Select(_ => x))
                 .SelectMany(x => This.ApplyReleases(x, null).TakeLast(1).Select(_ => x.ReleasesToApply.MaxBy(y => y.Version).LastOrDefault()))
-                .Finally(() => theLock.Dispose())
-                .Multicast(new AsyncSubject<ReleaseEntry>());
+                .PublishLast();
 
             ret.Connect();
             return ret;
