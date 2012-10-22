@@ -24,6 +24,8 @@
     <file src="tools\*.*" target="tools" />
     <file src="..\..\ext\wix\**" exclude="..\..\ext\wix\doc\**" target="tools\wix" />
 
+    <file src="keep.me" target="content" />
+
     <file src="..\..\bin\Core.dll" target="tools" />
     <file src="..\..\bin\CreateReleasePackage.exe" target="tools" />
     <file src="..\..\bin\Ionic.Zip.dll" target="tools" />
