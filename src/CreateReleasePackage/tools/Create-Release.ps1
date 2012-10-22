@@ -11,6 +11,8 @@ param (
 Set-PSDebug -Strict
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
+$wixDir = Join-Path $toolsDir "wix"
 $support = Join-Path $toolsDir "support.ps1"
 . $support
 
@@ -100,8 +102,8 @@ if (-not $BuildDirectory) {
 }
 
 ### DEBUG:
-$createReleasePackageExe = [IO.Path]::Combine($toolsDir, '..', 'bin', 'Debug', 'CreateReleasePackage.exe')
-$wixDir = [IO.Path]::Combine($toolsDir, '..', '..', '..', 'ext', 'wix')
+#$createReleasePackageExe = [IO.Path]::Combine($toolsDir, '..', 'bin', 'Debug', 'CreateReleasePackage.exe')
+#$wixDir = [IO.Path]::Combine($toolsDir, '..', '..', '..', 'ext', 'wix')
 ### End DEBUG
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
