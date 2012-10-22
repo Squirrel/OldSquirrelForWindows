@@ -302,7 +302,7 @@ namespace Shimmer.Client
                 remoteReleases = remoteReleases.Where(x => !x.IsDelta);
             }
 
-            if (EnumerableEx.IsEmpty(localReleases)) {
+            if (!localReleases.Any()) {
                 log.Warn("First run or local directory is corrupt, starting from scratch");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
