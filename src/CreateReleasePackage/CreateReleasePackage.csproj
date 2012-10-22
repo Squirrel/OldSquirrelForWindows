@@ -49,17 +49,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shimmer.Core\bin\Debug\Core.dll</HintPath>
-    </Reference>
     <Reference Include="MarkdownSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MarkdownSharp.1.13.0.0\lib\35\MarkdownSharp.dll</HintPath>
     </Reference>
-    <Reference Include="NuGetPackageExplorer.Types, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b33e3c54f0b885e9, processorArchitecture=MSIL">
+    <Reference Include="NuGet.Core, Version=2.1.31002.9028, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shimmer.Core\bin\Debug\NuGetPackageExplorer.Types.dll</HintPath>
+      <HintPath>..\packages\Nuget.Core.2.1.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

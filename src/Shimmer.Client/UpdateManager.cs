@@ -17,6 +17,7 @@ using System.Threading;
 using NuGet;
 using ReactiveUIMicro;
 using Shimmer.Core;
+using EnumerableEx = System.Linq.EnumerableEx;
 
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
@@ -301,7 +302,7 @@ namespace Shimmer.Client
                 remoteReleases = remoteReleases.Where(x => !x.IsDelta);
             }
 
-            if (localReleases.IsEmpty()) {
+            if (EnumerableEx.IsEmpty(localReleases)) {
                 log.Warn("First run or local directory is corrupt, starting from scratch");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
