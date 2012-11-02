@@ -26,11 +26,10 @@
 
     <file src="keep.me" target="content" />
 
-    <file src="..\..\bin\Core.dll" target="tools" />
     <file src="..\..\bin\CreateReleasePackage.exe" target="tools" />
     <file src="..\..\bin\Ionic.Zip.dll" target="tools" />
     <file src="..\..\bin\MarkdownSharp.dll" target="tools" />
-    <file src="..\..\bin\NuGetPackageExplorer.Types.dll" target="tools" />
+    <file src="..\..\bin\NuGet.Core.dll" target="tools" />
     <file src="..\..\bin\ReactiveUI.dll" target="tools" />
     <file src="..\..\bin\ReactiveUI.Blend.dll" target="tools" />
     <file src="..\..\bin\ReactiveUI.Routing.dll" target="tools" />
