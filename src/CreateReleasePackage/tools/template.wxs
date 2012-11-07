@@ -7,10 +7,9 @@
 
     <BootstrapperApplicationRef Id="ManagedBootstrapperApplicationHost">
       <Payload Name="BootstrapperCore.config" SourceFile="$(var.ToolsDir)\Shimmer.WiXUI.config" />
-      <Payload SourceFile="$(var.ToolsDir)\Core.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\NuGet.Core.dll" />
       <Payload SourceFile="$(var.ToolsDir)\Ionic.Zip.dll" />
       <Payload SourceFile="$(var.ToolsDir)\MarkdownSharp.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\NuGetPackageExplorer.Types.dll" />
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Blend.dll" />
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.dll" />
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Routing.dll" />
