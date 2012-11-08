@@ -79,6 +79,10 @@ function Create-ReleaseForProject {
 	}
 }
 
+if (-not $ProjectNameToBuild) {
+	$ProjectNameToBuild = (Get-Project).Name
+}
+
 if (-not $SolutionDir) {
 	if (Test-Path variable:Dte) {
 		$SolutionDir = Get-SolutionDir
