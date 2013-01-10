@@ -36,42 +36,51 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\wix\sdk\BootstrapperCore.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Core, Version=2.1.31002.9028, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="NuGet.Core, Version=2.2.31210.9045, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Nuget.Core.2.1.0\lib\net40-Client\NuGet.Core.dll</HintPath>
+      <HintPath>..\packages\Nuget.Core.2.2.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.3.99.4-beta\lib\Net40\ReactiveUI.dll</HintPath>
+    <Reference Include="ReactiveUI, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-core.4.3.0\lib\Net40\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Blend">
-      <HintPath>..\packages\reactiveui-xaml.3.99.4-beta\lib\Net40\ReactiveUI.Blend.dll</HintPath>
+    <Reference Include="ReactiveUI.Blend, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-xaml.4.3.0\lib\Net40\ReactiveUI.Blend.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing">
-      <HintPath>..\packages\reactiveui-xaml.3.99.4-beta\lib\Net40\ReactiveUI.Routing.dll</HintPath>
+    <Reference Include="ReactiveUI.Routing, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-xaml.4.3.0\lib\Net40\ReactiveUI.Routing.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml">
-      <HintPath>..\packages\reactiveui-xaml.3.99.4-beta\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
+    <Reference Include="ReactiveUI.Xaml, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-xaml.4.3.0\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="SharpBITS.Base">
       <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reactive.Core">
-      <HintPath>..\packages\Rx-Core.2.0.20823\lib\Net40\System.Reactive.Core.dll</HintPath>
+    <Reference Include="System.Reactive.Core, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Core.2.0.21114\lib\Net40\System.Reactive.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\packages\Rx-Interfaces.2.0.20823\lib\Net40\System.Reactive.Interfaces.dll</HintPath>
+    <Reference Include="System.Reactive.Interfaces, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Interfaces.2.0.21114\lib\Net40\System.Reactive.Interfaces.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Linq">
-      <HintPath>..\packages\Rx-Linq.2.0.20823\lib\Net40\System.Reactive.Linq.dll</HintPath>
+    <Reference Include="System.Reactive.Linq, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Linq.2.0.21114\lib\Net40\System.Reactive.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\packages\Rx-PlatformServices.2.0.20823\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-PlatformServices.2.0.21114\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Windows.Threading">
-      <HintPath>..\packages\Rx-XAML.2.0.20823\lib\Net40\System.Reactive.Windows.Threading.dll</HintPath>
+    <Reference Include="System.Reactive.Windows.Threading, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Xaml.2.0.21114\lib\Net40\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
