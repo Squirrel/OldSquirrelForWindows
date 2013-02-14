@@ -122,6 +122,7 @@
   <ItemGroup>
     <Compile Include="BitsManager.cs" />
     <Compile Include="IAppSetup.cs" />
+    <Compile Include="InstallerHookOperations.cs" />
     <Compile Include="InstallManager.cs" />
     <Compile Include="IUpdateManager.cs" />
     <Compile Include="PostInstallInfo.cs" />
