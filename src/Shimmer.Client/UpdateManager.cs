@@ -10,7 +10,6 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -241,9 +240,10 @@ namespace Shimmer.Client
             return Observable.Start(() => {
                 var key = Utility.CalculateStreamSHA1(new MemoryStream(Encoding.UTF8.GetBytes(rootAppDirectory)));
 
-                SingleGlobalInstance theLock;
+                IDisposable theLock;
                 try {
-                    theLock = new SingleGlobalInstance(key, 2000);
+                    theLock = RxApp.InUnitTestRunner() ?
+                        Disposable.Empty : new SingleGlobalInstance(key, 2000);
                 } catch (TimeoutException) {
                     throw new TimeoutException("Couldn't acquire update lock, another instance may be running updates");
                 }
