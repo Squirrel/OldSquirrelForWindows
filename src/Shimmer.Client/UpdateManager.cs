@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 using System.Reactive.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
-using ReactiveUI;
 using Shimmer.Core;
+
 using EnumerableEx = System.Linq.EnumerableEx;
 
 // NB: These are whitelisted types from System.IO, so that we always end up 

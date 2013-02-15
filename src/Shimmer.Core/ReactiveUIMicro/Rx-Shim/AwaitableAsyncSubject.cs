@@ -14,7 +14,7 @@ using System.Threading;
 /* This file is substantially copied from http://rx.codeplex.com/SourceControl/changeset/view/ef6a42709f49#Rx.NET/System.Reactive.Linq/Reactive/Subjects/AsyncSubject.cs
  * Check LICENSE in this folder for licensing information */
 
-namespace ReactiveUI
+namespace ReactiveUIMicro
 {
     /// <summary>
     /// Represents the result of an asynchronous operation.

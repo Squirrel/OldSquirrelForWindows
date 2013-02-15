@@ -11,7 +11,7 @@ using System.Threading;
 /* This file is substantially copied from http://rx.codeplex.com/SourceControl/changeset/view/ef6a42709f49#Rx.NET/System.Reactive.Linq/Reactive/Linq/QueryLanguage.Awaiter.cs
  * Check LICENSE in this folder for licensing information */
 
-namespace ReactiveUI
+namespace ReactiveUIMicro
 {
     public static class ObservableAwaiter
     {

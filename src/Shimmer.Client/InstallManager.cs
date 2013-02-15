@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
 using Shimmer.Core;
-using ReactiveUI;
+using ReactiveUIMicro;
 
 namespace Shimmer.Client
 {

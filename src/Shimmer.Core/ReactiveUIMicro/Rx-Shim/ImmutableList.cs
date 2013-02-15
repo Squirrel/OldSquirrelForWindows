@@ -8,7 +8,7 @@ using System.Text;
 /* This file is substantially copied from http://rx.codeplex.com/SourceControl/changeset/view/ef6a42709f49#Rx.NET/System.Reactive.Core/Reactive/Internal/ImmutableList.cs
  * Check LICENSE in this folder for licensing information */
 
-namespace ReactiveUI
+namespace ReactiveUIMicro
 {
     internal class ImmutableList<T>
     {
