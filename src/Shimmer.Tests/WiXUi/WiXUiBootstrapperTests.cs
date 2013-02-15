@@ -43,6 +43,8 @@ namespace Shimmer.Tests.WiXUi
             events.SetupGet(x => x.PlanCompleteObs).Returns(Observable.Never<PlanCompleteEventArgs>());
             events.SetupGet(x => x.ApplyCompleteObs).Returns(Observable.Never<ApplyCompleteEventArgs>());
 
+            events.SetupGet(x => x.Engine).Returns(Mock.Of<IEngine>());
+
             string dir;
             using (IntegrationTestHelper.WithFakeInstallDirectory(out dir)) {
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
@@ -79,6 +81,7 @@ namespace Shimmer.Tests.WiXUi
 
             events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
             events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+            events.SetupGet(x => x.Engine).Returns(Mock.Of<IEngine>());
 
             string dir;
             using (IntegrationTestHelper.WithFakeInstallDirectory(out dir)) {
