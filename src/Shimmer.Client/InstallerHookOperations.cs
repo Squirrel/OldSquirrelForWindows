@@ -119,12 +119,12 @@ namespace Shimmer.Client
                     fileSystem.CreateDirectoryRecursive(fi.Directory.FullName);
 
                     var sl = new ShellLink() {
-                    Target = x.TargetPath,
-                    IconPath = x.IconLibrary,
-                    IconIndex = x.IconIndex,
-                    Arguments = x.Arguments,
-                    WorkingDirectory = x.WorkingDirectory,
-                    Description = x.Description
+                        Target = x.TargetPath,
+                        IconPath = x.IconLibrary,
+                        IconIndex = x.IconIndex,
+                        Arguments = x.Arguments,
+                        WorkingDirectory = x.WorkingDirectory,
+                        Description = x.Description,
                     };
 
                     sl.Save(shortcut);
