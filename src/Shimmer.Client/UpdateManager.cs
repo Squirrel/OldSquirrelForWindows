@@ -13,8 +13,11 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Reactive.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
+using ReactiveUI;
 using Shimmer.Core;
 using EnumerableEx = System.Linq.EnumerableEx;
 
@@ -165,10 +168,10 @@ namespace Shimmer.Client
 
         public IObservable<List<string>> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
-            return acquireUpdateLock().SelectMany(_ => applyReleases(updateInfo, progress));
+            return acquireUpdateLock().SelectMany(_ => applyReleases(updateInfo, progress).ToObservable());
         }
 
-        IObservable<List<string>> applyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
+        async Task<List<string>> applyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
             progress = progress ?? new Subject<int>();
 
@@ -176,18 +179,24 @@ namespace Shimmer.Client
             // once the entire operation has completed, even though we technically
             // could do it after DownloadUpdates finishes. We do this so that if
             // we get interrupted / killed during this operation, we'll start over
-            var ret = cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
-                .Do(_ => progress.OnNext(10), progress.OnError)
-                .SelectMany(_ => createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion))
-                .Do(_ => progress.OnNext(50), progress.OnError)
-                .SelectMany(release =>
-                    Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler))
-                .Do(_ => progress.OnNext(95), progress.OnError)
-                .SelectMany(x => UpdateLocalReleasesFile().Select(_ => x))
-                .Do(_ => progress.OnNext(100)).Finally(() => progress.OnCompleted())
-                .PublishLast();
 
-            ret.Connect();
+            var ret = default(List<string>);
+            try {
+                await cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null);
+                progress.OnNext(10);
+
+                var release = await createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion);
+                progress.OnNext(50);
+
+                ret = await Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler);
+                progress.OnNext(95);
+
+                await UpdateLocalReleasesFile();
+                progress.OnNext(100);
+            } finally {
+                progress.OnCompleted();
+            }
+            
             return ret;
         }
 
