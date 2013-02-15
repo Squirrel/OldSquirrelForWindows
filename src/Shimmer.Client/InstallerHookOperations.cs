@@ -77,16 +77,16 @@ namespace Shimmer.Client
             // this means that the user deleted them by hand and that they should 
             // stay dead
             return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
-                                                                                            var path = x.GetLinkTarget(applicationName);
-
-                                                                                            var fi = fileSystem.GetFileInfo(path);
-                                                                                            if (fi.Exists) {
-                                                                                                fi.Delete();
-                                                                                            } else {
-                                                                                                acc.Add(x);
-                                                                                            }
-
-                                                                                            return acc;
+                var path = x.GetLinkTarget(applicationName);
+                var fi = fileSystem.GetFileInfo(path);
+	    
+                if (fi.Exists) {
+                    fi.Delete();
+                } else {
+                    acc.Add(x);
+                }
+                
+                return acc;
             });
         }
 
@@ -111,23 +111,23 @@ namespace Shimmer.Client
             shortcutList
                 .Where(x => !shortcutRequestsToIgnore.Contains(x))
                 .ForEach(x => {
-                                  var shortcut = x.GetLinkTarget(applicationName, true);
+                    var shortcut = x.GetLinkTarget(applicationName, true);
 
-                                  var fi = fileSystem.GetFileInfo(shortcut);
-                                  if (fi.Exists) fi.Delete();
+                    var fi = fileSystem.GetFileInfo(shortcut);
+                    if (fi.Exists) fi.Delete();
 
-                                  fileSystem.CreateDirectoryRecursive(fi.Directory.FullName);
+                    fileSystem.CreateDirectoryRecursive(fi.Directory.FullName);
 
-                                  var sl = new ShellLink() {
-                                      Target = x.TargetPath,
-                                      IconPath = x.IconLibrary,
-                                      IconIndex = x.IconIndex,
-                                      Arguments = x.Arguments,
-                                      WorkingDirectory = x.WorkingDirectory,
-                                      Description = x.Description
-                                  };
+                    var sl = new ShellLink() {
+                    Target = x.TargetPath,
+                    IconPath = x.IconLibrary,
+                    IconIndex = x.IconIndex,
+                    Arguments = x.Arguments,
+                    WorkingDirectory = x.WorkingDirectory,
+                    Description = x.Description
+                    };
 
-                                  sl.Save(shortcut);
+                    sl.Save(shortcut);
                 });
 
             return app.LaunchOnSetup ? app.Target : null;
@@ -150,12 +150,12 @@ namespace Shimmer.Client
                 .Select(x => loadAssemblyOrWhine(x.FullName)).Where(x => x != null)
                 .SelectMany(x => x.GetModules())
                 .SelectMany(x => {
-                                     try {
-                                         return x.GetTypes().Where(y => typeof (IAppSetup).IsAssignableFrom(y));
-                                     } catch (ReflectionTypeLoadException ex) {
-                                         log.WarnException("Couldn't load types from module", ex);
-                                         return Enumerable.Empty<Type>();
-                                     }
+                     try {
+                         return x.GetTypes().Where(y => typeof (IAppSetup).IsAssignableFrom(y));
+                     } catch (ReflectionTypeLoadException ex) {
+                         log.WarnException("Couldn't load types from module", ex);
+                         return Enumerable.Empty<Type>();
+                     }
                 })
                 .Select(createInstanceOrWhine).Where(x => x != null)
                 .ToArray();
