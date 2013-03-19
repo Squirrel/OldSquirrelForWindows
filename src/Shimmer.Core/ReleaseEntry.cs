@@ -85,6 +85,12 @@ namespace Shimmer.Core
         public string GetReleaseNotes(string packageDirectory)
         {
             var zp = new ZipPackage(Path.Combine(packageDirectory, Filename));
+
+            var t = zp.Id;
+
+            if (String.IsNullOrWhiteSpace(zp.ReleaseNotes))
+                throw new Exception(String.Format("Invalid 'ReleaseNotes' value in nuspec file at '{0}'", Path.Combine(packageDirectory, Filename)));
+
             return zp.ReleaseNotes;
         }
 

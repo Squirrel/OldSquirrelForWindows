@@ -56,5 +56,13 @@ namespace Shimmer.Tests.Core
             var entryAsString = ReleaseEntry.GenerateFromFile(path).EntryAsString;
             ReleaseEntry.ParseReleaseEntry(entryAsString);
         }
+
+        [Fact]
+        public void InvalidReleaseNotesThrowsException()
+        {
+            var path = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var fixture = ReleaseEntry.GenerateFromFile(path);
+            Assert.Throws<Exception>(() => fixture.GetReleaseNotes(IntegrationTestHelper.GetPath("fixtures")));
+        }
     }
 }
