@@ -21,7 +21,7 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for UninstallingView.xaml
     /// </summary>
-    public partial class UninstallingView : UserControl, IViewFor<IUninstallingViewModel>
+    public partial class UninstallingView : UserControl, IViewFor<UninstallingViewModel>
     {
         public UninstallingView()
         {
@@ -32,16 +32,16 @@ namespace Shimmer.WiXUi.Views
                 .BindTo(ProgressValue, x => x.Value);
         }
 
-        public IUninstallingViewModel ViewModel {
-            get { return (IUninstallingViewModel)GetValue(ViewModelProperty); }
+        public UninstallingViewModel ViewModel {
+            get { return (UninstallingViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
         public static readonly DependencyProperty ViewModelProperty =
-            DependencyProperty.Register("ViewModel", typeof(IUninstallingViewModel), typeof(UninstallingView), new PropertyMetadata(null));
+            DependencyProperty.Register("ViewModel", typeof(UninstallingViewModel), typeof(UninstallingView), new PropertyMetadata(null));
 
         object IViewFor.ViewModel {
             get { return ViewModel; }
-            set { ViewModel = (IUninstallingViewModel) value; }
+            set { ViewModel = (UninstallingViewModel) value; }
         }
     }
 }

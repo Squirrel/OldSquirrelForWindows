@@ -21,27 +21,25 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for InstallingView.xaml
     /// </summary>
-    public partial class InstallingView : UserControl, IViewFor<IInstallingViewModel>
+    public partial class InstallingView : UserControl, IViewFor<InstallingViewModel>
     {
         public InstallingView()
         {
             InitializeComponent();
 
-            this.WhenAny(x => x.ViewModel.LatestProgress, x => (double) x.Value)
-                .ObserveOn(RxApp.DeferredScheduler) // XXX: WHYYYYY
-                .BindTo(ProgressValue, x => x.Value);
+            this.OneWayBind(ViewModel, x => x.LatestProgress, x => x.ProgressValue.Value);
         }
 
-        public IInstallingViewModel ViewModel {
-            get { return (IInstallingViewModel)GetValue(ViewModelProperty); }
+        public InstallingViewModel ViewModel {
+            get { return (InstallingViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
         public static readonly DependencyProperty ViewModelProperty =
-            DependencyProperty.Register("ViewModel", typeof(IInstallingViewModel), typeof(InstallingView), new PropertyMetadata(null));
+            DependencyProperty.Register("ViewModel", typeof(InstallingViewModel), typeof(InstallingView), new PropertyMetadata(null));
 
         object IViewFor.ViewModel {
             get { return ViewModel; }
-            set { ViewModel = (IInstallingViewModel) value; }
+            set { ViewModel = (InstallingViewModel) value; }
         }
     }
 }

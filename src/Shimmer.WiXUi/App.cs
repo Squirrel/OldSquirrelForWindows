@@ -26,7 +26,6 @@ namespace Shimmer.WiXUi
         protected override void Run()
         {
             RxApp.LoggerFactory = _ => new DebugLogger();
-            RxApp.DeferredScheduler = DispatcherScheduler.Current;
 
             theApp = new Application();
 
@@ -48,12 +47,11 @@ namespace Shimmer.WiXUi
                 viewHost = {Router = bootstrapper.Router}
             };
 
-            uiDispatcher = theApp.MainWindow.Dispatcher;
-
             MainWindowHwnd = IntPtr.Zero;
             if (Command.Display == Display.Full) {
                 MainWindowHwnd = new WindowInteropHelper(theApp.MainWindow).Handle;
                 theApp.Run(theApp.MainWindow);
+                uiDispatcher = theApp.MainWindow.Dispatcher;
             }
 
             Engine.Quit(0);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,26 +21,28 @@ namespace Shimmer.WiXUi.Views
     /// <summary>
     /// Interaction logic for ErrorView.xaml
     /// </summary>
-    public partial class ErrorView : UserControl, IViewFor<IErrorViewModel>
+    public partial class ErrorView : UserControl, IViewFor<ErrorViewModel>
     {
         public ErrorView()
         {
             InitializeComponent();
 
-            this.WhenAny(x => x.ViewModel, x => x.Value)
-                .Subscribe(x => ErrorMessage.Text = String.Format("{0}\n{1}", x.Error.ErrorMessage, x.Error.ErrorCauseOrResolution));
+            this.WhenAny(x => x.ViewModel.Error, x => x.Value)
+                .Where(x => x != null)
+                .Select(x => String.Format("{0}\n{1}", x.ErrorMessage, x.ErrorCauseOrResolution))
+                .BindTo(this, x => x.ErrorMessage.Text);
         }
 
-        public IErrorViewModel ViewModel {
-            get { return (IErrorViewModel)GetValue(ViewModelProperty); }
+        public ErrorViewModel ViewModel {
+            get { return (ErrorViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
         public static readonly DependencyProperty ViewModelProperty =
-            DependencyProperty.Register("ViewModel", typeof(IErrorViewModel), typeof(ErrorView), new PropertyMetadata(null));
+            DependencyProperty.Register("ViewModel", typeof(ErrorViewModel), typeof(ErrorView), new PropertyMetadata(null));
 
         object IViewFor.ViewModel {
             get { return ViewModel; }
-            set { ViewModel = (IErrorViewModel) value; }
+            set { ViewModel = (ErrorViewModel) value; }
         }
     }
 }

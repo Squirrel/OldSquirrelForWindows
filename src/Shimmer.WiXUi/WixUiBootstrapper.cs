@@ -254,10 +254,10 @@ namespace Shimmer.WiXUi.ViewModels
                 new { Interface = typeof(IWelcomeViewModel), Impl = typeof(WelcomeViewModel) },
                 new { Interface = typeof(IInstallingViewModel), Impl = typeof(InstallingViewModel) },
                 new { Interface = typeof(IUninstallingViewModel), Impl = typeof(UninstallingViewModel) },
-                new { Interface = typeof(IViewFor<IErrorViewModel>), Impl = typeof(ErrorView) },
-                new { Interface = typeof(IViewFor<IWelcomeViewModel>), Impl = typeof(WelcomeView) },
-                new { Interface = typeof(IViewFor<IInstallingViewModel>), Impl = typeof(InstallingView) },
-                new { Interface = typeof(IViewFor<IUninstallingViewModel>), Impl = typeof(UninstallingView) },
+                new { Interface = typeof(IViewFor<ErrorViewModel>), Impl = typeof(ErrorView) },
+                new { Interface = typeof(IViewFor<WelcomeViewModel>), Impl = typeof(WelcomeView) },
+                new { Interface = typeof(IViewFor<InstallingViewModel>), Impl = typeof(InstallingView) },
+                new { Interface = typeof(IViewFor<UninstallingViewModel>), Impl = typeof(UninstallingView) },
             };
 
             foreach (var pair in toRegister.Where(pair => !kernel.CanResolve(pair.Interface))) {
