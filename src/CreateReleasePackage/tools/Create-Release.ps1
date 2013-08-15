@@ -64,7 +64,7 @@ function Create-ReleaseForProject {
 
         $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
         $wixTemplate = Join-Path $buildDirectory "template.wxs"
-        rm $wixTemplate
+        if (Test-Path $wixTemplate) { rm $wixTemplate | Out-Null }
         mv $candleTemplate $wixTemplate
 
 		$pkgFullName = $pkg.FullName
@@ -73,7 +73,7 @@ function Create-ReleaseForProject {
 		$candleExe = Join-Path $wixDir "candle.exe"
 		$lightExe = Join-Path $wixDir "light.exe"
 		
-		rm "$buildDirectory\template.wixobj"
+		if (Test-Path "$buildDirectory\template.wixobj") {  rm "$buildDirectory\template.wixobj" }
         & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
 		& $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 	}
