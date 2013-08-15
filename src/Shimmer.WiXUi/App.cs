@@ -50,8 +50,8 @@ namespace Shimmer.WiXUi
             MainWindowHwnd = IntPtr.Zero;
             if (Command.Display == Display.Full) {
                 MainWindowHwnd = new WindowInteropHelper(theApp.MainWindow).Handle;
-                theApp.Run(theApp.MainWindow);
                 uiDispatcher = theApp.MainWindow.Dispatcher;
+                theApp.Run(theApp.MainWindow);
             }
 
             Engine.Quit(0);
