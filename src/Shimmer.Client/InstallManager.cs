@@ -4,13 +4,11 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
 using Shimmer.Core;
-using ReactiveUIMicro;
 
 namespace Shimmer.Client
 {

@@ -70,7 +70,7 @@ namespace Shimmer.Tests.Client
                 // NB: We can't use Assert.Throws here because the binder
                 // will try to pick the wrong method
                 fixture.checksumPackage(entry);
-            } catch (Exception ex) {
+            } catch (Exception) {
                 shouldDie = false;
             }
 
