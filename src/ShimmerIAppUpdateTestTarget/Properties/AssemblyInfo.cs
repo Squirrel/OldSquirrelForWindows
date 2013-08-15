@@ -8,9 +8,9 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ShimmerIAppUpdateTestTarget")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Don't use this package")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("GitHub")]
 [assembly: AssemblyProduct("ShimmerIAppUpdateTestTarget")]
 [assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
