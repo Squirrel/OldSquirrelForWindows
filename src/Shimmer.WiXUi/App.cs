@@ -35,10 +35,11 @@ namespace Shimmer.WiXUi
             DisplayMode = Command.Display;
             Action = Command.Action;
 
+#if DEBUG
             // NB: If you want to debug through Setup.exe, uncommenting this
             // will make your life much easier
-            //Debugger.Launch();
-
+            Debugger.Launch();
+#endif
             setupWiXEventHooks();
 
             var bootstrapper = new WixUiBootstrapper(this);
