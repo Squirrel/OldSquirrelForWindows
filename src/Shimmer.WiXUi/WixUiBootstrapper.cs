@@ -78,6 +78,7 @@ namespace Shimmer.WiXUi.ViewModels
 
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
+                errorVm.Shutdown.Subscribe(_ => wixEvents.ShouldQuit());
                     
                 RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(errorVm));
                 return Observable.Return(RecoveryOptionResult.CancelOperation);

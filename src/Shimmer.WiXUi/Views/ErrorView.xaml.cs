@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
+using ReactiveUI.Xaml;
 using Shimmer.Client.WiXUi;
 using Shimmer.WiXUi.ViewModels;
 
@@ -31,6 +32,8 @@ namespace Shimmer.WiXUi.Views
                 .Where(x => x != null)
                 .Select(x => String.Format("{0}\n{1}", x.ErrorMessage, x.ErrorCauseOrResolution))
                 .BindTo(this, x => x.ErrorMessage.Text);
+
+            this.BindCommand(ViewModel, x => x.Shutdown, x => x.Shutdown);
         }
 
         public ErrorViewModel ViewModel {

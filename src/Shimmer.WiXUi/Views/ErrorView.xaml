@@ -20,7 +20,7 @@
 
         <!-- NB: Left this here so the spacing doesn't change-->
         <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontWeight="Light" FontSize="36" Margin="0,8,0,0">
-            <Hyperlink Command="{Binding Shutdown}">Close</Hyperlink>
+            <Hyperlink x:Name="Shutdown">Close</Hyperlink>
         </TextBlock>
     </Grid>
 </UserControl>
