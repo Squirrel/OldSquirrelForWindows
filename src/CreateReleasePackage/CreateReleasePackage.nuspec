@@ -40,7 +40,6 @@
     <file src="..\..\bin\Shimmer.WiXUI.config" target="tools" />
     <file src="..\..\bin\Shimmer.WiXUi.dll" target="tools" />
     <file src="..\..\bin\Shimmer.WiXUiClient.dll" target="tools" />
-    <file src="..\..\bin\System.Interactive.dll" target="tools" />
     <file src="..\..\bin\System.IO.Abstractions.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.Core.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.Interfaces.dll" target="tools" />
