@@ -225,11 +225,14 @@ namespace Shimmer.WiXUi.ViewModels
             ReleaseEntry ret;
 
             try {
-                var fileText = fileSystem.GetFile(release.FullName).ReadAllText(release.FullName, Encoding.UTF8);
-                ret = ReleaseEntry.ParseReleaseFile(fileText)
-                                  .Where(x => !x.IsDelta)
-                                  .OrderByDescending(x => x.Version)
-                                  .First();
+                var fileText = fileSystem
+                                 .GetFile(release.FullName)
+                                 .ReadAllText(release.FullName, Encoding.UTF8);
+                ret = ReleaseEntry
+                        .ParseReleaseFile(fileText)
+                        .Where(x => !x.IsDelta)
+                        .OrderByDescending(x => x.Version)
+                        .First();
             } catch (Exception ex) {
                 this.Log().ErrorException("Couldn't read bundled RELEASES file", ex);
                 UserError.Throw("This installer is incorrectly configured, please contact the author", ex);

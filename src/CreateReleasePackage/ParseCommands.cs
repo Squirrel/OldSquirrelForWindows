@@ -40,8 +40,7 @@ namespace CreateReleasePackage
                 return null;
             }
 
-            if (String.IsNullOrWhiteSpace(targetDir))
-            {
+            if (String.IsNullOrWhiteSpace(targetDir)) {
                 Console.Error.WriteLine("No value specified for Release directory");
                 showHelp = true;
             } else if (!Directory.Exists(targetDir)) {
