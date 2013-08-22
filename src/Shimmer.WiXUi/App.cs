@@ -25,7 +25,9 @@ namespace Shimmer.WiXUi
 
         protected override void Run()
         {
-            RxApp.LoggerFactory = _ => new DebugLogger();
+            RxApp.LoggerFactory = _ => new FileLogger("Shimmer");
+
+            this.Log().Info("Bootstrapper started");
 
             theApp = new Application();
 
@@ -66,6 +68,8 @@ namespace Shimmer.WiXUi
 
         public void ShouldQuit()
         {
+            this.Log().Info("Bootstrapper finishing");
+
             // NB: For some reason, we can't get DispatcherScheduler.Current
             // here, WiX is doing something very strange post-apply
             uiDispatcher.Invoke(new Action(() => {
