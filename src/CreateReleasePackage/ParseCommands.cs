@@ -26,10 +26,12 @@ namespace CreateReleasePackage
             };
 
             var filename = opts.Parse(args).FirstOrDefault();
-            showHelp = (String.IsNullOrEmpty(filename));
 
-            if (!File.Exists(filename)) {
-                Console.Error.WriteLine("'{0}' doesn't exist. Please specify an existing NuGet package", filename);
+            if (String.IsNullOrWhiteSpace(filename)) {
+                Console.Error.WriteLine("Please specify an existing NuGet package");
+                showHelp = true;
+            } else if (!File.Exists(filename)) {
+                Console.Error.WriteLine("File '{0}' doesn't exist. Please specify an existing NuGet package", filename);
                 showHelp = true;
             }
 

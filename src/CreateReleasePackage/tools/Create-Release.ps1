@@ -55,8 +55,11 @@ function Create-ReleaseForProject {
 
 	$nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 	foreach($pkg in $nugetPackages) {
+        $pkgFullName = $pkg.FullName
+        echo "Found package $pkgFullName"
+
 		$packageDir = Join-Path $solutionDir "packages"
-		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkg.FullName 
+		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
         $fullRelease = $fullRelease.Split(" ")[0]
@@ -67,7 +70,6 @@ function Create-ReleaseForProject {
         if (Test-Path $wixTemplate) { rm $wixTemplate | Out-Null }
         mv $candleTemplate $wixTemplate
 
-		$pkgFullName = $pkg.FullName
 		$defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`"" 
 
 		$candleExe = Join-Path $wixDir "candle.exe"
