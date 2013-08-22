@@ -188,6 +188,20 @@ namespace Shimmer.WiXUi.ViewModels
         IPackage openBundledPackage()
         {
             var fi = fileSystem.GetFileInfo(Path.Combine(currentAssemblyDir, BundledRelease.Filename));
+
+            if (!fi.Exists)
+            {
+                this.Log().Error("The expected file '{0}' could not be found...", BundledRelease.Filename);
+                var directoryInfo = fileSystem.GetDirectoryInfo(currentAssemblyDir);
+                foreach (var f in directoryInfo.GetFiles("*.nupkg")) {
+                    this.Log().Info("Directory contains file: {0}", f.Name);
+                }
+
+                UserError.Throw("This installer is incorrectly configured, please contact the author",
+                    new FileNotFoundException(fi.FullName));
+                return null;
+            }
+
             return new ZipPackage(fi.FullName);
         }
 
