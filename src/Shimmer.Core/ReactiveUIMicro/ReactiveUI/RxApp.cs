@@ -64,8 +64,6 @@ namespace ReactiveUIMicro
                 Console.Error.WriteLine("*** Detected Unit Test Runner, setting Scheduler to Immediate ***");
                 Console.Error.WriteLine("If we are not actually in a test runner, please file a bug\n");
                 DeferredScheduler = Scheduler.Immediate;
-            } else {
-                Console.Error.WriteLine("Initializing to normal mode");
             }
 
             if (DeferredScheduler == null) {
