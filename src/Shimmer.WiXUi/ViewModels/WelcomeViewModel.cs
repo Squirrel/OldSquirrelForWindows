@@ -15,7 +15,9 @@ namespace Shimmer.WiXUi.ViewModels
         public string UrlPathSegment { get { return "welcome"; } }
         public IScreen HostScreen { get; protected set; }
 
+#pragma warning disable 649
         IPackage _PackageMetadata;
+#pragma warning restore 649
         public IPackage PackageMetadata {
             get { return _PackageMetadata; }
             set { this.RaiseAndSetIfChanged(x => x.PackageMetadata, value); }

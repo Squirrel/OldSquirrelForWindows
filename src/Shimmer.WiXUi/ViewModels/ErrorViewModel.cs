@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Windows.Input;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
@@ -18,18 +14,24 @@ namespace Shimmer.WiXUi.ViewModels
 
         public IScreen HostScreen { get; private set; }
 
+#pragma warning disable 649
         IPackage _PackageMetadata;
+#pragma warning restore 649
         public IPackage PackageMetadata {
             get { return _PackageMetadata; }
             set { this.RaiseAndSetIfChanged(x => x.PackageMetadata, value); }
         }
 
+#pragma warning disable 649
         ObservableAsPropertyHelper<string> _Title; 
+#pragma warning restore 649
         public string Title {
             get { return _Title.Value; }
         }
             
+#pragma warning disable 649
         UserError _Error;
+#pragma warning restore 649
         public UserError Error {
             get { return _Error; }
             set { this.RaiseAndSetIfChanged(x => x.Error, value); }

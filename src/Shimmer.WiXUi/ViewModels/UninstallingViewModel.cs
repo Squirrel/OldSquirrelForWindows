@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
@@ -16,7 +12,9 @@ namespace Shimmer.WiXUi.ViewModels
         public string UrlPathSegment { get { return "installing";  } }
         public IScreen HostScreen { get; private set; }
 
+#pragma warning disable 649
         IPackage _PackageMetadata;
+#pragma warning restore 649
         public IPackage PackageMetadata {
             get { return _PackageMetadata; }
             set { this.RaiseAndSetIfChanged(x => x.PackageMetadata, value); }
@@ -24,17 +22,23 @@ namespace Shimmer.WiXUi.ViewModels
 
         public IObserver<int> ProgressValue { get; private set; }
 
+#pragma warning disable 649
         ObservableAsPropertyHelper<int> _LatestProgress;
+#pragma warning restore 649
         public int LatestProgress {
             get { return _LatestProgress.Value; }
         }
 
+#pragma warning disable 649
         ObservableAsPropertyHelper<string> _Title;
+#pragma warning restore 649
         public string Title {
             get { return _Title.Value; }
         }
 
+#pragma warning disable 649
         ObservableAsPropertyHelper<string> _Description;
+#pragma warning restore 649
         public string Description {
             get { return _Description.Value; }
         }

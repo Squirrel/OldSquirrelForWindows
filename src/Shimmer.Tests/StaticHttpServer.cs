@@ -1,22 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
-using ReactiveUI;
 
 namespace Shimmer.Tests
 {
     public sealed class StaticHttpServer : IDisposable
     {
-        public int Port { get; protected set; }
-        public string RootPath { get; protected set; }
+        public int Port { get; private set; }
+        public string RootPath { get; private set; }
         
-        IDisposable inner;
+        IDisposable _Inner;
 
         public StaticHttpServer(int port, string rootPath)
         {
@@ -25,7 +22,7 @@ namespace Shimmer.Tests
 
         public IDisposable Start()
         {
-            if (inner != null) {
+            if (_Inner != null) {
                 throw new InvalidOperationException("Already started!");
             }
 
@@ -68,10 +65,10 @@ namespace Shimmer.Tests
             var ret = Disposable.Create(() => {
                 listener.Dispose();
                 server.Stop();
-                inner = null;
+                _Inner = null;
             });
 
-            inner = ret;
+            _Inner = ret;
             return ret;
         }
 
@@ -86,7 +83,7 @@ namespace Shimmer.Tests
 
         public void Dispose()
         {
-            var toDispose = Interlocked.Exchange(ref inner, null);
+            var toDispose = Interlocked.Exchange(ref _Inner, null);
             if (toDispose != null) {
                 toDispose.Dispose();
             }
