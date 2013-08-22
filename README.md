@@ -47,9 +47,9 @@ Check out
 [the specs directory](https://github.com/github/Shimmer/tree/master/specs) for
 more information about how the framework works.
 
--## Getting Started
--
--After cloning this repository, run the `script\bootstrap.ps1` script to fetch 
+## Getting Started
+
+After cloning this repository, run the `script\bootstrap.ps1` script to fetch 
 the necessary NuGet packages (until NuGet supports this natively and won't 
 break your solution on opening).
 
