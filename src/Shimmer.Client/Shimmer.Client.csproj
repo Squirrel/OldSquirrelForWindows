@@ -102,10 +102,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Interactive, Version=1.1.10823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Ix_Experimental-Main.1.1.10823\lib\Net4\System.Interactive.dll</HintPath>
-    </Reference>
     <Reference Include="System.IO.Abstractions">
       <HintPath>..\packages\System.IO.Abstractions.1.4.0.66\lib\net35\System.IO.Abstractions.dll</HintPath>
     </Reference>

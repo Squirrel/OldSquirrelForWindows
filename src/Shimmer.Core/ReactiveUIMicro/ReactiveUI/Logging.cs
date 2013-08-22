@@ -137,7 +137,6 @@ namespace ReactiveUIMicro
         public LogLevel Level { get; set; }
     }
 
-
     /// <summary>
     /// "Implement" this interface in your class to get access to the Log() 
     /// Mixin, which will give you a Logger that includes the class name in the

@@ -19,8 +19,6 @@ using NuGet;
 using ReactiveUIMicro;
 using Shimmer.Core;
 
-using EnumerableEx = System.Linq.EnumerableEx;
-
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
 using FileAccess = System.IO.FileAccess;

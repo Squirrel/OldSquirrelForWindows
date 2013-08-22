@@ -50,7 +50,7 @@ namespace ReactiveUIMicro
 #elif WINRT            
             TaskpoolScheduler = System.Reactive.Concurrency.ThreadPoolScheduler.Default;
 #else
-            TaskpoolScheduler = Scheduler.TaskPool;
+            TaskpoolScheduler = TaskPoolScheduler.Default;
 #endif
 
             DefaultExceptionHandler = Observer.Create<Exception>(ex => 
@@ -64,8 +64,6 @@ namespace ReactiveUIMicro
                 Console.Error.WriteLine("*** Detected Unit Test Runner, setting Scheduler to Immediate ***");
                 Console.Error.WriteLine("If we are not actually in a test runner, please file a bug\n");
                 DeferredScheduler = Scheduler.Immediate;
-            } else {
-                Console.Error.WriteLine("Initializing to normal mode");
             }
 
             if (DeferredScheduler == null) {

@@ -54,9 +54,17 @@ function Create-ReleaseForProject {
 	echo "Creating Release for $solutionDir => $releaseDir`n"
 
 	$nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
+
+	if ($nugetPackages.length -eq 0) {
+		throw "Shimmer couldn't find any .nupkg files in the folder $buildDirectory"
+	}
+
 	foreach($pkg in $nugetPackages) {
+        $pkgFullName = $pkg.FullName
+        echo "Found package $pkgFullName"
+
 		$packageDir = Join-Path $solutionDir "packages"
-		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkg.FullName 
+		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
         $fullRelease = $fullRelease.Split(" ")[0]
@@ -64,18 +72,19 @@ function Create-ReleaseForProject {
 
         $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
         $wixTemplate = Join-Path $buildDirectory "template.wxs"
-        rm $wixTemplate
-        mv $candleTemplate $wixTemplate
+        if (Test-Path $wixTemplate) { rm $wixTemplate | Out-Null }
+        mv $candleTemplate $wixTemplate | Out-Null
 
-		$pkgFullName = $pkg.FullName
 		$defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`"" 
 
 		$candleExe = Join-Path $wixDir "candle.exe"
 		$lightExe = Join-Path $wixDir "light.exe"
 		
-		rm "$buildDirectory\template.wixobj"
+		if (Test-Path "$buildDirectory\template.wixobj") {  rm "$buildDirectory\template.wixobj" | Out-Null }
+        echo "Running candle.exe"
         & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
-		& $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
+        echo "Running light.exe"		
+        & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 	}
 }
 

@@ -26,10 +26,12 @@ namespace CreateReleasePackage
             };
 
             var filename = opts.Parse(args).FirstOrDefault();
-            showHelp = (String.IsNullOrEmpty(filename));
 
-            if (!File.Exists(filename)) {
-                Console.Error.WriteLine("'{0}' doesn't exist. Please specify an existing NuGet package", filename);
+            if (String.IsNullOrWhiteSpace(filename)) {
+                Console.Error.WriteLine("Please specify an existing NuGet package");
+                showHelp = true;
+            } else if (!File.Exists(filename)) {
+                Console.Error.WriteLine("File '{0}' doesn't exist. Please specify an existing NuGet package", filename);
                 showHelp = true;
             }
 
@@ -38,13 +40,19 @@ namespace CreateReleasePackage
                 return null;
             }
 
-            if (String.IsNullOrEmpty(targetDir) || !Directory.Exists(targetDir)) {
-                Console.Error.WriteLine("'{0}' doesn't exist. Please specify an existing Release directory", filename);
+            if (String.IsNullOrWhiteSpace(targetDir)) {
+                Console.Error.WriteLine("No value specified for Release directory");
+                showHelp = true;
+            } else if (!Directory.Exists(targetDir)) {
+                Console.Error.WriteLine("Directory '{0}' doesn't exist. Please specify an existing Release directory", filename);
                 showHelp = true;
             }
 
-            if (!String.IsNullOrEmpty(packagesDir) && !Directory.Exists(packagesDir)) {
-                Console.Error.WriteLine("'{0}' doesn't exist. Please specify an existing packages directory", filename);
+            if (String.IsNullOrWhiteSpace(packagesDir)) {
+                Console.Error.WriteLine("No value specified for packages directory");
+                showHelp = true;
+            } else if (!Directory.Exists(packagesDir)) {
+                Console.Error.WriteLine("Directory '{0}' doesn't exist. Please specify an existing packages directory", filename);
                 showHelp = true;
             }
 

@@ -97,9 +97,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Interactive">
-      <HintPath>..\packages\Ix_Experimental-Main.1.1.10823\lib\Net4\System.Interactive.dll</HintPath>
-    </Reference>
     <Reference Include="System.IO.Abstractions">
       <HintPath>..\packages\System.IO.Abstractions.1.4.0.66\lib\net35\System.IO.Abstractions.dll</HintPath>
     </Reference>
@@ -136,6 +133,7 @@
     <Compile Include="AppDomainHelper.cs" />
     <Compile Include="BinaryPatchUtility.cs" />
     <Compile Include="DeltaPackage.cs" />
+    <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="IFileSystemFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

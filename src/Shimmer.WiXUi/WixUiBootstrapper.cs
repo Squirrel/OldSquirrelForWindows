@@ -71,6 +71,8 @@ namespace Shimmer.WiXUi.ViewModels
             registerExtensionDlls(Kernel);
 
             UserError.RegisterHandler(ex => {
+                this.Log().ErrorException("Something unexpected happened", ex.InnerException);
+
                 if (wixEvents.DisplayMode != Display.Full) {
                     this.Log().Error(ex.ErrorMessage);
                     wixEvents.ShouldQuit();
@@ -78,6 +80,7 @@ namespace Shimmer.WiXUi.ViewModels
 
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
+                errorVm.Shutdown.Subscribe(_ => wixEvents.ShouldQuit());
                     
                 RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(errorVm));
                 return Observable.Return(RecoveryOptionResult.CancelOperation);
@@ -93,6 +96,7 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
+                    this.Log().Info("Shimmer is doing an uninstall! Sadface!");
                     var uninstallVm = RxApp.GetService<IUninstallingViewModel>();
                     Router.Navigate.Execute(uninstallVm);
                     wixEvents.Engine.Plan(LaunchAction.Uninstall);
@@ -103,11 +107,15 @@ namespace Shimmer.WiXUi.ViewModels
                 // If Display is silent, we should just exit here.
 
                 if (wixEvents.Action == LaunchAction.Install) {
+                    
                     if (wixEvents.DisplayMode != Display.Full) {
+                        this.Log().Info("Shimmer is doing a silent install! Sneaky!");
                         wixEvents.Engine.Plan(LaunchAction.Install);
                         return;
                     }
-
+                    
+                    this.Log().Info("We are doing an UI install! Huzzah!");
+                    
                     var welcomeVm = RxApp.GetService<IWelcomeViewModel>();
                     welcomeVm.PackageMetadata = bundledPackageMetadata.Value;
                     welcomeVm.ShouldProceed.Subscribe(_ => wixEvents.Engine.Plan(LaunchAction.Install));
@@ -187,6 +195,20 @@ namespace Shimmer.WiXUi.ViewModels
         IPackage openBundledPackage()
         {
             var fi = fileSystem.GetFileInfo(Path.Combine(currentAssemblyDir, BundledRelease.Filename));
+
+            if (!fi.Exists)
+            {
+                this.Log().Error("The expected file '{0}' could not be found...", BundledRelease.Filename);
+                var directoryInfo = fileSystem.GetDirectoryInfo(currentAssemblyDir);
+                foreach (var f in directoryInfo.GetFiles("*.nupkg")) {
+                    this.Log().Info("Directory contains file: {0}", f.Name);
+                }
+
+                UserError.Throw("This installer is incorrectly configured, please contact the author",
+                    new FileNotFoundException(fi.FullName));
+                return null;
+            }
+
             return new ZipPackage(fi.FullName);
         }
 
@@ -203,8 +225,14 @@ namespace Shimmer.WiXUi.ViewModels
             ReleaseEntry ret;
 
             try {
-                var fileText = fileSystem.GetFile(release.FullName).ReadAllText(release.FullName, Encoding.UTF8);
-                ret = ReleaseEntry.ParseReleaseFile(fileText).OrderByDescending(x => x.Version).First();
+                var fileText = fileSystem
+                                 .GetFile(release.FullName)
+                                 .ReadAllText(release.FullName, Encoding.UTF8);
+                ret = ReleaseEntry
+                        .ParseReleaseFile(fileText)
+                        .Where(x => !x.IsDelta)
+                        .OrderByDescending(x => x.Version)
+                        .First();
             } catch (Exception ex) {
                 this.Log().ErrorException("Couldn't read bundled RELEASES file", ex);
                 UserError.Throw("This installer is incorrectly configured, please contact the author", ex);
