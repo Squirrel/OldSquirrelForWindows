@@ -11,8 +11,17 @@ param(
     $MSBuildVerbosity = "normal"
 )
 
+
 $rootFolder = split-path -parent $MyInvocation.MyCommand.Definition
 $srcFolder = "$rootFolder\src"
+
+$configFiles = Get-ChildItem -Path $srcFolder -Include "packages.config" -Recurse
+
+foreach ($configFile in $configFiles)
+{
+   . "$srcFolder\.nuget\nuget.exe" install $configFile.FullName -OutputDirectory "$srcFolder\packages"
+}
+
 
 $msbuild = "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"
 
