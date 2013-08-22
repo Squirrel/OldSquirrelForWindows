@@ -76,6 +76,8 @@ namespace Shimmer.WiXUi.ViewModels
                     wixEvents.ShouldQuit();
                 }
 
+                this.Log().ErrorException("Something unexpected happened", ex.InnerException);
+
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
                 errorVm.Shutdown.Subscribe(_ => wixEvents.ShouldQuit());
