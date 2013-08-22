@@ -71,12 +71,12 @@ namespace Shimmer.WiXUi.ViewModels
             registerExtensionDlls(Kernel);
 
             UserError.RegisterHandler(ex => {
+                this.Log().ErrorException("Something unexpected happened", ex.InnerException);
+
                 if (wixEvents.DisplayMode != Display.Full) {
                     this.Log().Error(ex.ErrorMessage);
                     wixEvents.ShouldQuit();
                 }
-
-                this.Log().ErrorException("Something unexpected happened", ex.InnerException);
 
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
@@ -96,6 +96,7 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
+                    this.Log().Info("Shimmer is doing an uninstall! Sadface!");
                     var uninstallVm = RxApp.GetService<IUninstallingViewModel>();
                     Router.Navigate.Execute(uninstallVm);
                     wixEvents.Engine.Plan(LaunchAction.Uninstall);
@@ -106,11 +107,15 @@ namespace Shimmer.WiXUi.ViewModels
                 // If Display is silent, we should just exit here.
 
                 if (wixEvents.Action == LaunchAction.Install) {
+                    
                     if (wixEvents.DisplayMode != Display.Full) {
+                        this.Log().Info("Shimmer is doing a silent install! Sneaky!");
                         wixEvents.Engine.Plan(LaunchAction.Install);
                         return;
                     }
-
+                    
+                    this.Log().Info("We are doing an UI install! Huzzah!");
+                    
                     var welcomeVm = RxApp.GetService<IWelcomeViewModel>();
                     welcomeVm.PackageMetadata = bundledPackageMetadata.Value;
                     welcomeVm.ShouldProceed.Subscribe(_ => wixEvents.Engine.Plan(LaunchAction.Install));
