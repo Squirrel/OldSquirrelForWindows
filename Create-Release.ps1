@@ -14,6 +14,7 @@ $binaries = "$rootFolder\bin\"
 
 if (Test-Path $binaries) { Remove-Item $binaries -Recurse -Force }
 
+. $rootFolder\script\bootstrap.ps1
 . $rootFolder\script\Bump-Version.ps1 -Increment Patch
 . $rootFolder\Build-Solution.ps1 -Build $build -Config $config
 
