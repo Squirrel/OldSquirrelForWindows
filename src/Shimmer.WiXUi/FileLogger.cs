@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using ReactiveUI;
 
 namespace Shimmer.WiXUi
@@ -11,7 +10,7 @@ namespace Shimmer.WiXUi
         readonly string messageFormat;
         readonly string directoryPath;
 
-        static readonly ReaderWriterLock rwl = new ReaderWriterLock();
+        static readonly object _lock = 42;
 
         public FileLogger(string appName)
         {
@@ -21,38 +20,28 @@ namespace Shimmer.WiXUi
                                 appName);
             filePath = Path.Combine(directoryPath, fileName);
 
-            messageFormat = "{0} | {1} | {2} | {3}";
+            messageFormat = "{0} | {1} | {2}";
         }
 
         public void Write(string message, LogLevel logLevel)
         {
-            if ((int)logLevel < (int)Level) return;
+            if ((int) logLevel < (int) Level) return;
 
-            try
-            {
-                rwl.AcquireWriterLock(5000);
-                try
-                {
+            lock (_lock) {
+                try {
                     Directory.CreateDirectory(directoryPath); // if it exists, does nothing
-                    using (var writer = new StreamWriter(filePath, true))
-                    {
+                    using (var writer = new StreamWriter(filePath, true)) {
                         var now = DateTime.Now;
                         writer.WriteLine(
-                            messageFormat,
-                            now.ToString("yyyy-MM-dd"),
-                            now.ToString("hh:mm:ss tt zz"),
+                            messageFormat, 
                             logLevel.ToString().ToUpper(),
+                            now.ToString("yyyy-MM-dd hh:mm:ss tt zz"),
                             message);
                     }
                 }
-                finally
-                {
-                    rwl.ReleaseWriterLock();
+                catch {
+                    // we're kinda screwed
                 }
-            }
-            catch (ApplicationException)
-            {
-                // swallow this exception
             }
         }
 
