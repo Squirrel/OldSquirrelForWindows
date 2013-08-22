@@ -21,7 +21,7 @@ namespace Shimmer.WiXUi
                                 appName);
             filePath = Path.Combine(directoryPath, fileName);
 
-            messageFormat = "{0} | {1} | {2}";
+            messageFormat = "{0} | {1} | {2} | {3}";
         }
 
         public void Write(string message, LogLevel logLevel)
@@ -41,6 +41,7 @@ namespace Shimmer.WiXUi
                             messageFormat,
                             now.ToString("yyyy-MM-dd"),
                             now.ToString("hh:mm:ss tt zz"),
+                            logLevel.ToString().ToUpper(),
                             message);
                     }
                 }
