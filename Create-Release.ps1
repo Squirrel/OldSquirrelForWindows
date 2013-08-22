@@ -5,7 +5,7 @@ param(
     ,
     [ValidateSet('Debug', 'Release')]
     [string]
-    $config = "Debug"
+    $config = "Release"
 )
 
 $rootFolder = split-path -parent $MyInvocation.MyCommand.Definition
