@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Authentication;
-using System.Windows;
 using Shimmer.Client;
 
 namespace ShimmerIAppUpdateTestTarget
@@ -37,7 +36,7 @@ namespace ShimmerIAppUpdateTestTarget
                 return Enumerable.Empty<ShortcutCreationRequest>();
             }
 
-            var ret = new ShortcutCreationRequest() {
+            var ret = new ShortcutCreationRequest {
                 Arguments = "--foo",
                 Description = "A test app",
                 CreationLocation = ShortcutCreationLocation.Custom,
