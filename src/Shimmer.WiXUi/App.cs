@@ -25,7 +25,7 @@ namespace Shimmer.WiXUi
 
         protected override void Run()
         {
-            RxApp.LoggerFactory = _ => new FileLogger("Shimmer");
+            RxApp.LoggerFactory = _ => new FileLogger("Shimmer") { Level = ReactiveUI.LogLevel.Info };
 
             this.Log().Info("Bootstrapper started");
 
@@ -46,12 +46,14 @@ namespace Shimmer.WiXUi
 
             var bootstrapper = new WixUiBootstrapper(this);
 
-            theApp.MainWindow = new RootWindow {
-                viewHost = {Router = bootstrapper.Router}
+            theApp.MainWindow = new RootWindow
+            {
+                viewHost = { Router = bootstrapper.Router }
             };
 
             MainWindowHwnd = IntPtr.Zero;
-            if (Command.Display == Display.Full) {
+            if (Command.Display == Display.Full)
+            {
                 MainWindowHwnd = new WindowInteropHelper(theApp.MainWindow).Handle;
                 uiDispatcher = theApp.MainWindow.Dispatcher;
                 theApp.Run(theApp.MainWindow);
@@ -72,7 +74,8 @@ namespace Shimmer.WiXUi
 
             // NB: For some reason, we can't get DispatcherScheduler.Current
             // here, WiX is doing something very strange post-apply
-            uiDispatcher.Invoke(new Action(() => {
+            uiDispatcher.Invoke(new Action(() =>
+            {
                 theApp.MainWindow.Close();
                 theApp.Shutdown();
                 Engine.Quit(0);
@@ -96,7 +99,7 @@ namespace Shimmer.WiXUi
             ProgressObs = Observable.FromEventPattern<ProgressEventArgs>(x => Progress += x, x => Progress -= x).Select(x => x.EventArgs);
             CacheAcquireBeginObs = Observable.FromEventPattern<CacheAcquireBeginEventArgs>(x => CacheAcquireBegin += x, x => CacheAcquireBegin -= x).Select(x => x.EventArgs);
             CacheCompleteObs = Observable.FromEventPattern<CacheCompleteEventArgs>(x => CacheComplete += x, x => CacheComplete -= x).Select(x => x.EventArgs);
-            Engine = new EngineWrapper(((BootstrapperApplication) this).Engine);
+            Engine = new EngineWrapper(((BootstrapperApplication)this).Engine);
         }
 
         public IObservable<DetectBeginEventArgs> DetectBeginObs { get; private set; }
