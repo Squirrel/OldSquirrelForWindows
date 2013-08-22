@@ -50,7 +50,7 @@ namespace ReactiveUIMicro
 #elif WINRT            
             TaskpoolScheduler = System.Reactive.Concurrency.ThreadPoolScheduler.Default;
 #else
-            TaskpoolScheduler = Scheduler.TaskPool;
+            TaskpoolScheduler = TaskPoolScheduler.Default;
 #endif
 
             DefaultExceptionHandler = Observer.Create<Exception>(ex => 

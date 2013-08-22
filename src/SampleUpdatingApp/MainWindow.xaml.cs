@@ -1,28 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using ReactiveUI;
 using ReactiveUI.Xaml;
 using Shimmer.Client;
 
 namespace SampleUpdatingApp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindow()
         {
@@ -34,19 +19,25 @@ namespace SampleUpdatingApp
 
     public class MainWindowViewModel : ReactiveObject
     {
+#pragma warning disable 649
         string _UpdatePath;
+#pragma warning restore 649
         public string UpdatePath {
             get { return _UpdatePath; }
             set { this.RaiseAndSetIfChanged(x => x.UpdatePath, value); }
         }
 
+#pragma warning disable 649
         UpdateInfo _UpdateInfo;
+#pragma warning restore 649
         public UpdateInfo UpdateInfo {
             get { return _UpdateInfo; }
             set { this.RaiseAndSetIfChanged(x => x.UpdateInfo, value); }
         }
 
+#pragma warning disable 649
         UpdateInfo _DownloadedUpdateInfo;
+#pragma warning restore 649
         public UpdateInfo DownloadedUpdateInfo {
             get { return _DownloadedUpdateInfo; }
             set { this.RaiseAndSetIfChanged(x => x.DownloadedUpdateInfo, value); }
