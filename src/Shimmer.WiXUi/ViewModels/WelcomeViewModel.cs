@@ -15,9 +15,37 @@ namespace Shimmer.WiXUi.ViewModels
 #pragma warning disable 649
         IPackage _PackageMetadata;
 #pragma warning restore 649
-        public IPackage PackageMetadata {
+        public IPackage PackageMetadata
+        {
             get { return _PackageMetadata; }
-            set { this.RaiseAndSetIfChanged(x => x.PackageMetadata, value); }
+            set
+            {
+                this.RaiseAndSetIfChanged(x => x.PackageMetadata, value);
+                this.RaisePropertyChanged(x => x.Title);
+                this.RaisePropertyChanged(x => x.Summary);
+            }
+        }
+
+        public string Title
+        {
+            get
+            {
+                if (_PackageMetadata == null) return String.Empty;
+
+                return string.IsNullOrWhiteSpace(_PackageMetadata.Title)
+                         ? _PackageMetadata.Id
+                         : _PackageMetadata.Title;
+            }
+        }
+
+        public string Summary
+        {
+            get
+            {
+                if (_PackageMetadata == null) return String.Empty;
+
+                return _PackageMetadata.Summary;
+            }
         }
 
         public ReactiveCommand ShouldProceed { get; private set; }

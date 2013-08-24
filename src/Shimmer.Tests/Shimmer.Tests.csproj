@@ -190,6 +190,7 @@
     <Compile Include="TestHelpers\ExposedObjectHelper.cs" />
     <Compile Include="TestHelpers\IntegrationTestHelper.cs" />
     <Compile Include="TestHelpers\MoqExtensions.cs" />
+    <Compile Include="WiXUi\WelcomeViewModelTests.cs" />
     <Compile Include="WiXUi\WiXUiBootstrapperTests.cs" />
   </ItemGroup>
   <ItemGroup>

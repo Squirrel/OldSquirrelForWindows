@@ -12,7 +12,8 @@ namespace Shimmer.WiXUi.Views
         {
             InitializeComponent();
 
-            this.OneWayBind(ViewModel, x => x.PackageMetadata.Title, x => x.Title.Text);
+            this.OneWayBind(ViewModel, x => x.Title, x => x.Title.Text);
+            this.OneWayBind(ViewModel, x => x.Summary, x => x.Summary.Text);
             this.BindCommand(ViewModel, x => x.ShouldProceed, x => x.ShouldProceed);
         }
 
