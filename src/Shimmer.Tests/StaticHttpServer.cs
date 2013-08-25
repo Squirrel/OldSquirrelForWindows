@@ -13,7 +13,7 @@ namespace Shimmer.Tests
         public int Port { get; private set; }
         public string RootPath { get; private set; }
         
-        IDisposable _Inner;
+        IDisposable inner;
 
         public StaticHttpServer(int port, string rootPath)
         {
@@ -22,7 +22,7 @@ namespace Shimmer.Tests
 
         public IDisposable Start()
         {
-            if (_Inner != null) {
+            if (inner != null) {
                 throw new InvalidOperationException("Already started!");
             }
 
@@ -65,10 +65,10 @@ namespace Shimmer.Tests
             var ret = Disposable.Create(() => {
                 listener.Dispose();
                 server.Stop();
-                _Inner = null;
+                inner = null;
             });
 
-            _Inner = ret;
+            inner = ret;
             return ret;
         }
 
@@ -83,7 +83,7 @@ namespace Shimmer.Tests
 
         public void Dispose()
         {
-            var toDispose = Interlocked.Exchange(ref _Inner, null);
+            var toDispose = Interlocked.Exchange(ref inner, null);
             if (toDispose != null) {
                 toDispose.Dispose();
             }
