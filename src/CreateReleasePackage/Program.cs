@@ -13,8 +13,6 @@ namespace CreateReleasePackage
         static int Main(string[] args)
         {
 #if DEBUG
-            // NB: If you want to debug through Setup.exe, uncommenting this
-            // will make your life much easier
             Debugger.Launch();
 #endif
 
