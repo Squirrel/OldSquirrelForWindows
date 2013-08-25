@@ -239,6 +239,9 @@ namespace Shimmer.WiXUi.ViewModels
                 return null;
             }
 
+            // now set the logger to the found package name
+            RxApp.LoggerFactory = _ => new FileLogger(ret.PackageName) { Level = ReactiveUI.LogLevel.Info };
+
             return ret;
         }
 
