@@ -29,7 +29,7 @@ using StreamReader = System.IO.StreamReader;
 
 namespace Shimmer.Client
 {
-    public sealed class UpdateManager : IUpdateManager
+    public sealed class UpdateManager : IUpdateManager, IEnableLogger
     {
         readonly IRxUIFullLogger log;
         readonly IFileSystemFactory fileSystem;
@@ -506,7 +506,13 @@ namespace Shimmer.Client
 
         IEnumerable<ShortcutCreationRequest> cleanUpOldVersions(Version newCurrentVersion)
         {
-            return fileSystem.GetDirectoryInfo(rootAppDirectory).GetDirectories()
+            var directory = fileSystem.GetDirectoryInfo(rootAppDirectory);
+            if (!directory.Exists) {
+                this.Log().Warn("The directory '{0}' does not exist", rootAppDirectory);
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
+            
+            return directory.GetDirectories()
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => x.Name != "app-" + newCurrentVersion)
                 .OrderBy(x => x.Name)
