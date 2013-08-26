@@ -142,7 +142,7 @@ function Add-FileWithNoOutput {
 
         ###### end infinite crying
     } else {
-        Write-Message "Modifying project file to exclude csproj file from build output"
+        Write-Message "Ensuring nuspec file is excluded from build output"
 
         $copyToOutput = $existingFile.Properties.Item("CopyToOutputDirectory")
         $copyToOutput.Value = 0
