@@ -21,10 +21,14 @@ namespace Shimmer.WiXUi.ViewModels
         }
 
         ObservableAsPropertyHelper<string> _Title;
-        public string Title { get { return _Title.Value; } }
+        public string Title {
+            get { return _Title.Value; }
+        }
 
         ObservableAsPropertyHelper<string> _Summary;
-        public string Summary { get { return _Summary.Value; } }
+        public string Summary {
+            get { return _Summary.Value; }
+        }
 
         public ReactiveCommand ShouldProceed { get; private set; }
 
