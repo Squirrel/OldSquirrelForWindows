@@ -132,3 +132,24 @@ function Set-BuildPackage {
         Set-MSBuildProperty "BuildPackage" $Value $ProjectName
     }
 }
+
+function Add-InstallerTemplate {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
+        [string] $Destination,
+
+        [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
+        [string] $ProjectName = ''
+    )
+
+    if (Test-Path $Destination) {
+        Write-Host "The file already exists, no need to overwrite it..."
+    } else {
+        $nuspecTemplate = (Join-Path $toolsDir template.nuspec.temp)
+        Copy-Item $nuspecTemplate $Destination -Force | Out-Null
+    }
+
+    Write-Host "TODO: replace placeholders with project-specific text"
+}
+

@@ -9,18 +9,13 @@
     $projectDir = (gci $project.FullName).Directory
     $nuspecFile = (Join-Path $projectDir "$ProjectName.nuspec")
 
-    if (Test-Path $nuspecFile) {
-        Write-Host "The file already exists, no need to overwrite it..."
-    } else {
-        $nuspecTemplate = (Join-Path $toolsDir template.nuspec.temp)
-        Copy-Item $nuspecTemplate $nuspecFile -Force | Out-Null
-    }
+    Add-InstallerTemplate -Destination $nuspecFile -ProjectName $ProjectName
 
     Set-BuildPackage -Value $true -ProjectName $ProjectName
 
     Add-FileWithNoOutput -FilePath $nuspecFile -Project $Project
 
-	## open the nuspec file in the editor
+    # open the nuspec file in the editor
     $dte.ItemOperations.OpenFile($nuspecFile) | Out-Null
 }
 
