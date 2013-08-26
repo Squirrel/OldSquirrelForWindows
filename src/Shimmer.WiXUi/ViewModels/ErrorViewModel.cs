@@ -40,13 +40,13 @@ namespace Shimmer.WiXUi.ViewModels
             Shutdown = new ReactiveCommand();
         
             this.WhenAny(x => x.PackageMetadata, x => x.Value)
-                            .SelectMany(metadata => metadata != null
-                                           ? Observable.Return(new Tuple<string, string>(metadata.Title, metadata.Id))
-                                           : Observable.Return(new Tuple<string, string>("", "")))
-                            .Select(tuple => !String.IsNullOrWhiteSpace(tuple.Item1)
-                                                    ? tuple.Item1
-                                                    : tuple.Item2)
-                            .ToProperty(this, x => x.Title);
+                .SelectMany(metadata => metadata != null
+                               ? Observable.Return(new Tuple<string, string>(metadata.Title, metadata.Id))
+                               : Observable.Return(new Tuple<string, string>("", "")))
+                .Select(tuple => !String.IsNullOrWhiteSpace(tuple.Item1)
+                           ? tuple.Item1
+                           : tuple.Item2)
+                .ToProperty(this, x => x.Title);
         }
     }
 }

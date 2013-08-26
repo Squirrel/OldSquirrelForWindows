@@ -77,7 +77,7 @@ namespace Shimmer.Tests.WiXUi
             [Fact]
             public void WhenPackageSpecifiesValueItIsDisplayed()
             {
-                var package = Mock.Of<IPackage>(p => p.Summary == "My App Description");
+                var package = Mock.Of<IPackage>(p => p.Description == "My App Description");
 
                 var viewModel = new WelcomeViewModel(Mock.Of<IScreen>())
                 {

@@ -134,6 +134,7 @@
     <Compile Include="BinaryPatchUtility.cs" />
     <Compile Include="DeltaPackage.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="IFileSystemFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
