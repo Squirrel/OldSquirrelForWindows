@@ -108,17 +108,46 @@ function Add-FileWithNoOutput {
 
     if ($existingFile -eq $null) {
         Write-Message "Could not find file '$FilePath', adding it to project"
-        $Project.DTE.ItemOperations.AddExistingItem($FilePath) | Out-Null
-        $Project.Save()
-        $existingFile = Get-ProjectItem -FileName $fileName -Project $Project
-    } else {
-        Write-Message "The file '$FilePath' exists already, excellent!"
-    }
 
-    Write-Message "Modifying project file to exclude csproj file from build output"
-    $copyToOutput1 = $existingFile.Properties.Item("CopyToOutputDirectory")
-    $copyToOutput1.Value = 0
-    $project.Save()
+        ###### start infinite crying
+
+        # SO, have a guess at what this line of code is supposed to do
+        #
+        # $Project.DTE.ItemOperations.AddExistingItem($FilePath)
+        #
+        # Not sure? Well, according to MSDN (http://msdn.microsoft.com/en-us/library/envdte.itemoperations.addexistingitem(v=vs.110).aspx)
+        # it says "Adds an existing item to the current project." but
+        # my testing indicates it'll often just add it to the solution
+        # under a new Solution Folder, which isn't what I wanted either
+        # and after a few tries running this it'll add it to the
+        # project so I have two nuspec files in the solution.
+
+        # Fuck Yeah!
+
+        # this is the evil code to make this all better
+
+        # let's use the native MSBuild object
+        # so we don't force a reload after install
+        $msbuildProj = Get-MSBuildProject $Project.Name
+        $xml = $msbuildProj.Xml
+
+        # create the new elements with *just* the nuspec file
+        $itemGroup = $xml.AddItemGroup()
+        $none = $xml.CreateItemElement("None")
+
+        $none.Include = $fileName
+        $itemGroup.AppendChild($none) | Out-Null
+
+        $msbuildProj.Save()
+
+        ###### end infinite crying
+    } else {
+        Write-Message "Modifying project file to exclude csproj file from build output"
+
+        $copyToOutput = $existingFile.Properties.Item("CopyToOutputDirectory")
+        $copyToOutput.Value = 0
+        $project.Save()
+    }
 }
 
 function Set-BuildPackage {
@@ -137,7 +166,7 @@ function Set-BuildPackage {
     if ($buildProjectValue -eq $Value) {
         Write-Message "No need to modify the csproj file as BuildPackage is set to $Value"
     } else {
-        Write-Message "Setting BuildPackage to $Value in project file"
+        Write-Message "Changing BuildPackage from '$buildPackageValue' to '$Value' in project file"
         Set-MSBuildProperty "BuildPackage" $Value $ProjectName
     }
 }
