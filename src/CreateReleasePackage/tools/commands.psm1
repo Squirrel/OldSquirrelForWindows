@@ -26,7 +26,7 @@ function Publish-Release {
         [string] $ProjectName = ''
     )
 
-    Write-Host "TODO: move the Powershell functionality into this project"
+    Write-Message "TODO: move the Powershell functionality into this project"
 }
 
 Export-ModuleMember Initialize-Installer

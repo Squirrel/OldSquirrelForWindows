@@ -1,13 +1,12 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>YourAppId</id>
-    <title>Your App Name</title>
+    <id>{{project}}</id>
+    <title>A human-friendly name for {{project}} goes here</title>
     <version>$version$-beta</version>
     <authors>Your Name Here</authors>
-    <owners>Your Name Here</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Some words about Your App Name go here</description>
-    <tags>tags that describe what your app dies</tags>
+    <description>A description of {{project}} goes here </description>
+    <tags>tags that describe what {{project}} does</tags>
   </metadata>
 </package>

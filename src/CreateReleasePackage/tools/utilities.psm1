@@ -2,6 +2,16 @@
 
 # from NuGetPowerTools - https://github.com/davidfowl/NuGetPowerTools/blob/master/MSBuild.psm1
 
+function Write-Message {
+    param(
+        [parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $true)]
+        [string[]]$Message
+    )
+
+    Write-Host "Shimmer: " -f blue -nonewline;
+    Write-Host $Message
+}
+
 function Resolve-ProjectName {
     param(
         [parameter(ValueFromPipelineByPropertyName = $true)]
@@ -97,15 +107,15 @@ function Add-FileWithNoOutput {
     $existingFile = Get-ProjectItem -FileName $fileName -Project $Project
 
     if ($existingFile -eq $null) {
-        Write-Host "Could not find file, let's insert it"
+        Write-Message "Could not find file '$FilePath', adding it to project"
         $Project.DTE.ItemOperations.AddExistingItem($FilePath) | Out-Null
         $Project.Save()
         $existingFile = Get-ProjectItem -FileName $fileName -Project $Project
     } else {
-        Write-Host "The file exists, we can continue on"
+        Write-Message "The file '$FilePath' exists already, excellent!"
     }
 
-    Write-Host "Setting file to not copy to output directory"
+    Write-Message "Modifying project file to exclude csproj file from build output"
     $copyToOutput1 = $existingFile.Properties.Item("CopyToOutputDirectory")
     $copyToOutput1.Value = 0
     $project.Save()
@@ -123,12 +133,11 @@ function Set-BuildPackage {
 
     $buildPackage = Get-MSBuildProperty "BuildPackage" $ProjectName
     $buildPackageValue = $buildPackage.EvaluatedValue
-    Write-Host "BuildPackage is $buildPackageValue in project $ProjectName"
 
     if ($buildProjectValue -eq $Value) {
-        Write-Host "No need to modify the csproj file"
+        Write-Message "No need to modify the csproj file as BuildPackage is set to $Value"
     } else {
-        Write-Host "Inserting <BuildPackage>$Value</BuildPackage> into project $ProjectName"
+        Write-Message "Setting BuildPackage to $Value in project file"
         Set-MSBuildProperty "BuildPackage" $Value $ProjectName
     }
 }
@@ -144,12 +153,11 @@ function Add-InstallerTemplate {
     )
 
     if (Test-Path $Destination) {
-        Write-Host "The file already exists, no need to overwrite it..."
+         Write-Message "The file '$Destination' already exists, will not overwrite this file..."
     } else {
-        $nuspecTemplate = (Join-Path $toolsDir template.nuspec.temp)
-        Copy-Item $nuspecTemplate $Destination -Force | Out-Null
+        $content = Get-Content (Join-Path $toolsDir template.nuspec.temp) | `
+                   Foreach-Object { $_ -replace '{{project}}', $ProjectName }
+
+        Set-Content -Path $Destination -Value $content	| Out-Null
     }
-
-    Write-Host "TODO: replace placeholders with project-specific text"
 }
-
