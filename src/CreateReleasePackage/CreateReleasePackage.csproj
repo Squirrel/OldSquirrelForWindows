@@ -125,6 +125,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="tools\commands.psm1" />
+    <None Include="tools\utilities.psm1" />
     <None Include="tools\Create-Release.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
