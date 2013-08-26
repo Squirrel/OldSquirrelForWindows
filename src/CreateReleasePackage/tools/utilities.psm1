@@ -161,9 +161,8 @@ function Set-BuildPackage {
     )
 
     $buildPackage = Get-MSBuildProperty "BuildPackage" $ProjectName
-    $buildPackageValue = $buildPackage.EvaluatedValue
 
-    if ($buildProjectValue -eq $Value) {
+    if ([System.Convert]::ToBoolean($buildPackage.EvaluatedValue) -eq $Value) {
         Write-Message "No need to modify the csproj file as BuildPackage is set to $Value"
     } else {
         Write-Message "Changing BuildPackage from '$buildPackageValue' to '$Value' in project file"
