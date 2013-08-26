@@ -13,10 +13,17 @@ namespace Shimmer.WiXUi.ViewModels
         public IScreen HostScreen { get; private set; }
 
         IPackage _PackageMetadata;
-        public IPackage PackageMetadata {
+        public IPackage PackageMetadata
+        {
             get { return _PackageMetadata; }
             set { this.RaiseAndSetIfChanged(x => x.PackageMetadata, value); }
         }
+
+        ObservableAsPropertyHelper<string> _Title;
+        public string Title { get { return _Title.Value; } }
+
+        ObservableAsPropertyHelper<string> _Summary;
+        public string Summary { get { return _Summary.Value; } }
 
         public IObserver<int> ProgressValue { get; private set; }
 
@@ -24,17 +31,6 @@ namespace Shimmer.WiXUi.ViewModels
         public int LatestProgress {
             get { return _LatestProgress.Value; }
         }
-
-        ObservableAsPropertyHelper<string> _Title;
-        public string Title {
-            get { return _Title.Value; }
-        }
-
-        ObservableAsPropertyHelper<string> _Description;
-        public string Description {
-            get { return _Description.Value; }
-        }
-
         public InstallingViewModel(IScreen hostScreen)
         {
             HostScreen = hostScreen;
@@ -45,12 +41,17 @@ namespace Shimmer.WiXUi.ViewModels
             progress.ToProperty(this, x => x.LatestProgress, 0);
 
             this.WhenAny(x => x.PackageMetadata, x => x.Value)
-                .SelectMany(x => x != null ? Observable.Return(x.Title) : Observable.Empty<string>())
+                .SelectMany(metadata => metadata != null
+                               ? Observable.Return(new Tuple<string, string>(metadata.Title, metadata.Id))
+                               : Observable.Return(new Tuple<string, string>("", "")))
+                .Select(tuple => !String.IsNullOrWhiteSpace(tuple.Item1)
+                                        ? tuple.Item1
+                                        : tuple.Item2)
                 .ToProperty(this, x => x.Title);
 
-            this.WhenAny(x => x.PackageMetadata, x => x.Value)
-                .SelectMany(x => x != null ? Observable.Return(x.Description) : Observable.Empty<string>())
-                .ToProperty(this, x => x.Description);
+            this.WhenAny(x => x.PackageMetadata, v => v.Value)
+                .SelectMany(x => x != null ? Observable.Return(x.Summary) : Observable.Return(""))
+                .ToProperty(this, x => x.Summary);
         }
     }
 }
