@@ -25,9 +25,9 @@ namespace Shimmer.WiXUi.ViewModels
             get { return _Title.Value; }
         }
 
-        ObservableAsPropertyHelper<string> _Summary;
-        public string Summary {
-            get { return _Summary.Value; }
+        ObservableAsPropertyHelper<string> _Description;
+        public string Description {
+            get { return _Description.Value; }
         }
 
         public ReactiveCommand ShouldProceed { get; private set; }
@@ -47,8 +47,8 @@ namespace Shimmer.WiXUi.ViewModels
                 .ToProperty(this, x => x.Title);
 
             this.WhenAny(x => x.PackageMetadata, v => v.Value)
-                .SelectMany(x => x != null ? Observable.Return(x.Summary) : Observable.Return(""))
-                .ToProperty(this, x => x.Summary);
+                .SelectMany(x => x != null ? Observable.Return(x.Description) : Observable.Return(""))
+                .ToProperty(this, x => x.Description);
         }
     }
 }

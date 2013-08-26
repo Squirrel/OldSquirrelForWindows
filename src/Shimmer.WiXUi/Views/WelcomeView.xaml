@@ -15,10 +15,11 @@
 
         <StackPanel Margin="8,0">
             <TextBlock x:Name="Title" FontWeight="ExtraLight" FontSize="32" />
-            <TextBlock x:Name="Summary" FontWeight="Normal" FontSize="16" TextWrapping="Wrap" />
+            <TextBlock x:Name="Description" FontWeight="Normal" FontSize="16" TextWrapping="Wrap" />
         </StackPanel>
-            <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
-            <TextBlock x:Name="Description" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
+        
+        <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
+
         </Border>
 
         <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontWeight="Light" FontSize="36" Margin="0,8,0,0">

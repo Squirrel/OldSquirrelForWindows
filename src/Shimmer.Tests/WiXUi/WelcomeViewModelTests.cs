@@ -71,20 +71,20 @@ namespace Shimmer.Tests.WiXUi
                     PackageMetadata = null
                 };
 
-                Assert.Equal("", viewModel.Summary);
+                Assert.Equal("", viewModel.Description);
             }
 
             [Fact]
             public void WhenPackageSpecifiesValueItIsDisplayed()
             {
-                var package = Mock.Of<IPackage>(p => p.Summary == "My App Summary");
+                var package = Mock.Of<IPackage>(p => p.Summary == "My App Description");
 
                 var viewModel = new WelcomeViewModel(Mock.Of<IScreen>())
                 {
                     PackageMetadata = package
                 };
 
-                Assert.Equal("My App Summary", viewModel.Summary);
+                Assert.Equal("My App Description", viewModel.Description);
             }
         }
     }

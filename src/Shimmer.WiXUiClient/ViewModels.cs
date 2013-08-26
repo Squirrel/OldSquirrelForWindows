@@ -9,7 +9,7 @@ namespace Shimmer.Client.WiXUi
     {
         IPackage PackageMetadata { get; set; }
         string Title { get; }
-        string Summary { get; }
+        string Description { get; }
         ReactiveCommand ShouldProceed { get; }
     }
 
