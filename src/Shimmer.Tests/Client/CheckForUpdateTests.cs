@@ -166,13 +166,13 @@ namespace Shimmer.Tests.Client
             Assert.Throws<Exception>(() => fixture.CheckForUpdate().First());
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void IfLocalVersionGreaterThanRemoteWeRollback()
         {
             throw new NotImplementedException();
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void IfLocalAndRemoteAreEqualThenDoNothing()
         {
             throw new NotImplementedException();

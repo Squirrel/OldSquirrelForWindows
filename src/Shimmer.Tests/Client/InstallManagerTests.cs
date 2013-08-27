@@ -56,25 +56,25 @@ namespace Shimmer.Tests.Client
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void EigenUpdateWithUpdateURL()
         {
             throw new NotImplementedException();
         }
 
-        [Fact]
+        [Fact(Skip="TODO")]
         public void UpdateReportsProgress()
         {
             throw new NotImplementedException();
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void InstallHandlesAccessDenied()
         {
             throw new NotImplementedException();
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void UninstallRunsHooks()
         {
             throw new NotImplementedException();

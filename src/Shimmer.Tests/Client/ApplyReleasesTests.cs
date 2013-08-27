@@ -171,7 +171,7 @@ namespace Shimmer.Tests.Client
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void ShouldCallAppUninstallOnTheOldVersion()
         {
             throw new NotImplementedException();
@@ -221,7 +221,7 @@ namespace Shimmer.Tests.Client
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void DeletedShortcutsShouldntBeRecreatedOnUpgrade()
         {
             throw new NotImplementedException();
