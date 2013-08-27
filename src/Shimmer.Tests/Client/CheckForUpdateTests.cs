@@ -163,7 +163,9 @@ namespace Shimmer.Tests.Client
 
             var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
 
-            Assert.Throws<Exception>(() => fixture.CheckForUpdate().First());
+            using (fixture) {
+                Assert.Throws<Exception>(() => fixture.CheckForUpdate().First());   
+            }
         }
 
         [Fact(Skip = "TODO")]
