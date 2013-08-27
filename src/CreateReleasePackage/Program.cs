@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,10 @@ namespace CreateReleasePackage
     {
         static int Main(string[] args)
         {
+#if DEBUG
+            Debugger.Launch();
+#endif
+
             var optParams = ParseCommands.ParseOptions(args);
             if (optParams == null) {
                 return -1;

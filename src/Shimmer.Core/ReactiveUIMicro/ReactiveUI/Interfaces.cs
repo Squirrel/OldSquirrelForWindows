@@ -200,9 +200,9 @@ namespace ReactiveUIMicro
 
         new IObservable<T> BeforeItemsRemoved { get; }
 
-        IObservable<IObservedChange<T, object>> ItemChanging { get; }
+        new IObservable<IObservedChange<T, object>> ItemChanging { get; }
 
-        IObservable<IObservedChange<T, object>> ItemChanged { get; }
+        new IObservable<IObservedChange<T, object>> ItemChanged { get; }
     }
 
     /// <summary>
@@ -332,7 +332,7 @@ namespace ReactiveUIMicro
         /// <summary>
         /// The ViewModel corresponding to this specific View.
         /// </summary>
-        T ViewModel { get; set; }
+        new T ViewModel { get; set; }
     }
 
     internal interface IDefaultPropertyBindingProvider

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:Routing="clr-namespace:ReactiveUI.Routing;assembly=ReactiveUI.Routing" mc:Ignorable="d" 
-             Height="525" Width="350">
+             Height="525" Width="360">
 
     <Routing:RoutedViewHost x:Name="viewHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
 </Window>

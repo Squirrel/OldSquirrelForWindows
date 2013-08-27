@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Windows.Input;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
 using ReactiveUI.Xaml;
 using Shimmer.Client.WiXUi;
+using Shimmer.Core.Extensions;
 
 namespace Shimmer.WiXUi.ViewModels
 {
@@ -42,8 +39,8 @@ namespace Shimmer.WiXUi.ViewModels
             HostScreen = hostScreen;
 
             Shutdown = new ReactiveCommand();
-            this.WhenAny(x => x.PackageMetadata, x => x.Value)
-                .SelectMany(x => x != null ? Observable.Return(x.Title) : Observable.Empty<string>())
+        
+            this.WhenAny(x => x.PackageMetadata, x => x.Value.ExtractTitle())
                 .ToProperty(this, x => x.Title);
         }
     }

@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
-using ReactiveUI;
 
 namespace Shimmer.Tests
 {
     public sealed class StaticHttpServer : IDisposable
     {
-        public int Port { get; protected set; }
-        public string RootPath { get; protected set; }
+        public int Port { get; private set; }
+        public string RootPath { get; private set; }
         
         IDisposable inner;
 

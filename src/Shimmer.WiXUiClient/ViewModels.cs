@@ -8,6 +8,8 @@ namespace Shimmer.Client.WiXUi
     public interface IWelcomeViewModel : IRoutableViewModel
     {
         IPackage PackageMetadata { get; set; }
+        string Title { get; }
+        string Description { get; }
         ReactiveCommand ShouldProceed { get; }
     }
 

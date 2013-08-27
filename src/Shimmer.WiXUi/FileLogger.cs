@@ -17,7 +17,7 @@ namespace Shimmer.WiXUi
             var fileName = String.Format("{0}.txt", appName);
             directoryPath = Path.Combine(
                                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                                appName);
+                                "Shimmer");
             filePath = Path.Combine(directoryPath, fileName);
 
             messageFormat = "{0} | {1} | {2}";

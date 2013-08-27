@@ -45,16 +45,20 @@ namespace Shimmer.WiXUi.ViewModels
             this.currentAssemblyDir = currentAssemblyDir ?? Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             RxApp.ConfigureServiceLocator(
-                (type, contract) => String.IsNullOrEmpty(contract) ?
-                    Kernel.Resolve(type) :
-                    Kernel.Resolve(type, contract),
+                (type, contract) => {
+                    this.Log().Info("Resolving type '{0}' with contract '{1}'", type, contract);
+                    return String.IsNullOrEmpty(contract)
+                        ? Kernel.Resolve(type)
+                        : Kernel.Resolve(type, contract);
+                },
                 (type, contract) => Kernel.ResolveAll(type, true),
-                (c, t, s) => {
-                    if (String.IsNullOrEmpty(s)) {
-                        Kernel.Register(t, c, Guid.NewGuid().ToString());
-                    } else {
-                        Kernel.Register(t, c, s);
-                    }
+                    (c, t, s) => {
+                       this.Log().Info("Registering interface '{0}' with type '{1}' and contract '{2}'", c, t, s);
+                        if (String.IsNullOrEmpty(s)) {
+                            Kernel.Register(t, c, Guid.NewGuid().ToString());
+                        } else {
+                            Kernel.Register(t, c, s);
+                        }
                 });
 
             RxRouting.ViewModelToViewFunc = findViewClassNameForViewModelName;
@@ -238,6 +242,9 @@ namespace Shimmer.WiXUi.ViewModels
                 UserError.Throw("This installer is incorrectly configured, please contact the author", ex);
                 return null;
             }
+
+            // now set the logger to the found package name
+            RxApp.LoggerFactory = _ => new FileLogger(ret.PackageName) { Level = ReactiveUI.LogLevel.Info };
 
             return ret;
         }

@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
 using Shimmer.Client.WiXUi;
+using Shimmer.Core.Extensions;
 
 namespace Shimmer.WiXUi.ViewModels
 {
@@ -22,13 +19,6 @@ namespace Shimmer.WiXUi.ViewModels
             set { this.RaiseAndSetIfChanged(x => x.PackageMetadata, value); }
         }
 
-        public IObserver<int> ProgressValue { get; private set; }
-
-        ObservableAsPropertyHelper<int> _LatestProgress;
-        public int LatestProgress {
-            get { return _LatestProgress.Value; }
-        }
-
         ObservableAsPropertyHelper<string> _Title;
         public string Title {
             get { return _Title.Value; }
@@ -37,6 +27,13 @@ namespace Shimmer.WiXUi.ViewModels
         ObservableAsPropertyHelper<string> _Description;
         public string Description {
             get { return _Description.Value; }
+        }
+
+        public IObserver<int> ProgressValue { get; private set; }
+
+        ObservableAsPropertyHelper<int> _LatestProgress;
+        public int LatestProgress {
+            get { return _LatestProgress.Value; }
         }
 
         public InstallingViewModel(IScreen hostScreen)
@@ -48,12 +45,11 @@ namespace Shimmer.WiXUi.ViewModels
 
             progress.ToProperty(this, x => x.LatestProgress, 0);
 
-            this.WhenAny(x => x.PackageMetadata, x => x.Value)
-                .SelectMany(x => x != null ? Observable.Return(x.Title) : Observable.Empty<string>())
+            this.WhenAny(x => x.PackageMetadata, x => x.Value.ExtractTitle())
                 .ToProperty(this, x => x.Title);
 
-            this.WhenAny(x => x.PackageMetadata, x => x.Value)
-                .SelectMany(x => x != null ? Observable.Return(x.Description) : Observable.Empty<string>())
+            this.WhenAny(x => x.PackageMetadata, v => v.Value)
+                .Select(x => x != null ? x.Description : String.Empty)
                 .ToProperty(this, x => x.Description);
         }
     }
