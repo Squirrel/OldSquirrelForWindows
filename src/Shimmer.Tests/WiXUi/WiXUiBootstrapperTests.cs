@@ -126,7 +126,7 @@ namespace Shimmer.Tests.WiXUi
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void IfAppIsAlreadyInstalledRunTheApp()
         {
             throw new NotImplementedException();
@@ -140,19 +140,19 @@ namespace Shimmer.Tests.WiXUi
         // Helper methods
         //
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void DetermineFxVersionFromPackageTest()
         {
             throw new NotImplementedException();
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void RegisterExtensionDllsFindsExtensions()
         {
             throw new NotImplementedException();
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         public void DefaultTypesShouldntStepOnExtensionRegisteredTypes()
         {
             throw new NotImplementedException();
