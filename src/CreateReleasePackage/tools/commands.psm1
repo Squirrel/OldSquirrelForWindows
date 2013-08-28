@@ -1,4 +1,6 @@
-﻿function Initialize-Installer {
+﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+function Initialize-Installer {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
@@ -26,7 +28,13 @@ function Publish-Release {
         [string] $ProjectName = ''
     )
 
-    Write-Message "TODO: move the Powershell functionality into this project"
+	Write-Message "TODO: extract the solution directory from EnvDTE"
+	Write-Message "TODO: extract the build directory from EnvDTE (for the specific project)"
+	Write-Message "TODO: can we move that into the inner script?"
+
+    $createReleaseScript = Join-Path $toolsDir "Create-Release.ps1"
+
+    . $createReleaseScript -ProjectNameToBuild $ProjectName -SolutionDir . -BuildDirectory "bin\Release"
 }
 
 Export-ModuleMember Initialize-Installer
