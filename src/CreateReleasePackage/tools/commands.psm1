@@ -3,9 +3,13 @@
 function Initialize-Installer {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
+        [Parameter(Position=0, ValueFromPipeLine=$true)]
         [string] $ProjectName = ''
     )
+
+    if (-not $ProjectName) {
+        $ProjectName = (Get-Project).Name
+    }
 
     $project = (Get-Project -Name $ProjectName)
     $projectDir = (gci $project.FullName).Directory
@@ -24,9 +28,13 @@ function Initialize-Installer {
 function Publish-Release {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
-        [string] $ProjectName = ''
+        [Parameter(Position=0, ValueFromPipeLine=$true)]
+        [string] $ProjectName
     )
+
+    if (-not $ProjectName) {
+        $ProjectName = (Get-Project).Name
+    }
 
     $solutionDir = (gci $dte.Solution.FullName).Directory
 
