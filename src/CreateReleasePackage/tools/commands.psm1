@@ -28,13 +28,16 @@ function Publish-Release {
         [string] $ProjectName = ''
     )
 
-	Write-Message "TODO: extract the solution directory from EnvDTE"
-	Write-Message "TODO: extract the build directory from EnvDTE (for the specific project)"
-	Write-Message "TODO: can we move that into the inner script?"
+    $solutionDir = (gci $dte.Solution.FullName).Directory
+
+    $project = Get-Project $ProjectName
+    $outputDir =  $project.ConfigurationManager.ActiveConfiguration.Properties.Item("OutputPath").Value
 
     $createReleaseScript = Join-Path $toolsDir "Create-Release.ps1"
 
-    . $createReleaseScript -ProjectNameToBuild $ProjectName -SolutionDir . -BuildDirectory "bin\Release"
+    . $createReleaseScript -ProjectNameToBuild $ProjectName  `
+                           -SolutionDir $solutionDir `
+                           -BuildDirectory $outputDir
 }
 
 Export-ModuleMember Initialize-Installer
