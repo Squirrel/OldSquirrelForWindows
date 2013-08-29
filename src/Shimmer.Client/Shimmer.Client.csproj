@@ -92,9 +92,6 @@
       <HintPath>..\packages\NuGet.Core.2.7.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.4.6.4\lib\Net40\ReactiveUI.dll</HintPath>
-    </Reference>
     <Reference Include="SharpBITS.Base, Version=2.0.0.0, Culture=neutral, PublicKeyToken=3f9d288a1b96f67a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
