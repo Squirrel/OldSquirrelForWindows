@@ -1,33 +1,6 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
     
-function Initialize-ProjectForShimmer {
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, ValueFromPipeLine=$true)]
-        [string] $ProjectName = ''
-    )
-
-    if (-not $ProjectName) {
-        $ProjectName = (Get-Project).Name
-    }
-
-    $project = (Get-Project -Name $ProjectName)
-    $projectDir = (gci $project.FullName).Directory
-    $nuspecFile = (Join-Path $projectDir "$ProjectName.nuspec")
-
-    Write-Message "Initializing project $ProjectName for installer and packaging"
-
-    Add-InstallerTemplate -Destination $nuspecFile -ProjectName $ProjectName
-
-    Set-BuildPackage -Value $true -ProjectName $ProjectName
-
-    Add-FileWithNoOutput -FilePath $nuspecFile -Project $Project
-
-    # open the nuspec file in the editor
-    $dte.ItemOperations.OpenFile($nuspecFile) | Out-Null
-}
-
 function Generate-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -88,8 +61,7 @@ function Create-ReleaseForProject {
 	}
 }
 
-
-function Publish-ShimmerRelease {
+function New-Release {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, ValueFromPipeLine=$true)]
@@ -117,12 +89,8 @@ function Publish-ShimmerRelease {
                              -BuildDirectory (Join-Path $projectDir $outputDir)
 }
 
-# Statement completion for project names
-'Initialize-ProjectForShimmer', 'Publish-ShimmerRelease' | %{ 
-    Register-TabExpansion $_ @{
+Register-TabExpansion 'New-Release' @{
         ProjectName = { Get-Project -All | Select -ExpandProperty Name }
-    }
 }
 
-Export-ModuleMember Initialize-ProjectForShimmer
-Export-ModuleMember Publish-ShimmerRelease
+Export-ModuleMember New-Release
