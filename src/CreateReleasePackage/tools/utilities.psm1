@@ -126,19 +126,20 @@ function Add-FileWithNoOutput {
 
         # this is the evil code to make this all better
 
-        # let's use the native MSBuild object
-        # so we don't force a reload after install
-        $msbuildProj = Get-MSBuildProject $Project.Name
-        $xml = $msbuildProj.Xml
+        (Resolve-ProjectName $Project.Name) | %{
+            # use the native MSBuild object
+            $buildProject = $_ | Get-MSBuildProject
+         
+            # create the new elements with *just* the nuspec file
+            $itemGroup = $buildProject.Xml.AddItemGroup()
+            $none = $buildProject.Xml.CreateItemElement("None")
 
-        # create the new elements with *just* the nuspec file
-        $itemGroup = $xml.AddItemGroup()
-        $none = $xml.CreateItemElement("None")
+            $none.Include = $fileName
+            $itemGroup.AppendChild($none) | Out-Null
 
-        $none.Include = $fileName
-        $itemGroup.AppendChild($none) | Out-Null
-
-        $msbuildProj.Save()
+            # save the native project object instead
+            $_.Save()
+        }
 
         ###### end infinite crying
     } else {
