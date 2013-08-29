@@ -22,7 +22,9 @@ function Create-ReleaseForProject {
 	)
 
 	$releaseDir = Join-Path $solutionDir "Releases"
-	if (!(Test-Path $releaseDir)) { mkdir -p $releaseDir }
+	if (!(Test-Path $releaseDir)) { ` 
+		New-Item -ItemType Directory -Path $releaseDir | Out-Null
+	}
 
 	Write-Message "Creating Release for $solutionDir => $releaseDir`n"
 
