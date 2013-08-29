@@ -12,6 +12,16 @@ function Write-Message {
     Write-Host $Message
 }
 
+function Write-Error {
+    param(
+        [parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $true)]
+        [string[]]$Message
+    )
+
+    Write-Host "Shimmer: " -f red -nonewline;
+    Write-Host $Message
+}
+
 function Resolve-ProjectName {
     param(
         [parameter(ValueFromPipelineByPropertyName = $true)]

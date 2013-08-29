@@ -24,12 +24,15 @@ function Create-ReleaseForProject {
 	$releaseDir = Join-Path $solutionDir "Releases"
 	if (!(Test-Path $releaseDir)) { mkdir -p $releaseDir }
 
-	echo "Creating Release for $solutionDir => $releaseDir`n"
+	Write-Message "Creating Release for $solutionDir => $releaseDir`n"
 
 	$nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 
 	if ($nugetPackages.length -eq 0) {
-		throw "Shimmer couldn't find any .nupkg files in the folder $buildDirectory"
+		Write-Error "No .nupkg files were found in the build directory $buildDirectory"
+		Write-Error "Have you built the solution lately?"
+
+		return
 	}
 
 	foreach($pkg in $nugetPackages) {
