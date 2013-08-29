@@ -76,60 +76,51 @@ function Get-MSBuildProperty {
 
 function Get-ProjectItem {
     param(
-        [parameter(Position = 0, Mandatory = $true)]
+        [parameter(Position=0,ValueFromPipeLine=$true,Mandatory=$true)]
         $FileName,
-        [parameter(Position = 1, Mandatory = $true)]
-        $Project
+        [parameter(Position=1,ValueFromPipeLine=$true,Mandatory=$true)]
+        $ProjectName
     )
 
-    $existingFile = $Project.ProjectItems | Where-Object { $_.Name -eq $FileName }
+    (Resolve-ProjectName $ProjectName) | %{
 
-    if ($existingFile.length -eq 0) {
-        return $null
+        $existingFile = $_.ProjectItems | Where-Object { $_.Name -eq $FileName }
+
+        if ($existingFile.length -eq 0) {
+            $null
+        } else {
+            $existingFile[0]
+        }
     }
-
-    return $existingFile[0]
 }
 
 function Add-FileWithNoOutput {
     [CmdletBinding()]
     param (
-        [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
+        [Parameter(Position=0,ValueFromPipeLine=$true,Mandatory=$true)]
         [string] $FilePath,
 
-        [Parameter(Position=1, ValueFromPipeLine=$true, Mandatory=$true)]
+        [Parameter(Position=1,ValueFromPipeLine=$true,Mandatory=$true)]
         $Project
     )
 
-    # do we have the existing file in the project?
     # NOTE: this won't work for nested files
     $fileName = (gci $FilePath).Name
-    $existingFile = Get-ProjectItem -FileName $fileName -Project $Project
+
+    # TODO: stop passing the Project object around
+    $projectName = $Project.Name
+
+    # do we have the existing file in the project?
+    $existingFile = Get-ProjectItem $fileName $projectName
 
     if ($existingFile -eq $null) {
-        Write-Message "Could not find file '$FilePath', adding it to project"
+        Write-Message "Could not find file '$FilePath' in project '$projectName'"
+        Write-Message "Adding nuspec file to the project"
 
-        ###### start infinite crying
-
-        # SO, have a guess at what this line of code is supposed to do
-        #
-        # $Project.DTE.ItemOperations.AddExistingItem($FilePath)
-        #
-        # Not sure? Well, according to MSDN (http://msdn.microsoft.com/en-us/library/envdte.itemoperations.addexistingitem(v=vs.110).aspx)
-        # it says "Adds an existing item to the current project." but
-        # my testing indicates it'll often just add it to the solution
-        # under a new Solution Folder, which isn't what I wanted either
-        # and after a few tries running this it'll add it to the
-        # project so I have two nuspec files in the solution.
-
-        # Fuck Yeah!
-
-        # this is the evil code to make this all better
-
-        (Resolve-ProjectName $Project.Name) | %{
+        (Resolve-ProjectName $projectName) | %{
             # use the native MSBuild object
             $buildProject = $_ | Get-MSBuildProject
-         
+
             # create the new elements with *just* the nuspec file
             $itemGroup = $buildProject.Xml.AddItemGroup()
             $none = $buildProject.Xml.CreateItemElement("None")
@@ -137,17 +128,15 @@ function Add-FileWithNoOutput {
             $none.Include = $fileName
             $itemGroup.AppendChild($none) | Out-Null
 
-            # save the native project object instead
+            # save the outer project object instead
             $_.Save()
         }
-
-        ###### end infinite crying
     } else {
         Write-Message "Ensuring nuspec file is excluded from build output"
 
         $copyToOutput = $existingFile.Properties.Item("CopyToOutputDirectory")
         $copyToOutput.Value = 0
-        $project.Save()
+        $Project.Save()
     }
 }
 
