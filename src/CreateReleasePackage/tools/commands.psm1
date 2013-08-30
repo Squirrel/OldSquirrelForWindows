@@ -1,6 +1,6 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
-    
+
 function Generate-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -9,33 +9,33 @@ function Generate-TemplateFromPackage {
         [string]$templateFile
     )
 
-	$resultFile = & $createReleasePackageExe --preprocess-template $templateFile $pkg.FullName
+    $resultFile = & $createReleasePackageExe --preprocess-template $templateFile $pkg.FullName
     $resultFile
 }
 
 function Create-ReleaseForProject {
-	param(
-		[Parameter(Mandatory = $true)]
-		[string]$solutionDir,
-		[Parameter(Mandatory = $true)]
-		[string]$buildDirectory
-	)
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$solutionDir,
+        [Parameter(Mandatory = $true)]
+        [string]$buildDirectory
+    )
 
-	$releaseDir = Join-Path $solutionDir "Releases"
-	if (!(Test-Path $releaseDir)) { ` 
-		New-Item -ItemType Directory -Path $releaseDir | Out-Null
-	}
+    $releaseDir = Join-Path $solutionDir "Releases"
+    if (!(Test-Path $releaseDir)) { `
+        New-Item -ItemType Directory -Path $releaseDir | Out-Null
+    }
 
-	Write-Message "Creating Release for $solutionDir => $releaseDir`n"
+    Write-Message "Creating Release for $solutionDir => $releaseDir`n"
 
-	$nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
+    $nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 
-	if ($nugetPackages.length -eq 0) {
-		Write-Error "No .nupkg files were found in the build directory $buildDirectory"
-		Write-Error "Have you built the solution lately?"
+    if ($nugetPackages.length -eq 0) {
+        Write-Error "No .nupkg files were found in the build directory $buildDirectory"
+        Write-Error "Have you built the solution lately?"
 
-		return
-	}
+        return
+    }
 
 	foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
@@ -56,15 +56,15 @@ function Create-ReleaseForProject {
         # TODO: is this actually being used?
         $defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`""
 
-		$candleExe = Join-Path $wixDir "candle.exe"
-		$lightExe = Join-Path $wixDir "light.exe"
-		
-		if (Test-Path "$buildDirectory\template.wixobj") {  rm "$buildDirectory\template.wixobj" | Out-Null }
-        echo "Running candle.exe"
+        $candleExe = Join-Path $wixDir "candle.exe"
+        $lightExe = Join-Path $wixDir "light.exe"
+
+        if (Test-Path "$buildDirectory\template.wixobj") {  rm "$buildDirectory\template.wixobj" | Out-Null }
+        Write-Message "Running candle.exe"
         & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
         echo "Running light.exe"		
         & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
-	}
+    }
 }
 
 function New-Release {
