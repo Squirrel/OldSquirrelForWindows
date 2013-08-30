@@ -35,6 +35,10 @@ namespace CreateReleasePackage
             if (File.Exists(releaseFile)) {
                 var releaseEntries = ReleaseEntry.ParseReleaseFile(File.ReadAllText(releaseFile, Encoding.UTF8));
 
+                // TODO: when I call this with an existing release
+                // it should iterate over all the releases
+                // *before* this current version
+
                 var latestFullRelease = releaseEntries
                     .Where(x => x.IsDelta == false)
                     .MaxBy(x => x.Version)
@@ -49,7 +53,6 @@ namespace CreateReleasePackage
             }
                 
             ReleaseEntry.BuildReleasesFile(targetDir);
-
 
             return 0;
         }
