@@ -23,6 +23,14 @@ namespace Shimmer.Core
             Contract.Requires(basePackage != null && basePackage.ReleasePackageFile != null);
             Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
 
+            if (basePackage.Version > newPackage.Version) {
+                var message = String.Format(
+                    "You cannot create a delta package based on version {0} as it is a later version than {1}",
+                    basePackage.Version,
+                    newPackage.Version);
+                throw new InvalidOperationException(message);
+            }
+
             string baseTempPath = null;
             string tempPath = null;
 
