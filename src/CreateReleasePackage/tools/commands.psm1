@@ -26,27 +26,41 @@ function Create-ReleaseForProject {
         New-Item -ItemType Directory -Path $releaseDir | Out-Null
     }
 
-    Write-Message "Creating Release for $solutionDir => $releaseDir`n"
+    Write-Message "Checking $buildDirectory for packages`n"
 
     $nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 
     if ($nugetPackages.length -eq 0) {
-        Write-Error "No .nupkg files were found in the build directory $buildDirectory"
+        Write-Error "No .nupkg files were found in the build directory"
         Write-Error "Have you built the solution lately?"
 
         return
+    } else {
+        foreach($pkg in $nugetPackages) {
+            $pkgFullName = $pkg.FullName
+            Write-Message "Found package $pkgFullName"
+        }
     }
 
-	foreach($pkg in $nugetPackages) {
+    Write-Host ""
+    Write-Message "Publishing artifacts to $releaseDir"
+
+    foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
-        echo "Found package $pkgFullName"
 
 		$packageDir = Join-Path $solutionDir "packages"
 		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
-        ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
-        $fullRelease = $fullRelease.Split(" ")[0]
-		echo "Full release file at $fullRelease"
+        $packages = $releaseOutput.Split(" ")
+
+        $fullRelease = $packages[0]
+        Write-Host ""
+        Write-Message "Full release: $fullRelease"
+
+        if ($packages.Length -gt 1) {
+            $deltaRelease = $packages[-1]
+            Write-Message "Delta release: $deltaRelease`n"
+        }
 
         $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
         $wixTemplate = Join-Path $buildDirectory "template.wxs"
