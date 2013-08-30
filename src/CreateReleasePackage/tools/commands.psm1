@@ -53,7 +53,8 @@ function Create-ReleaseForProject {
         if (Test-Path $wixTemplate) { rm $wixTemplate | Out-Null }
         mv $candleTemplate $wixTemplate | Out-Null
 
-		$defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`"" 
+        # TODO: is this actually being used?
+        $defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`""
 
 		$candleExe = Join-Path $wixDir "candle.exe"
 		$lightExe = Join-Path $wixDir "light.exe"
