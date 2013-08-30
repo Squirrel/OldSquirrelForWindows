@@ -1,7 +1,8 @@
 ﻿using System;
 using NuGet;
 
-namespace Shimmer.Core.Extensions
+// ReSharper disable once CheckNamespace
+namespace Shimmer.Core
 {
     public static class PackageExtensions
     {

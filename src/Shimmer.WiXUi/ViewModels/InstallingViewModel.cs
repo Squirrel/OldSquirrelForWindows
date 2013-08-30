@@ -4,7 +4,7 @@ using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
 using Shimmer.Client.WiXUi;
-using Shimmer.Core.Extensions;
+using Shimmer.Core;
 
 namespace Shimmer.WiXUi.ViewModels
 {

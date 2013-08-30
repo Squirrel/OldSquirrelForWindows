@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NuGet;
 using ReactiveUIMicro;
-using Shimmer.Core.Extensions;
 
 namespace Shimmer.Core
 {
