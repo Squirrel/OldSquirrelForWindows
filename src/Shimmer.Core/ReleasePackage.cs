@@ -12,6 +12,7 @@ using System.Xml;
 using Ionic.Zip;
 using NuGet;
 using ReactiveUIMicro;
+using Shimmer.Core.Extensions;
 
 namespace Shimmer.Core
 {
@@ -44,6 +45,8 @@ namespace Shimmer.Core
                 return String.Format("{0}-{1}-full.nupkg", zp.Id, zp.Version);
             }
         }
+
+        public Version Version { get { return InputPackageFile.ToVersion(); } }
 
         public string CreateReleasePackage(string outputFile, string packagesRootDir = null, Func<string, string> releaseNotesProcessor = null)
         {
