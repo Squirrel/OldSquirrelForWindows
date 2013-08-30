@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NuGet;
 using ReactiveUIMicro;
+using Shimmer.Core.Extensions;
 
 namespace Shimmer.Core
 {
@@ -45,36 +46,7 @@ namespace Shimmer.Core
             get { return String.Format("{0} {1} {2}", SHA1, Filename, Filesize); } 
         }
 
-        public Version Version {
-            get {
-                var parts = (new FileInfo(Filename)).Name
-                    .Replace(".nupkg", "").Replace("-delta", "")
-                    .Split('.', '-').Reverse();
-
-                var numberRegex = new Regex(@"^\d+$");
-
-                var versionFields = parts
-                    .Where(x => numberRegex.IsMatch(x))
-                    .Select(Int32.Parse)
-                    .Reverse()
-                    .ToArray();
-
-                if (versionFields.Length < 2 || versionFields.Length > 4) {
-                    return null;
-                }
-
-                switch(versionFields.Length) {
-                case 2:
-                    return new Version(versionFields[0], versionFields[1]);
-                case 3:
-                    return new Version(versionFields[0], versionFields[1], versionFields[2]);
-                case 4:
-                    return new Version(versionFields[0], versionFields[1], versionFields[2], versionFields[3]);
-                }
-
-                return null;
-            } 
-        }
+        public Version Version { get { return Filename.ToVersion(); } }
 
         public string PackageName {
             get {
