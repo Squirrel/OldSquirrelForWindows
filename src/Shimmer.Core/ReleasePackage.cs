@@ -72,7 +72,7 @@ namespace Shimmer.Core
                 var specPath = tempDir.GetFiles("*.nuspec").First().FullName;
 
                 removeDependenciesFromPackageSpec(specPath);
-                removeSilverlightAssemblies(tempDir);
+                removeNonDesktopAssemblies(tempDir);
                 removeDeveloperDocumentation(tempDir);
 
                 if (releaseNotesProcessor != null) {
@@ -118,15 +118,15 @@ namespace Shimmer.Core
                 .ForEach(x => x.Delete());
         }
 
-        void removeSilverlightAssemblies(DirectoryInfo expandedRepoPath)
+        void removeNonDesktopAssemblies(DirectoryInfo expandedRepoPath)
         {
-            // NB: Nuke Silverlight and WinRT. We can't tell as easily if other
-            // profiles can be removed because you can load net20 DLLs inside 
-            // .NET 4.0 apps
+            // NB: Nuke Silverlight, WinRT, WindowsPhone and Xamarin assemblies. 
+            // We can't tell as easily if other profiles can be removed because 
+            // you can load net20 DLLs inside .NET 4.0 apps
             var libPath = expandedRepoPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
             this.Log().Debug(libPath.FullName);
 
-            var bannedFrameworks = new[] {"sl", "winrt", "netcore", };
+            var bannedFrameworks = new[] {"sl", "winrt", "netcore", "win8", "windows8", "MonoAndroid", "MonoTouch", "MonoMac", "wp", };
 
             libPath.GetDirectories()
                 .Where(x => bannedFrameworks.Any(y => x.Name.ToLowerInvariant().StartsWith(y, StringComparison.InvariantCultureIgnoreCase)))
