@@ -1,6 +1,12 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
 
+$wixDir = Join-Path $toolsDir "wix"
+$support = Join-Path $toolsDir "support.ps1"
+
+$candleExe = Join-Path $wixDir "candle.exe"
+$lightExe = Join-Path $wixDir "light.exe"
+
 function Generate-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -45,11 +51,13 @@ function Create-ReleaseForProject {
     Write-Host ""
     Write-Message "Publishing artifacts to $releaseDir"
 
+    $releasePackages = @()
+
     foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
 
 		$packageDir = Join-Path $solutionDir "packages"
-		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
+		$releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         $packages = $releaseOutput.Split(" ")
 
@@ -62,23 +70,36 @@ function Create-ReleaseForProject {
             Write-Message "Delta release: $deltaRelease`n"
         }
 
-        $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
-        $wixTemplate = Join-Path $buildDirectory "template.wxs"
-        if (Test-Path $wixTemplate) { rm $wixTemplate | Out-Null }
-        mv $candleTemplate $wixTemplate | Out-Null
-
-        # TODO: is this actually being used?
-        $defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`""
-
-        $candleExe = Join-Path $wixDir "candle.exe"
-        $lightExe = Join-Path $wixDir "light.exe"
-
-        if (Test-Path "$buildDirectory\template.wixobj") {  rm "$buildDirectory\template.wixobj" | Out-Null }
-        Write-Message "Running candle.exe"
-        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
-        echo "Running light.exe"		
-        & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
+        $releasePackages += @{
+            "Package" = @{
+                PackageSource = $pkgFullName
+                FullRelease = $fullRelease
+                DeltaRelease = $deltaRelease
+            }
+        }
     }
+
+    # use the last package and create an installer
+    $latest =  $releasePackages[-1]
+
+    $latestPackageSource = $latest.Values.Item("PackageSource")
+    $latestFullRelease = $latest.Values.Item("FullRelease")
+
+    Write-Message "Creating installer for $latestFullRelease"
+
+    $candleTemplate = Generate-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
+    $wixTemplate = Join-Path $buildDirectory "template.wxs"
+
+    Remove-ItemSafe $wixTemplate
+    mv $candleTemplate $wixTemplate | Out-Null
+
+    Remove-ItemSafe "$buildDirectory\template.wixobj"
+
+    Write-Message "Running candle.exe"
+    & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$latestFullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
+
+    Write-Message "Running light.exe"
+    & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 }
 
 function New-Release {
@@ -88,8 +109,6 @@ function New-Release {
         [string] $ProjectName
     )
 
-    $wixDir = Join-Path $toolsDir "wix"
-    $support = Join-Path $toolsDir "support.ps1"
     . $support
 
     if (-not $ProjectName) {
