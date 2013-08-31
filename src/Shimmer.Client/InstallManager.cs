@@ -80,6 +80,11 @@ namespace Shimmer.Client
 
             List<string> ret = null;
             var updateInfo = await eigenUpdater.CheckForUpdate(progress: eigenCheckProgress);
+
+            foreach (var u in updateInfo.ReleasesToApply) {
+                log.Info("HEY! We should be applying update {0}", u.Filename);
+            }
+
             await eigenUpdater.DownloadReleases(updateInfo.ReleasesToApply, eigenCopyFileProgress);
             ret = await eigenUpdater.ApplyReleases(updateInfo, eigenApplyProgress);
 
