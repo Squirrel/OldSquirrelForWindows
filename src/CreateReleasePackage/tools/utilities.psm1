@@ -22,6 +22,17 @@ function Write-Error {
     Write-Host $Message
 }
 
+function Remove-ItemSafe {
+    param(
+        [parameter(Mandatory=$true)]
+        $Path
+    )
+
+    if (Test-Path $Path) {
+        rm $Path | Out-Null
+    }
+}
+
 function Resolve-ProjectName {
     param(
         [parameter(ValueFromPipelineByPropertyName = $true)]

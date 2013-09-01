@@ -100,8 +100,10 @@ namespace Shimmer.Client
             // HTTP URL
             try {
                 if (isHttpUrl(updateUrlOrPath)) {
+                    this.Log().Info("Downloading RELEASES file from {0}", updateUrlOrPath);
                     releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
                 } else {
+                    this.Log().Info("Reading RELEASES file from {0}", updateUrlOrPath);
                     var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
 
                     using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
@@ -361,7 +363,7 @@ namespace Shimmer.Client
                 Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
 
             if (!targetPackage.Exists) {
-                log.Error("File should exist but doesn't", targetPackage.FullName);
+                log.Error("File {0} should exist but doesn't", targetPackage.FullName);
                 throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
             }
 
@@ -369,7 +371,7 @@ namespace Shimmer.Client
                 log.Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
                 targetPackage.Delete();
                 throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
-            } 
+            }
 
             using (var file = targetPackage.OpenRead()) {
                 var hash = Utility.CalculateStreamSHA1(file);

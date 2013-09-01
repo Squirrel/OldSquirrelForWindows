@@ -53,7 +53,7 @@ namespace Shimmer.WiXUi.ViewModels
                 },
                 (type, contract) => Kernel.ResolveAll(type, true),
                     (c, t, s) => {
-                       this.Log().Info("Registering interface '{0}' with type '{1}' and contract '{2}'", c, t, s);
+                       this.Log().Info("Registering type '{0}' for interface '{1}' and contract '{2}'", c, t, s);
                         if (String.IsNullOrEmpty(s)) {
                             Kernel.Register(t, c, Guid.NewGuid().ToString());
                         } else {
@@ -85,6 +85,7 @@ namespace Shimmer.WiXUi.ViewModels
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
                 errorVm.Shutdown.Subscribe(_ => wixEvents.ShouldQuit());
+                errorVm.OpenLogsFolder.Subscribe(_ => openLogsFolder());
                     
                 RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(errorVm));
                 return Observable.Return(RecoveryOptionResult.CancelOperation);
@@ -184,6 +185,10 @@ namespace Shimmer.WiXUi.ViewModels
             wixEvents.Engine.Detect();
         }
 
+        static void openLogsFolder() {
+            Process.Start(FileLogger.LogDirectory);
+        }
+
         UserError convertHResultToError(int status)
         {
             // NB: WiX passes this as an int which makes it impossible for us to
@@ -245,6 +250,7 @@ namespace Shimmer.WiXUi.ViewModels
 
             // now set the logger to the found package name
             RxApp.LoggerFactory = _ => new FileLogger(ret.PackageName) { Level = ReactiveUI.LogLevel.Info };
+            ReactiveUIMicro.RxApp.ConfigureFileLogging(ret.PackageName); // HACK: we can do better than this later
 
             return ret;
         }

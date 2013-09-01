@@ -21,6 +21,7 @@ namespace Shimmer.WiXUi.Views
                 .BindTo(this, x => x.ErrorMessage.Text);
 
             this.BindCommand(ViewModel, x => x.Shutdown, x => x.Shutdown);
+            this.BindCommand(ViewModel, x => x.OpenLogsFolder, x => x.LogsCommand);
         }
 
         public ErrorViewModel ViewModel {

@@ -15,14 +15,18 @@ namespace Shimmer.WiXUi
         public FileLogger(string appName)
         {
             var fileName = String.Format("{0}.txt", appName);
-            directoryPath = Path.Combine(
-                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                                "Shimmer");
-            filePath = Path.Combine(directoryPath, fileName);
-
+            filePath = Path.Combine(LogDirectory, fileName);
             messageFormat = "{0} | {1} | {2}";
         }
 
+        public static string LogDirectory {
+            get {
+                return Path.Combine(
+                               Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                               "Shimmer");
+            }
+        }
+        
         public void Write(string message, LogLevel logLevel)
         {
             if ((int) logLevel < (int) Level) return;

@@ -1,6 +1,13 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
-    
+
+$wixDir = Join-Path $toolsDir "wix"
+$support = Join-Path $toolsDir "support.ps1"
+$echoArgs = Join-Path $toolsDir "EchoArgs.exe"
+
+$candleExe = Join-Path $wixDir "candle.exe"
+$lightExe = Join-Path $wixDir "light.exe"
+
 function Generate-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
@@ -9,61 +16,92 @@ function Generate-TemplateFromPackage {
         [string]$templateFile
     )
 
-	$resultFile = & $createReleasePackageExe --preprocess-template $templateFile $pkg.FullName
+    $resultFile = & $createReleasePackageExe --preprocess-template $templateFile $pkg.FullName
     $resultFile
 }
 
 function Create-ReleaseForProject {
-	param(
-		[Parameter(Mandatory = $true)]
-		[string]$solutionDir,
-		[Parameter(Mandatory = $true)]
-		[string]$buildDirectory
-	)
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$solutionDir,
+        [Parameter(Mandatory = $true)]
+        [string]$buildDirectory
+    )
 
-	$releaseDir = Join-Path $solutionDir "Releases"
-	if (!(Test-Path $releaseDir)) { ` 
-		New-Item -ItemType Directory -Path $releaseDir | Out-Null
-	}
+    $releaseDir = Join-Path $solutionDir "Releases"
+    if (!(Test-Path $releaseDir)) { `
+        New-Item -ItemType Directory -Path $releaseDir | Out-Null
+    }
 
-	Write-Message "Creating Release for $solutionDir => $releaseDir`n"
+    Write-Message "Checking $buildDirectory for packages`n"
 
-	$nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
+    $nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
 
-	if ($nugetPackages.length -eq 0) {
-		Write-Error "No .nupkg files were found in the build directory $buildDirectory"
-		Write-Error "Have you built the solution lately?"
+    if ($nugetPackages.length -eq 0) {
+        Write-Error "No .nupkg files were found in the build directory"
+        Write-Error "Have you built the solution lately?"
 
-		return
-	}
+        return
+    } else {
+        foreach($pkg in $nugetPackages) {
+            $pkgFullName = $pkg.FullName
+            Write-Message "Found package $pkgFullName"
+        }
+    }
 
-	foreach($pkg in $nugetPackages) {
+    Write-Host ""
+    Write-Message "Publishing artifacts to $releaseDir"
+
+    $releasePackages = @()
+
+    foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
-        echo "Found package $pkgFullName"
 
 		$packageDir = Join-Path $solutionDir "packages"
-		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
+		$releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
-        ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
-        $fullRelease = $fullRelease.Split(" ")[0]
-		echo "Full release file at $fullRelease"
+        $packages = $releaseOutput.Split(";")
 
-        $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
-        $wixTemplate = Join-Path $buildDirectory "template.wxs"
-        if (Test-Path $wixTemplate) { rm $wixTemplate | Out-Null }
-        mv $candleTemplate $wixTemplate | Out-Null
+        $fullRelease = $packages[0]
+        Write-Host ""
+        Write-Message "Full release: $fullRelease"
 
-		$defines = " -d`"ToolsDir=$toolsDir`"" + " -d`"NuGetFullPackage=$fullRelease`"" 
+        if ($packages.Length -gt 1) {
+            $deltaRelease = $packages[-1]
+            Write-Message "Delta release: $deltaRelease"
+        }
 
-		$candleExe = Join-Path $wixDir "candle.exe"
-		$lightExe = Join-Path $wixDir "light.exe"
-		
-		if (Test-Path "$buildDirectory\template.wixobj") {  rm "$buildDirectory\template.wixobj" | Out-Null }
-        echo "Running candle.exe"
-        & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$fullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
-        echo "Running light.exe"		
-        & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
-	}
+        $releasePackages += @{
+            "Package" = @{
+                PackageSource = $pkgFullName
+                FullRelease = $fullRelease
+                DeltaRelease = $deltaRelease
+            }
+        }
+    }
+
+    # use the last package and create an installer
+    $latest =  $releasePackages[-1]
+
+    $latestPackageSource = $latest.Values.Item("PackageSource")
+    $latestFullRelease = $latest.Values.Item("FullRelease")
+
+    Write-Host ""
+    Write-Message "Creating installer for $latestFullRelease"
+
+    $candleTemplate = Generate-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
+    $wixTemplate = Join-Path $buildDirectory "template.wxs"
+
+    Remove-ItemSafe $wixTemplate
+    mv $candleTemplate $wixTemplate | Out-Null
+
+    Remove-ItemSafe "$buildDirectory\template.wixobj"
+
+    Write-Message "Running candle.exe"
+    & $candleExe -d"ToolsDir=$toolsDir" -d"ReleasesFile=$releaseDir\RELEASES" -d"NuGetFullPackage=$latestFullRelease" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
+
+    Write-Message "Running light.exe"
+    & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 }
 
 function New-Release {
@@ -73,8 +111,6 @@ function New-Release {
         [string] $ProjectName
     )
 
-    $wixDir = Join-Path $toolsDir "wix"
-    $support = Join-Path $toolsDir "support.ps1"
     . $support
 
     if (-not $ProjectName) {

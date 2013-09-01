@@ -64,8 +64,16 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(from) && File.Exists(from));
             Contract.Requires(!String.IsNullOrEmpty(to));
 
+            if (!File.Exists(from)) {
+                LogManager.GetLogger(typeof(Utility))
+                          .Warn("The file {0} does not exist", from);
+
+                // TODO: should we fail this operation?
+                return Observable.Return(Unit.Default);
+            }
+
             // XXX: SafeCopy
-            return Observable.Start(() => File.Copy(@from, to, true), RxApp.TaskpoolScheduler);
+            return Observable.Start(() => File.Copy(from, to, true), RxApp.TaskpoolScheduler);
         }
 
         public static void Retry(this Action block, int retries = 2)
