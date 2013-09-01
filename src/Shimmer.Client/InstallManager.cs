@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -128,6 +129,8 @@ namespace Shimmer.Client
 
         static FrameworkVersion determineFxVersionFromPackage(IPackage package)
         {
+            Contract.Requires(package != null);
+
             return package.GetFiles().Any(x => x.Path.Contains("lib") && x.Path.Contains("45"))
                 ? FrameworkVersion.Net45
                 : FrameworkVersion.Net40;
