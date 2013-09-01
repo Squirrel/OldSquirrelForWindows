@@ -67,7 +67,7 @@ function Create-ReleaseForProject {
 
         if ($packages.Length -gt 1) {
             $deltaRelease = $packages[-1]
-            Write-Message "Delta release: $deltaRelease`n"
+            Write-Message "Delta release: $deltaRelease"
         }
 
         $releasePackages += @{
@@ -85,6 +85,7 @@ function Create-ReleaseForProject {
     $latestPackageSource = $latest.Values.Item("PackageSource")
     $latestFullRelease = $latest.Values.Item("FullRelease")
 
+    Write-Host ""
     Write-Message "Creating installer for $latestFullRelease"
 
     $candleTemplate = Generate-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
