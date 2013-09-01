@@ -53,7 +53,7 @@ namespace Shimmer.WiXUi.ViewModels
                 },
                 (type, contract) => Kernel.ResolveAll(type, true),
                     (c, t, s) => {
-                       this.Log().Info("Registering interface '{0}' with type '{1}' and contract '{2}'", c, t, s);
+                       this.Log().Info("Registering type '{0}' for interface '{1}' and contract '{2}'", c, t, s);
                         if (String.IsNullOrEmpty(s)) {
                             Kernel.Register(t, c, Guid.NewGuid().ToString());
                         } else {
