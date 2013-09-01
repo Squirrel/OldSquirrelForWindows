@@ -35,7 +35,8 @@ namespace ReactiveUIMicro
      * have *every single* class have a default Scheduler property is really 
      * irritating, with either default making life difficult.
      */
-    internal static class RxApp
+
+    public static class RxApp
     {
         static RxApp()
         {
@@ -128,7 +129,7 @@ namespace ReactiveUIMicro
 
         static Func<Type, IRxUILogger> _LoggerFactory;
         static internal readonly Subject<Unit> _LoggerFactoryChanged = new Subject<Unit>();
-        public static Func<Type, IRxUILogger> LoggerFactory {
+        internal static Func<Type, IRxUILogger> LoggerFactory {
             get { return _LoggerFactory; }
             set { _LoggerFactory = value; _LoggerFactoryChanged.OnNext(Unit.Default); }
         }
@@ -334,6 +335,11 @@ namespace ReactiveUIMicro
         public static bool IsServiceLocationConfigured()
         {
             return _getService != null && _getAllServices != null;
+        }
+
+        public static void ConfigureFileLogging(string appName = "Shimmer")
+        {
+            LoggerFactory = _ => new FileLogger(appName) { Level = LogLevel.Info };
         }
     }
 }

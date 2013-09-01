@@ -26,6 +26,7 @@ namespace Shimmer.WiXUi
         protected override void Run()
         {
             RxApp.LoggerFactory = _ => new FileLogger("Shimmer") { Level = ReactiveUI.LogLevel.Info };
+            ReactiveUIMicro.RxApp.ConfigureFileLogging(); // HACK: we can do better than this later
 
             this.Log().Info("Bootstrapper started");
 
