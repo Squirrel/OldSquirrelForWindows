@@ -60,7 +60,6 @@ namespace Shimmer.Client
         async Task<List<string>> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null)
         {
             var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
-            var eigenUpdater = new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, TargetRootDirectory);
 
             var eigenCheckProgress = new Subject<int>();
             var eigenCopyFileProgress = new Subject<int>();
@@ -70,33 +69,41 @@ namespace Shimmer.Client
             var realCopyFileProgress = new Subject<int>();
             var realApplyProgress = new Subject<int>();
 
-            // The real update takes longer than the eigenupdate because we're
-            // downloading from the Internet instead of doing everything 
-            // locally, so give it more weight
-            Observable.Concat(
-                    Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress).Select(x => (x / 3.0) * 0.33),
-                    Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress).Select(x => (x / 3.0) * 0.67))
-                .Select(x => (int)x)
-                .Subscribe(progress);
-
             List<string> ret = null;
-            var updateInfo = await eigenUpdater.CheckForUpdate(progress: eigenCheckProgress);
 
-            log.Info("The checking of releases completed - and there was much rejoicing");
+            using (var eigenUpdater = new UpdateManager(
+                        currentAssemblyDir, 
+                        bundledPackageMetadata.Id, 
+                        fxVersion,
+                        TargetRootDirectory)) {
 
-            foreach (var u in updateInfo.ReleasesToApply) {
-                log.Info("HEY! We should be applying update {0}", u.Filename);
+                // The real update takes longer than the eigenupdate because we're
+                // downloading from the Internet instead of doing everything 
+                // locally, so give it more weight
+                Observable.Concat(
+                    Observable.Concat(eigenCheckProgress, eigenCopyFileProgress, eigenCopyFileProgress)
+                        .Select(x => (x/3.0)*0.33),
+                    Observable.Concat(realCheckProgress, realCopyFileProgress, realApplyProgress)
+                        .Select(x => (x/3.0)*0.67))
+                    .Select(x => (int) x)
+                    .Subscribe(progress);
+
+                var updateInfo = await eigenUpdater.CheckForUpdate(progress: eigenCheckProgress);
+
+                log.Info("The checking of releases completed - and there was much rejoicing");
+
+                foreach (var u in updateInfo.ReleasesToApply) {
+                    log.Info("HEY! We should be applying update {0}", u.Filename);
+                }
+
+                await eigenUpdater.DownloadReleases(updateInfo.ReleasesToApply, eigenCopyFileProgress);
+
+                log.Info("The downloading of releases completed - and there was much rejoicing");
+
+                ret = await eigenUpdater.ApplyReleases(updateInfo, eigenApplyProgress);
+
+                log.Info("The applying of releases completed - and there was much rejoicing");
             }
-
-            await eigenUpdater.DownloadReleases(updateInfo.ReleasesToApply, eigenCopyFileProgress);
-
-            log.Info("The downloading of releases completed - and there was much rejoicing");
-            
-            ret = await eigenUpdater.ApplyReleases(updateInfo, eigenApplyProgress);
-
-            log.Info("The applying of releases completed - and there was much rejoicing");
-
-            eigenUpdater.Dispose();
 
             var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
             updateUrl = null; //XXX REMOVE ME
@@ -108,18 +115,20 @@ namespace Shimmer.Client
                 return ret;
             }
 
-            var realUpdater = new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, TargetRootDirectory);
-
-            try {
-                updateInfo = await realUpdater.CheckForUpdate(progress: realCheckProgress);
-                await realUpdater.DownloadReleases(updateInfo.ReleasesToApply, realCopyFileProgress);
-                await realUpdater.ApplyReleases(updateInfo, realApplyProgress);
-            } catch (Exception ex) {
-                log.ErrorException("Failed to update to latest remote version", ex);
-                return new List<string>();
+            using(var realUpdater = new UpdateManager(
+                    updateUrl,
+                    bundledPackageMetadata.Id,
+                    fxVersion,
+                    TargetRootDirectory)) {
+                try {
+                    var updateInfo = await realUpdater.CheckForUpdate(progress: realCheckProgress);
+                    await realUpdater.DownloadReleases(updateInfo.ReleasesToApply, realCopyFileProgress);
+                    await realUpdater.ApplyReleases(updateInfo, realApplyProgress);
+                } catch (Exception ex) {
+                    log.ErrorException("Failed to update to latest remote version", ex);
+                    return new List<string>();
+                }
             }
-
-            realUpdater.Dispose();
 
             return ret;
         }
