@@ -29,7 +29,7 @@ namespace CreateReleasePackage
                 optParams["pkgdir"] != "" ? optParams["pkgdir"] : null,
                 input => (new Markdown()).Transform(input));
 
-            Console.WriteLine(fullRelease);
+            Console.WriteLine("{0};", fullRelease);
 
             var releaseFile = Path.Combine(targetDir, "RELEASES");
             if (File.Exists(releaseFile)) {
@@ -42,7 +42,7 @@ namespace CreateReleasePackage
                     .FirstOrDefault();
 
                 var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
-                Console.WriteLine("{0} {1}", latestFullRelease.InputPackageFile, deltaFile);
+                Console.WriteLine("{0}; {1}", latestFullRelease.InputPackageFile, deltaFile);
 
                 var deltaBuilder = new DeltaPackageBuilder();
                 deltaBuilder.CreateDeltaPackage(package, latestFullRelease, deltaFile);

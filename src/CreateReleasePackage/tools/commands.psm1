@@ -59,7 +59,7 @@ function Create-ReleaseForProject {
 		$packageDir = Join-Path $solutionDir "packages"
 		$releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
-        $packages = $releaseOutput.Split(" ")
+        $packages = $releaseOutput.Split(";")
 
         $fullRelease = $packages[0]
         Write-Host ""
