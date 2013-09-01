@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
@@ -33,12 +34,14 @@ namespace Shimmer.WiXUi.ViewModels
         }
 
         public ReactiveCommand Shutdown { get; protected set; }
+        public ReactiveCommand OpenLogsFolder { get; protected set; }
 
         public ErrorViewModel(IScreen hostScreen)
         {
             HostScreen = hostScreen;
 
             Shutdown = new ReactiveCommand();
+            OpenLogsFolder = new ReactiveCommand();
         
             this.WhenAny(x => x.PackageMetadata, x => x.Value.ExtractTitle())
                 .ToProperty(this, x => x.Title);

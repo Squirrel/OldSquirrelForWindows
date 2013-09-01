@@ -15,8 +15,18 @@
 
         <TextBlock x:Name="Title" Text="Failed to Install" FontWeight="ExtraLight" FontSize="32" Margin="8,0,0,0"/>
         <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
-            <TextBlock x:Name="ErrorMessage" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
-        </Border>
+            <StackPanel>
+                <TextBlock x:Name="ErrorMessage" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16" />
+
+                <TextBlock x:Name="GoToLogs" FontSize="14" TextWrapping="WrapWithOverflow" Margin="16">
+                    <Run Text="Please check"/>
+                    <Hyperlink x:Name="LogsCommand">the logs folder</Hyperlink>
+                    <Run Text="for more details"/>
+                </TextBlock>
+
+            </StackPanel>
+            
+            </Border>
 
         <!-- NB: Left this here so the spacing doesn't change-->
         <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontWeight="Light" FontSize="36" Margin="0,8,0,0">

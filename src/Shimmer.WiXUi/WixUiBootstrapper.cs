@@ -85,6 +85,7 @@ namespace Shimmer.WiXUi.ViewModels
                 var errorVm = RxApp.GetService<IErrorViewModel>();
                 errorVm.Error = ex;
                 errorVm.Shutdown.Subscribe(_ => wixEvents.ShouldQuit());
+                errorVm.OpenLogsFolder.Subscribe(_ => openLogsFolder());
                     
                 RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(errorVm));
                 return Observable.Return(RecoveryOptionResult.CancelOperation);
@@ -182,6 +183,10 @@ namespace Shimmer.WiXUi.ViewModels
             wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
 
             wixEvents.Engine.Detect();
+        }
+
+        static void openLogsFolder() {
+            Process.Start(FileLogger.LogDirectory);
         }
 
         UserError convertHResultToError(int status)
