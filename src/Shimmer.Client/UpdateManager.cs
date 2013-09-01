@@ -363,7 +363,7 @@ namespace Shimmer.Client
                 Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
 
             if (!targetPackage.Exists) {
-                log.Error("File should exist but doesn't", targetPackage.FullName);
+                log.Error("File {0} should exist but doesn't", targetPackage.FullName);
                 throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
             }
 
@@ -371,7 +371,7 @@ namespace Shimmer.Client
                 log.Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
                 targetPackage.Delete();
                 throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
-            } 
+            }
 
             using (var file = targetPackage.OpenRead()) {
                 var hash = Utility.CalculateStreamSHA1(file);
