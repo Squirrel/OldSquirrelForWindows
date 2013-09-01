@@ -40,6 +40,7 @@ namespace Shimmer.Client
         readonly FrameworkVersion appFrameworkVersion;
 
         IDisposable updateLock;
+        string id;
 
         public UpdateManager(string urlOrPath, 
             string applicationName,
@@ -52,6 +53,8 @@ namespace Shimmer.Client
             Contract.Requires(!String.IsNullOrEmpty(applicationName));
 
             log = LogManager.GetLogger<UpdateManager>();
+            id = Guid.NewGuid().ToString();
+            log.Info("Creating object with id {0}", id);
 
             updateUrlOrPath = urlOrPath;
             this.applicationName = applicationName;
@@ -229,6 +232,7 @@ namespace Shimmer.Client
 
         public void Dispose()
         {
+            log.Info("Disposing object with id {0}", id);
             var disp = Interlocked.Exchange(ref updateLock, null);
             if (disp != null) {
                 disp.Dispose();
@@ -238,6 +242,7 @@ namespace Shimmer.Client
         ~UpdateManager()
         {
             if (updateLock != null) {
+                log.Info("Destructor hit with id {0} not disposed", id);
                 throw new Exception("You must dispose UpdateManager!");
             }
         }
