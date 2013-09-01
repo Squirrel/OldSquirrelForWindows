@@ -52,12 +52,16 @@ namespace Shimmer.Client
             // this rigamarole is so that developers don't have to rebuild the 
             // installer as often (never, technically).
 
-            return executeInstall(currentAssemblyDir, bundledPackageMetadata, progress)
+            return executeInstall(currentAssemblyDir, bundledPackageMetadata, progress: progress)
                 .ToObservable()
                 .ObserveOn(RxApp.DeferredScheduler);
         }
 
-        async Task<List<string>> executeInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null)
+        async Task<List<string>> executeInstall(
+            string currentAssemblyDir,
+            IPackage bundledPackageMetadata,
+            bool ignoreDeltaUpdates = false,
+            IObserver<int> progress = null)
         {
             var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
 
@@ -88,7 +92,7 @@ namespace Shimmer.Client
                     .Select(x => (int) x)
                     .Subscribe(progress);
 
-                var updateInfo = await eigenUpdater.CheckForUpdate(progress: eigenCheckProgress);
+                var updateInfo = await eigenUpdater.CheckForUpdate(ignoreDeltaUpdates, eigenCheckProgress);
 
                 log.Info("The checking of releases completed - and there was much rejoicing");
 
