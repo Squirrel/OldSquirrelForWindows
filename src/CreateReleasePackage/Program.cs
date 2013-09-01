@@ -29,6 +29,8 @@ namespace CreateReleasePackage
                 optParams["pkgdir"] != "" ? optParams["pkgdir"] : null,
                 input => (new Markdown()).Transform(input));
 
+            Console.WriteLine(fullRelease);
+
             var releaseFile = Path.Combine(targetDir, "RELEASES");
             if (File.Exists(releaseFile)) {
                 var releaseEntries = ReleaseEntry.ParseReleaseFile(File.ReadAllText(releaseFile, Encoding.UTF8));
@@ -48,7 +50,7 @@ namespace CreateReleasePackage
                 
             ReleaseEntry.BuildReleasesFile(targetDir);
 
-            Console.WriteLine(fullRelease);
+
             return 0;
         }
     }
