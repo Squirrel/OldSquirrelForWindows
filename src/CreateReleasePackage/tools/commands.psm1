@@ -3,6 +3,7 @@ $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
 
 $wixDir = Join-Path $toolsDir "wix"
 $support = Join-Path $toolsDir "support.ps1"
+$echoArgs = Join-Path $toolsDir "EchoArgs.exe"
 
 $candleExe = Join-Path $wixDir "candle.exe"
 $lightExe = Join-Path $wixDir "light.exe"
@@ -97,7 +98,7 @@ function Create-ReleaseForProject {
     Remove-ItemSafe "$buildDirectory\template.wixobj"
 
     Write-Message "Running candle.exe"
-    & $candleExe "-d`"ToolsDir=$toolsDir`"" "-d`"ReleasesFile=$releaseDir\RELEASES`"" "-d`"NuGetFullPackage=$latestFullRelease`"" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" $wixTemplate		
+    & $candleExe -d"ToolsDir=$toolsDir" -d"ReleasesFile=$releaseDir\RELEASES" -d"NuGetFullPackage=$latestFullRelease" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
 
     Write-Message "Running light.exe"
     & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
