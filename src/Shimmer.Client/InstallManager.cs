@@ -52,9 +52,17 @@ namespace Shimmer.Client
             // this rigamarole is so that developers don't have to rebuild the 
             // installer as often (never, technically).
 
-            return executeInstall(currentAssemblyDir, bundledPackageMetadata, progress: progress)
-                .ToObservable()
-                .ObserveOn(RxApp.DeferredScheduler);
+            var updateUsingDeltas =
+                executeInstall(currentAssemblyDir, bundledPackageMetadata, progress: progress)
+                        .ToObservable()
+                        .ObserveOn(RxApp.DeferredScheduler)
+                        .Catch<List<string>, Exception>(ex => {
+                    log.WarnException("Updating using deltas has failed", ex);
+                    return executeInstall(currentAssemblyDir, bundledPackageMetadata, true, progress)
+                                 .ToObservable();
+            });
+
+            return updateUsingDeltas;
         }
 
         async Task<List<string>> executeInstall(
