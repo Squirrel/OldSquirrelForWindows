@@ -36,10 +36,16 @@ namespace Shimmer.Tests.Core
                 refs.ShouldEqual(0);
 
                 this.Log().Info("Files in release package:");
-                pkg.GetFiles().ForEach(x => this.Log().Info(x.Path));
 
-                pkg.GetFiles().Any(x => x.Path.ToLowerInvariant().Contains(@"lib\sl")).ShouldBeFalse();
-                pkg.GetFiles().Any(x => x.Path.ToLowerInvariant().Contains(@".xml")).ShouldBeFalse();
+                List<IPackageFile> files = pkg.GetFiles().ToList();
+                files.ForEach(x => this.Log().Info(x.Path));
+
+                List<string> nonDesktopPaths = new[] {"sl", "winrt", "netcore", "win8", "windows8", "MonoAndroid", "MonoTouch", "MonoMac", "wp", }
+                    .Select(x => @"lib\" + x)
+                    .ToList();
+
+                files.Any(x => nonDesktopPaths.Any(y => x.Path.ToLowerInvariant().Contains(y.ToLowerInvariant()))).ShouldBeFalse();
+                files.Any(x => x.Path.ToLowerInvariant().Contains(@".xml")).ShouldBeFalse();
             } finally {
                 File.Delete(outputPackage);
             }
