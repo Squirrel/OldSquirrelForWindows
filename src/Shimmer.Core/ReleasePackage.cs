@@ -209,19 +209,30 @@ namespace Shimmer.Core
             return findPackageFromNameInList(id, versionSpec, localPackages) ?? findPackageFromNameInList(id, versionSpec, machineCache);
         }
 
-        IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
+        static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
         {
-            // Apply a VersionSpec to a specific Version (this code is nicked 
-            // from NuGet)
             return packageList.Where(x => x.Id == id).ToArray().FirstOrDefault(x => {
-                if (((versionSpec != null) && (versionSpec.MinVersion != null)) && (versionSpec.MaxVersion != null)) {
-                    if ((!versionSpec.IsMaxInclusive || !versionSpec.IsMinInclusive) && (versionSpec.MaxVersion == versionSpec.MinVersion)) {
-                        return false;
+                if (((versionSpec != null))) {
+
+                    bool minVersion;
+                    if (versionSpec.MinVersion == null) {
+                        minVersion = true; // no preconditon? LET'S DO IT
+                    } else if (versionSpec.IsMinInclusive) {
+                        minVersion = x.Version >= versionSpec.MinVersion;
+                    } else {
+                        minVersion = x.Version > versionSpec.MinVersion;
                     }
 
-                    if (versionSpec.MaxVersion < versionSpec.MinVersion) {
-                        return false;
+                    bool maxVersion;
+                    if (versionSpec.MaxVersion == null) {
+                        maxVersion = true; // no preconditon? LET'S DO IT
+                    } else if (versionSpec.IsMaxInclusive) {
+                        maxVersion = x.Version <= versionSpec.MaxVersion;
+                    } else {
+                        maxVersion = x.Version < versionSpec.MaxVersion;
                     }
+
+                    return maxVersion && minVersion;
                 }
 
                 return true;
