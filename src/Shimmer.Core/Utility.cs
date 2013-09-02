@@ -20,6 +20,11 @@ namespace Shimmer.Core
 {
     public static class Utility
     {
+        static IRxUIFullLogger Log()
+        {
+            return LogManager.GetLogger(typeof(Utility));
+        }
+
         public static IEnumerable<FileInfo> GetAllFilesRecursively(this DirectoryInfo rootPath)
         {
             Contract.Requires(rootPath != null);
@@ -65,8 +70,7 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(to));
 
             if (!File.Exists(from)) {
-                LogManager.GetLogger(typeof(Utility))
-                          .Warn("The file {0} does not exist", from);
+                Log().Warn("The file {0} does not exist", from);
 
                 // TODO: should we fail this operation?
                 return Observable.Return(Unit.Default);
@@ -140,7 +144,15 @@ namespace Shimmer.Core
             string[] dirs = Directory.GetDirectories(directoryPath);
 
             foreach (string file in files) {
-                File.SetAttributes(file, FileAttributes.Normal);
+                try {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                }
+                catch (UnauthorizedAccessException ex) {
+                    var message = String.Format("Could not set attributes on file {0}", file);
+                    Log().ErrorException(message, ex);
+                    continue;
+                }
+
                 string filePath = file;
                 (new Action(() => File.Delete(Path.Combine(directoryPath, filePath)))).Retry();
             }
@@ -187,8 +199,7 @@ namespace Shimmer.Core
             if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT))
                 return;
 
-            LogManager.GetLogger(typeof(Utility))
-                .Error("The file {0} could not be deleted by MoveFileEx", name);
+            Log().Error("The file {0} could not be deleted by MoveFileEx", name);
 
             throw new Win32Exception();
         }
