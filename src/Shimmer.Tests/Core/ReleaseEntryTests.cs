@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using Moq;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;
 using Xunit;
@@ -63,6 +62,98 @@ namespace Shimmer.Tests.Core
             var path = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
             var fixture = ReleaseEntry.GenerateFromFile(path);
             Assert.Throws<Exception>(() => fixture.GetReleaseNotes(IntegrationTestHelper.GetPath("fixtures")));
+        }
+
+        [Fact]
+        public void GetLatestReleaseWithNullCollectionReturnsNull()
+        {
+            Assert.Null(ReleaseEntry.GetPreviousRelease(
+                null, null, null));
+        }
+
+        [Fact]
+        public void GetLatestReleaseWithEmptyCollectionReturnsNull()
+        {
+            Assert.Null(ReleaseEntry.GetPreviousRelease(
+                Enumerable.Empty<ReleaseEntry>(), null, null));
+        }
+
+        [Fact]
+        public void WhenCurrentReleaseMatchesLastReleaseReturnNull()
+        {
+            var package = Mock.Of<IReleasePackage>(
+                r => r.InputPackageFile == "Espera-1.7.6-beta.nupkg");
+
+            var releaseEntries = new[] {
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.6-beta.nupkg"))
+            };
+            Assert.Null(ReleaseEntry.GetPreviousRelease(
+                releaseEntries, package, @"C:\temp\somefolder"));
+        }
+
+        [Fact]
+        public void WhenMultipleReleaseMatchesReturnEarlierResult()
+        {
+            var expected = new Version("1.7.5");
+            var package = Mock.Of<IReleasePackage>(
+                r => r.InputPackageFile == "Espera-1.7.6-beta.nupkg");
+
+            var releaseEntries = new[] {
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.6-beta.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.5-beta.nupkg"))
+            };
+
+            var actual = ReleaseEntry.GetPreviousRelease(
+                releaseEntries,
+                package,
+                @"C:\temp\");
+
+            Assert.Equal(expected, actual.Version);
+        }
+
+        [Fact]
+        public void WhenMultipleReleasesFoundReturnPreviousVersion()
+        {
+            var expected = new Version("1.7.6");
+            var input = Mock.Of<IReleasePackage>(
+                r => r.InputPackageFile == "Espera-1.7.7-beta.nupkg");
+
+            var releaseEntries = new[] {
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.6-beta.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.5-beta.nupkg"))
+            };
+
+            var actual = ReleaseEntry.GetPreviousRelease(
+                releaseEntries,
+                input,
+                @"C:\temp\");
+
+            Assert.Equal(expected, actual.Version);
+        }
+
+        [Fact]
+        public void WhenMultipleReleasesFoundInOtherOrderReturnPreviousVersion()
+        {
+            var expected = new Version("1.7.6");
+            var input = Mock.Of<IReleasePackage>(
+                r => r.InputPackageFile == "Espera-1.7.7-beta.nupkg");
+
+            var releaseEntries = new[] {
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.5-beta.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.7.6-beta.nupkg"))
+            };
+
+            var actual = ReleaseEntry.GetPreviousRelease(
+                releaseEntries,
+                input,
+                @"C:\temp\");
+
+            Assert.Equal(expected, actual.Version);
+        }
+
+        static string MockReleaseEntry(string name)
+        {
+            return string.Format("94689fede03fed7ab59c24337673a27837f0c3ec  {0}  1004502", name);
         }
     }
 }

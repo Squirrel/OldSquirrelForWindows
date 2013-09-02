@@ -9,6 +9,11 @@ namespace Shimmer.Core.Extensions
 {
     public static class VersionExtensions
     {
+        public static Version ToVersion(this IReleasePackage package)
+        {
+            return package.InputPackageFile.ToVersion();
+        }
+
         public static Version ToVersion(this string fileName)
         {
             var parts = (new FileInfo(fileName)).Name

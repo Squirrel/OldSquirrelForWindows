@@ -173,5 +173,18 @@ namespace Shimmer.Core
         {
             return filename.EndsWith("-delta.nupkg", StringComparison.InvariantCultureIgnoreCase);
         }
+
+        public static ReleasePackage GetPreviousRelease(IEnumerable<ReleaseEntry> releaseEntries, IReleasePackage package, string targetDir)
+        {
+            if (releaseEntries == null || !releaseEntries.Any())
+                return null;
+
+            return releaseEntries
+                    .Where(x => x.IsDelta == false)
+                    .Where(x => x.Version < package.ToVersion())
+                    .OrderByDescending(x => x.Version)
+                    .Select(x => new ReleasePackage(Path.Combine(targetDir, x.Filename), true))
+                    .FirstOrDefault();
+        }
     }
 }
