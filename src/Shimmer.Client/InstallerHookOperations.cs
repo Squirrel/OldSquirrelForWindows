@@ -154,6 +154,7 @@ namespace Shimmer.Client
                          return x.GetTypes().Where(y => typeof (IAppSetup).IsAssignableFrom(y));
                      } catch (ReflectionTypeLoadException ex) {
                          log.WarnException("Couldn't load types from module", ex);
+                         ex.LoaderExceptions.ForEach(lex => log.WarnException("LoaderException: ", lex));
                          return Enumerable.Empty<Type>();
                      }
                 })
