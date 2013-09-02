@@ -1,14 +1,15 @@
-﻿using System;
+﻿using System.Runtime.Versioning;
+using MarkdownSharp;
+using NuGet;
+using ReactiveUI;
+using Shimmer.Core;
+using Shimmer.Tests.TestHelpers;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using MarkdownSharp;
-using ReactiveUI;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
-using NuGet;
 using Xunit;
 
 namespace Shimmer.Tests.Core
@@ -162,6 +163,54 @@ namespace Shimmer.Tests.Core
                 htmlText.Contains("## Release Notes").ShouldBeFalse();
             } finally {
                 File.Delete(targetFile);
+            }
+        }
+
+        [Fact]
+        public void UsesTheRightVersionOfADependencyWhenMultipleAreInPackages()
+        {
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+            string outputFile = null;
+
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "CaliburnMicroDemo.1.0.0.nupkg");
+
+            var wrongPackage = "Caliburn.Micro.1.4.1.nupkg";
+            var wrongPackagePath = IntegrationTestHelper.GetPath("fixtures", wrongPackage);
+            var rightPackage = "Caliburn.Micro.1.5.2.nupkg";
+            var rightPackagePath = IntegrationTestHelper.GetPath("fixtures", rightPackage);
+
+            try {
+                var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+                (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+                File.Copy(wrongPackagePath, Path.Combine(sourceDir, wrongPackage), true);
+                File.Copy(rightPackagePath, Path.Combine(sourceDir, rightPackage), true);
+
+                var package = new ReleasePackage(inputPackage);
+                var outputFileName = package.CreateReleasePackage(outputPackage, sourceDir);
+
+                var zipPackage = new ZipPackage(outputFileName);
+
+                var fileName = "Caliburn.Micro.dll";
+                var dependency = zipPackage.GetLibFiles()
+                    .Where(f => f.Path.EndsWith(fileName))
+                    .Single(f => f.TargetFramework 
+                        == new FrameworkName(".NETFramework,Version=v4.0"));
+
+                outputFile = new FileInfo(Path.Combine(sourceDir, fileName)).FullName;
+
+                using (var of = File.Create(outputFile))
+                {
+                    dependency.GetStream().CopyTo(of);
+                }
+
+                var assemblyName = AssemblyName.GetAssemblyName(outputFile);
+                Assert.Equal(1, assemblyName.Version.Major);
+                Assert.Equal(5, assemblyName.Version.Minor);
+            }
+            finally {
+                File.Delete(outputPackage);
+                File.Delete(outputFile);
             }
         }
     }
