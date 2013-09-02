@@ -33,26 +33,18 @@ namespace CreateReleasePackage
 
             var releaseFile = Path.Combine(targetDir, "RELEASES");
             if (File.Exists(releaseFile)) {
-                var releaseEntries = ReleaseEntry.ParseReleaseFile(File.ReadAllText(releaseFile, Encoding.UTF8));
+                var releasesText = File.ReadAllText(releaseFile, Encoding.UTF8);
+                var releaseEntries = ReleaseEntry.ParseReleaseFile(releasesText);
 
-                if (releaseEntries.Any()) {
+                var previousFullRelease = ReleaseEntry.GetPreviousRelease(releaseEntries, package, targetDir);
 
-                    var previousFullRelease = releaseEntries
-                        .Where(x => x.IsDelta == false)
-                        .Where(x => x.Version < package.Version)
-                        .MaxBy(x => x.Version)
-                        .Select(x => new ReleasePackage(Path.Combine(targetDir, x.Filename), true))
-                        .FirstOrDefault();
+                if (previousFullRelease != null) {
+                    var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
+                    Console.WriteLine("{0}; {1}", previousFullRelease.InputPackageFile, deltaFile);
 
-                    if (previousFullRelease != null) {
-                        var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
-                        Console.WriteLine("{0}; {1}", previousFullRelease.InputPackageFile, deltaFile);
-
-                        var deltaBuilder = new DeltaPackageBuilder();
-                        deltaBuilder.CreateDeltaPackage(previousFullRelease, package, deltaFile);
-                    }
+                    var deltaBuilder = new DeltaPackageBuilder();
+                    deltaBuilder.CreateDeltaPackage(previousFullRelease, package, deltaFile);
                 }
-
             }
 
             ReleaseEntry.BuildReleasesFile(targetDir);
