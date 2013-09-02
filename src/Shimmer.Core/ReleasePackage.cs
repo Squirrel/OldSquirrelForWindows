@@ -27,7 +27,7 @@ namespace Shimmer.Core
 
     public static class VersionComparer
     {
-        public static bool Compare(IVersionSpec versionSpec, SemanticVersion version)
+        public static bool Matches(IVersionSpec versionSpec, SemanticVersion version)
         {
             if (versionSpec == null)
                 return true; // I CAN'T DEAL WITH THIS
@@ -241,7 +241,7 @@ namespace Shimmer.Core
         static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
         {
             return packageList.Where(x => x.Id == id).ToArray()
-                .FirstOrDefault(x => VersionComparer.Compare(versionSpec, x.Version));
+                .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));
         }
 
         static internal void addDeltaFilesToContentTypes(string rootDirectory)

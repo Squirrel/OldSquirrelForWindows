@@ -19,28 +19,28 @@ namespace Shimmer.Tests.Core
 
                 // from http://docs.nuget.org/docs/reference/versioning
                 // 1.0  = 1.0 ≤ x
-                Assert.True(VersionComparer.Compare(convert("1.0"), version));
+                Assert.True(VersionComparer.Matches(convert("1.0"), version));
 
                 // (,1.0]  = x ≤ 1.0
-                Assert.True(VersionComparer.Compare(convert("(,1.0]"), version));
+                Assert.True(VersionComparer.Matches(convert("(,1.0]"), version));
 
                 // (,1.0)  = x < 1.0
-                Assert.False(VersionComparer.Compare(convert("(,1.0)"), version));
+                Assert.False(VersionComparer.Matches(convert("(,1.0)"), version));
 
                 // [1.0] = x == 1.0
-                Assert.True(VersionComparer.Compare(convert("[1.0]"), version));
+                Assert.True(VersionComparer.Matches(convert("[1.0]"), version));
                 
                 // (1.0,) = 1.0 < x
-                Assert.False(VersionComparer.Compare(convert("(1.0,)"), version));
+                Assert.False(VersionComparer.Matches(convert("(1.0,)"), version));
 
                 // (1.0,2.0) = 1.0 < x < 2.0
-                Assert.False(VersionComparer.Compare(convert("(1.0,2.0)"), version));
+                Assert.False(VersionComparer.Matches(convert("(1.0,2.0)"), version));
 
                 // [1.0,2.0] = 1.0 ≤ x ≤ 2.0
-                Assert.True(VersionComparer.Compare(convert("[1.0,2.0]"), version));
+                Assert.True(VersionComparer.Matches(convert("[1.0,2.0]"), version));
 
                 // empty = latest version.
-                Assert.True(VersionComparer.Compare(null, version));
+                Assert.True(VersionComparer.Matches(null, version));
             }
 
             [Fact]
@@ -50,28 +50,28 @@ namespace Shimmer.Tests.Core
 
                 // from http://docs.nuget.org/docs/reference/versioning
                 // 1.0  = 1.0 ≤ x
-                Assert.False(VersionComparer.Compare(convert("1.0"), version));
+                Assert.False(VersionComparer.Matches(convert("1.0"), version));
 
                 // (,1.0]  = x ≤ 1.0
-                Assert.True(VersionComparer.Compare(convert("(,1.0]"), version));
+                Assert.True(VersionComparer.Matches(convert("(,1.0]"), version));
 
                 // (,1.0)  = x < 1.0
-                Assert.True(VersionComparer.Compare(convert("(,1.0)"), version));
+                Assert.True(VersionComparer.Matches(convert("(,1.0)"), version));
 
                 // [1.0] = x == 1.0
-                Assert.False(VersionComparer.Compare(convert("[1.0]"), version));
+                Assert.False(VersionComparer.Matches(convert("[1.0]"), version));
 
                 // (1.0,) = 1.0 < x
-                Assert.False(VersionComparer.Compare(convert("(1.0,) "), version));
+                Assert.False(VersionComparer.Matches(convert("(1.0,) "), version));
 
                 // (1.0,2.0) = 1.0 < x < 2.0
-                Assert.False(VersionComparer.Compare(convert("(1.0,2.0) "), version));
+                Assert.False(VersionComparer.Matches(convert("(1.0,2.0) "), version));
 
                 // [1.0,2.0] = 1.0 ≤ x ≤ 2.0
-                Assert.False(VersionComparer.Compare(convert("[1.0,2.0]"), version));
+                Assert.False(VersionComparer.Matches(convert("[1.0,2.0]"), version));
 
                 // empty = latest version.
-                Assert.True(VersionComparer.Compare(null, version));
+                Assert.True(VersionComparer.Matches(null, version));
             }
 
             [Fact]
