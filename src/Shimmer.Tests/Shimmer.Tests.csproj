@@ -185,6 +185,7 @@
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
     <Compile Include="Core\UtilityTests.cs" />
+    <Compile Include="Core\VersionComparerTests.cs" />
     <Compile Include="Release\ParseCommandsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticHttpServer.cs" />
