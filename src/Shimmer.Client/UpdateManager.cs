@@ -462,10 +462,6 @@ namespace Shimmer.Client
                 return false;
             }
 
-            if (packageFile.Path.StartsWith("lib\\winrt45", StringComparison.InvariantCultureIgnoreCase)) {
-                return false;
-            }
-
             return true;
         }
 
