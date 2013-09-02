@@ -35,7 +35,9 @@ function Create-ReleaseForProject {
 
     Write-Message "Checking $buildDirectory for packages`n"
 
-    $nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
+    $nugetPackages = ls "$buildDirectory\*.nupkg" `
+        | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false } `
+        | sort @{expression={$_.LastWriteTime};Descending=$false}
 
     if ($nugetPackages.length -eq 0) {
         Write-Error "No .nupkg files were found in the build directory"
