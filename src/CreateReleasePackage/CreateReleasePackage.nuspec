@@ -26,7 +26,6 @@
 
     <file src="keep.me" target="content" />
 
-    <file src="..\..\bin\CreateReleasePackage.exe" target="tools" />
     <file src="..\..\bin\Ionic.Zip.dll" target="tools" />
     <file src="..\..\bin\MarkdownSharp.dll" target="tools" />
     <file src="..\..\bin\NuGet.Core.dll" target="tools" />
