@@ -119,5 +119,43 @@ namespace Shimmer.Tests.Core
                 tempFiles.ForEach(File.Delete);
             }
         }
+
+
+
+        [Fact]
+        public void WhenBasePackageIsNewerThanNewPackageThrowException()
+        {
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            var baseFixture = new ReleasePackage(basePackage);
+            var fixture = new ReleasePackage(newPackage);
+
+            var tempFiles = Enumerable.Range(0, 3)
+                .Select(_ => Path.GetTempPath() + Guid.NewGuid().ToString() + ".nupkg")
+                .ToArray();
+
+            try
+            {
+                baseFixture.CreateReleasePackage(tempFiles[0], sourceDir);
+                fixture.CreateReleasePackage(tempFiles[1], sourceDir);
+
+                (new FileInfo(baseFixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+                (new FileInfo(fixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    var deltaBuilder = new DeltaPackageBuilder();
+                    deltaBuilder.CreateDeltaPackage(baseFixture, fixture, tempFiles[2]);
+                });
+            }
+            finally
+            {
+                tempFiles.ForEach(File.Delete);
+            }
+        }
     }
 }

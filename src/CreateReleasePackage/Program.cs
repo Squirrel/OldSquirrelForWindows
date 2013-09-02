@@ -35,21 +35,23 @@ namespace CreateReleasePackage
             if (File.Exists(releaseFile)) {
                 var releaseEntries = ReleaseEntry.ParseReleaseFile(File.ReadAllText(releaseFile, Encoding.UTF8));
 
-                var latestFullRelease = releaseEntries
+                var previousFullRelease = releaseEntries
                     .Where(x => x.IsDelta == false)
+                    .Where(x => x.Version < package.Version)
                     .MaxBy(x => x.Version)
                     .Select(x => new ReleasePackage(Path.Combine(targetDir, x.Filename), true))
                     .FirstOrDefault();
 
-                var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
-                Console.WriteLine("{0}; {1}", latestFullRelease.InputPackageFile, deltaFile);
+                if (previousFullRelease != null) {
+                    var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
+                    Console.WriteLine("{0}; {1}", previousFullRelease.InputPackageFile, deltaFile);
 
-                var deltaBuilder = new DeltaPackageBuilder();
-                deltaBuilder.CreateDeltaPackage(package, latestFullRelease, deltaFile);
+                    var deltaBuilder = new DeltaPackageBuilder();
+                    deltaBuilder.CreateDeltaPackage(previousFullRelease, package, deltaFile);
+                }
             }
-                
-            ReleaseEntry.BuildReleasesFile(targetDir);
 
+            ReleaseEntry.BuildReleasesFile(targetDir);
 
             return 0;
         }

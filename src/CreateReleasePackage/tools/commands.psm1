@@ -35,7 +35,9 @@ function Create-ReleaseForProject {
 
     Write-Message "Checking $buildDirectory for packages`n"
 
-    $nugetPackages = ls "$buildDirectory\*.nupkg" | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false }
+    $nugetPackages = ls "$buildDirectory\*.nupkg" `
+        | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false } `
+        | sort @{expression={$_.LastWriteTime};Descending=$false}
 
     if ($nugetPackages.length -eq 0) {
         Write-Error "No .nupkg files were found in the build directory"
@@ -56,13 +58,13 @@ function Create-ReleaseForProject {
 
     foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
-
-		$packageDir = Join-Path $solutionDir "packages"
-		$releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
+       
+        $packageDir = Join-Path $solutionDir "packages"
+        $releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         $packages = $releaseOutput.Split(";")
-
         $fullRelease = $packages[0]
+
         Write-Host ""
         Write-Message "Full release: $fullRelease"
 
