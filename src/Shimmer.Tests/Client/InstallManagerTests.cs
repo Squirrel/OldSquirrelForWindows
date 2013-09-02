@@ -105,5 +105,23 @@ namespace Shimmer.Tests.Client
                 di.GetFiles().Any().ShouldBeFalse();
             }
         }
+
+        [Fact]
+        public void UninstallDoesntCrashOnMissingAppDirectory()
+        {
+            string dir;
+            string appDir;
+            InstallManager fixture;
+
+            using (IntegrationTestHelper.WithFakeInstallDirectory(out dir))
+            using (IntegrationTestHelper.WithFakeAlreadyInstalledApp(out appDir)) {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                fixture = new InstallManager(bundledRelease, appDir);
+            }
+            
+            fixture.ExecuteUninstall().First();
+        }
     }
 }
