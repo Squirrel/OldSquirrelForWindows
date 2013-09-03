@@ -82,7 +82,7 @@ namespace Shimmer.Tests.Client
                 }
             }
 
-            [Fact(Skip="This test is touching a fair bit of internals")]
+            [Fact]
             public void WhenRemoteReleasesDoNotHaveDeltasNoUpdatesAreApplied()
             {
                 string tempDir;
