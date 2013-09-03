@@ -14,4 +14,8 @@
     <copyright>Copyright 2012 GitHub</copyright>
     <tags>Installer Desktop WiX</tags>
   </metadata>
+
+  <files>
+    <file src="..\..\bin\Ionic.Zip.dll" target="lib\net40\" />
+  </files>
 </package>
