@@ -25,6 +25,35 @@ namespace Shimmer.Core
         string CreateReleasePackage(string outputFile, string packagesRootDir = null, Func<string, string> releaseNotesProcessor = null);
     }
 
+    public static class VersionComparer
+    {
+        public static bool Matches(IVersionSpec versionSpec, SemanticVersion version)
+        {
+            if (versionSpec == null)
+                return true; // I CAN'T DEAL WITH THIS
+
+            bool minVersion;
+            if (versionSpec.MinVersion == null) {
+                minVersion = true; // no preconditon? LET'S DO IT
+            } else if (versionSpec.IsMinInclusive) {
+                minVersion = version >= versionSpec.MinVersion;
+            } else {
+                minVersion = version > versionSpec.MinVersion;
+            }
+
+            bool maxVersion;
+            if (versionSpec.MaxVersion == null) {
+                maxVersion = true; // no preconditon? LET'S DO IT
+            } else if (versionSpec.IsMaxInclusive) {
+                maxVersion = version <= versionSpec.MaxVersion;
+            } else {
+                maxVersion = version < versionSpec.MaxVersion;
+            }
+
+            return maxVersion && minVersion;
+        }
+    }
+
     public class ReleasePackage : IEnableLogger, IReleasePackage
     {
         public ReleasePackage(string inputPackageFile, bool isReleasePackage = false)
@@ -209,23 +238,10 @@ namespace Shimmer.Core
             return findPackageFromNameInList(id, versionSpec, localPackages) ?? findPackageFromNameInList(id, versionSpec, machineCache);
         }
 
-        IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
+        static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
         {
-            // Apply a VersionSpec to a specific Version (this code is nicked 
-            // from NuGet)
-            return packageList.Where(x => x.Id == id).ToArray().FirstOrDefault(x => {
-                if (((versionSpec != null) && (versionSpec.MinVersion != null)) && (versionSpec.MaxVersion != null)) {
-                    if ((!versionSpec.IsMaxInclusive || !versionSpec.IsMinInclusive) && (versionSpec.MaxVersion == versionSpec.MinVersion)) {
-                        return false;
-                    }
-
-                    if (versionSpec.MaxVersion < versionSpec.MinVersion) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
+            return packageList.Where(x => x.Id == id).ToArray()
+                .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));
         }
 
         static internal void addDeltaFilesToContentTypes(string rootDirectory)
