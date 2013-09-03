@@ -133,7 +133,7 @@ namespace Shimmer.Core
 
         public static void DeleteDirectory(string directoryPath)
         {
-            Contract.Requires(!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath));
+            Contract.Requires(!String.IsNullOrEmpty(directoryPath));
 
             if (!Directory.Exists(directoryPath)) {
                 LogManager.GetLogger(typeof(Utility))
