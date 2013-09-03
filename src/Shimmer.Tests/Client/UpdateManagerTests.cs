@@ -170,20 +170,16 @@ namespace Shimmer.Tests.Client
                         fixture.UpdateLocalReleasesFile().Last();
                         ReleaseEntry.BuildReleasesFile(remotePackages);
 
-                        // check for an update
                         updateInfo = fixture.CheckForUpdate().Wait();
-                    }
 
-                    Assert.True(updateInfo.ReleasesToApply.First().IsDelta);
+                        Assert.True(updateInfo.ReleasesToApply.First().IsDelta);
 
-                    using (fixture)
-                    {
-                        // check for an update
                         updateInfo = fixture.CheckForUpdate(ignoreDeltaUpdates:true).Wait();
-                    }
 
-                    Assert.False(updateInfo.ReleasesToApply.First().IsDelta);
+                        Assert.False(updateInfo.ReleasesToApply.First().IsDelta);
+                    }
                 }
+
             }
         }
     }
