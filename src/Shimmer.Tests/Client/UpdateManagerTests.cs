@@ -130,6 +130,61 @@ namespace Shimmer.Tests.Client
                     Assert.Empty(updateInfo.ReleasesToApply);
                 }
             }
+
+            [Fact]
+            public void WhenTwoRemoteUpdatesAreAvailableChoosesDeltaVersion()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir))
+                {
+                    var localPackages = Path.Combine(tempDir, "theApp", "packages");
+                    var remotePackages = Path.Combine(tempDir, "releases");
+                    Directory.CreateDirectory(localPackages);
+                    Directory.CreateDirectory(remotePackages);
+
+                    new[] {
+                        "Shimmer.Core.1.0.0.0-full.nupkg",
+                    }.ForEach(x =>
+                    {
+                        var path = IntegrationTestHelper.GetPath("fixtures", x);
+                        File.Copy(path, Path.Combine(localPackages, x));
+                    });
+
+                    new[] {
+                        "Shimmer.Core.1.0.0.0-full.nupkg",
+                        "Shimmer.Core.1.1.0.0-delta.nupkg",
+                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                    }.ForEach(x =>
+                    {
+                        var path = IntegrationTestHelper.GetPath("fixtures", x);
+                        File.Copy(path, Path.Combine(remotePackages, x));
+                    });
+
+                    var urlDownloader = new Mock<IUrlDownloader>();
+                    var fixture = new UpdateManager(remotePackages, "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
+
+                    UpdateInfo updateInfo;
+                    using (fixture)
+                    {
+                        // sync both release files
+                        fixture.UpdateLocalReleasesFile().Last();
+                        ReleaseEntry.BuildReleasesFile(remotePackages);
+
+                        // check for an update
+                        updateInfo = fixture.CheckForUpdate().Wait();
+                    }
+
+                    Assert.True(updateInfo.ReleasesToApply.First().IsDelta);
+
+                    using (fixture)
+                    {
+                        // check for an update
+                        updateInfo = fixture.CheckForUpdate(ignoreDeltaUpdates:true).Wait();
+                    }
+
+                    Assert.False(updateInfo.ReleasesToApply.First().IsDelta);
+                }
+            }
         }
     }
 }
