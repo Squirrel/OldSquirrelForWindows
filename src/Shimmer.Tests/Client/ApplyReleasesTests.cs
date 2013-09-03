@@ -52,12 +52,11 @@ namespace Shimmer.Tests.Client
                 var packages = Path.Combine(tempDir, "theApp", "packages");
                 Directory.CreateDirectory(packages);
 
-                new[] {
-                    "Shimmer.Core.1.0.0.0-full.nupkg"
-                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x),
-                                         Path.Combine(packages, x)));
+                var package = "Shimmer.Core.1.0.0.0-full.nupkg";
+                File.Copy(IntegrationTestHelper.GetPath("fixtures", package),
+                          Path.Combine(packages, package));
 
-                var aGivenPackage = Path.Combine(packages, "Shimmer.Core.1.0.0.0-full.nupkg");
+                var aGivenPackage = Path.Combine(packages, package);
                 var baseEntry = ReleaseEntry.GenerateFromFile(aGivenPackage);
 
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { baseEntry }, "dontcare", FrameworkVersion.Net40);
