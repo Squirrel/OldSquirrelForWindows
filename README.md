@@ -1,5 +1,10 @@
 # Shimmer: It's like ClickOnce but Works™
 
+## Relevant Links
+
+ - [Wiki](https://github.com/github/Shimmer/wiki)
+ - [Contributing to Shimmer](https://github.com/github/Shimmer/wiki/Contributing-to-Shimmer)
+
 ## What Do We Want?
 
 Deployment and Updates for Desktop applications blow. ClickOnce almost works,
