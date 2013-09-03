@@ -67,7 +67,7 @@ function Create-ReleaseForProject {
 		$fullRelease = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         ## NB: For absolutely zero reason whatsoever, $fullRelease ends up being the full path Three times
-        $fullRelease = $fullRelease.Split(" ")[0]
+        $fullRelease = $fullRelease.Split(";")[0]
 		echo "Full release file at $fullRelease"
 
         $candleTemplate = Generate-TemplateFromPackage $pkg.FullName "$toolsDir\template.wxs"
