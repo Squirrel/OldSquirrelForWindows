@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -79,6 +80,55 @@ namespace Shimmer.Tests.Client
                     }
 
                     Assert.Null(updateInfo);
+                }
+            }
+
+            [Fact(Skip="This test is touching a fair bit of internals")]
+            public void WhenRemoteReleasesDoNotHaveDeltasNoUpdatesAreApplied()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir))
+                {
+                    var localPackages = Path.Combine(tempDir, "theApp", "packages");
+                    var remotePackages = Path.Combine(tempDir, "releases");
+                    Directory.CreateDirectory(localPackages);
+                    Directory.CreateDirectory(remotePackages);
+
+                    new[] {
+                        "Shimmer.Core.1.0.0.0-full.nupkg",
+                        "Shimmer.Core.1.1.0.0-delta.nupkg",
+                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                    }.ForEach(x =>
+                    {
+                        var path = IntegrationTestHelper.GetPath("fixtures", x);
+                        File.Copy(path, Path.Combine(localPackages, x));
+                    });
+
+                    new[] {
+                        "Shimmer.Core.1.0.0.0-full.nupkg",
+                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                    }.ForEach(x =>
+                    {
+                        var path = IntegrationTestHelper.GetPath("fixtures", x);
+                        File.Copy(path, Path.Combine(remotePackages, x));
+                    });
+
+                    var urlDownloader = new Mock<IUrlDownloader>();
+                    var fixture = new UpdateManager(remotePackages, "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
+
+                    UpdateInfo updateInfo;
+                    using (fixture)
+                    {
+                        // sync both release files
+                        fixture.UpdateLocalReleasesFile().Last();
+                        ReleaseEntry.BuildReleasesFile(remotePackages);
+
+                        // check for an update
+                        updateInfo = fixture.CheckForUpdate().Wait();
+                    }
+
+                    Assert.NotNull(updateInfo);
+                    Assert.Empty(updateInfo.ReleasesToApply);
                 }
             }
         }
