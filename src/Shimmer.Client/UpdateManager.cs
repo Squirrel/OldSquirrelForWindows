@@ -317,7 +317,7 @@ namespace Shimmer.Client
                 return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory, appFrameworkVersion));
             }
 
-            if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
+            if (localReleases.Max(x => x.Version) > remoteReleases.Max(x => x.Version)) {
                 log.Warn("hwhat, local version is greater than remote version");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
