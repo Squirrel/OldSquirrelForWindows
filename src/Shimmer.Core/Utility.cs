@@ -135,6 +135,12 @@ namespace Shimmer.Core
         {
             Contract.Requires(!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath));
 
+            if (!Directory.Exists(directoryPath)) {
+                LogManager.GetLogger(typeof(Utility))
+                    .Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                return;
+            }
+
             // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
             string[] files = Directory.GetFiles(directoryPath);
             string[] dirs = Directory.GetDirectories(directoryPath);
