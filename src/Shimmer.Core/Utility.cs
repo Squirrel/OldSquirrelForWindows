@@ -65,8 +65,7 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(to));
 
             if (!File.Exists(from)) {
-                LogManager.GetLogger(typeof(Utility))
-                          .Warn("The file {0} does not exist", from);
+                Log().Warn("The file {0} does not exist", from);
 
                 // TODO: should we fail this operation?
                 return Observable.Return(Unit.Default);
@@ -136,8 +135,7 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath));
 
             if (!Directory.Exists(directoryPath)) {
-                LogManager.GetLogger(typeof(Utility))
-                    .Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
                 return;
             }
 
@@ -160,8 +158,7 @@ namespace Shimmer.Core
                 Directory.Delete(directoryPath, false);
             } catch (Exception ex) {
                 var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
-                LogManager.GetLogger(typeof(Utility))
-                    .ErrorException(message, ex);
+                Log().ErrorException(message, ex);
                 throw;
             }
         }
@@ -189,8 +186,7 @@ namespace Shimmer.Core
             var di = new DirectoryInfo(directoryPath);
 
             if (!di.Exists) {
-                LogManager.GetLogger(typeof(Utility))
-                    .Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
                 return;
             }
 
@@ -205,10 +201,14 @@ namespace Shimmer.Core
         {
             if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
 
-            LogManager.GetLogger(typeof(Utility))
-                .Error("safeDeleteFileAtNextDir: failed - {0}", name);
+            Log().Error("safeDeleteFileAtNextDir: failed - {0}", name);
 
             throw new Win32Exception();
+        }
+
+        static IRxUIFullLogger Log()
+        {
+            return LogManager.GetLogger(typeof(Utility));
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
