@@ -191,17 +191,17 @@ namespace Shimmer.Core
             }
 
             // NB: MoveFileEx blows up if you're a non-admin, so you always need a backup plan
-            di.GetFiles().ForEach(x => safeDeleteFileAtNextDir(x.FullName));
+            di.GetFiles().ForEach(x => safeDeleteFileAtNextReboot(x.FullName));
             di.GetDirectories().ForEach(x => DeleteDirectoryAtNextReboot(x.FullName));
 
-            safeDeleteFileAtNextDir(directoryPath);
+            safeDeleteFileAtNextReboot(directoryPath);
         }
 
-        static void safeDeleteFileAtNextDir(string name)
+        static void safeDeleteFileAtNextReboot(string name)
         {
             if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
 
-            Log().Error("safeDeleteFileAtNextDir: failed - {0}", name);
+            Log().Error("safeDeleteFileAtNextReboot: failed - {0}", name);
 
             throw new Win32Exception();
         }
