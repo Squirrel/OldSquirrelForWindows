@@ -156,7 +156,14 @@ namespace Shimmer.Core
             }
 
             File.SetAttributes(directoryPath, FileAttributes.Normal);
-            Directory.Delete(directoryPath, false);
+            try {
+                Directory.Delete(directoryPath, false);
+            } catch (Exception ex) {
+                var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
+                LogManager.GetLogger(typeof(Utility))
+                    .ErrorException(message, ex);
+                throw;
+            }
         }
 
         public static Tuple<string, Stream> CreateTempFile()
