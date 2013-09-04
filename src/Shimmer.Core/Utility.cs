@@ -203,7 +203,12 @@ namespace Shimmer.Core
 
         static void safeDeleteFileAtNextDir(string name)
         {
-            if (!MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) throw new Win32Exception();
+            if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
+
+            LogManager.GetLogger(typeof(Utility))
+                .Error("safeDeleteFileAtNextDir: failed - {0}", name);
+
+            throw new Win32Exception();
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
