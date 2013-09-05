@@ -16,9 +16,11 @@ namespace Shimmer.Client
         readonly IFileSystemFactory fileSystem;
         readonly string applicationName;
 
-        public InstallerHookOperations(IRxUIFullLogger log, IFileSystemFactory fileSystem, string applicationName)
+        public InstallerHookOperations(IFileSystemFactory fileSystem, string applicationName)
         {
-            this.log = log;
+            // XXX: ALWAYS BE LOGGING
+            this.log = new WrappingFullLogger(new FileLogger(applicationName), typeof(InstallerHookOperations));
+            
             this.fileSystem = fileSystem;
             this.applicationName = applicationName;
         }

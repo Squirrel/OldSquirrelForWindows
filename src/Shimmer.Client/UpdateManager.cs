@@ -51,7 +51,8 @@ namespace Shimmer.Client
             Contract.Requires(!String.IsNullOrEmpty(urlOrPath));
             Contract.Requires(!String.IsNullOrEmpty(applicationName));
 
-            log = LogManager.GetLogger<UpdateManager>();
+            // XXX: ALWAYS BE LOGGING
+            log = new WrappingFullLogger(new FileLogger(applicationName), typeof(UpdateManager));
 
             updateUrlOrPath = urlOrPath;
             this.applicationName = applicationName;
@@ -448,7 +449,7 @@ namespace Shimmer.Client
                 ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
             };
 
-            var installerHooks = new InstallerHookOperations(log, fileSystem, applicationName);
+            var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
             return AppDomainHelper.ExecuteInNewAppDomain(postInstallInfo, installerHooks.RunAppSetupInstallers).ToList();
         }
 
@@ -516,7 +517,7 @@ namespace Shimmer.Client
                 .OrderBy(x => x.Name)
                 .SelectMany(oldAppRoot => {
                     var path = oldAppRoot.FullName;
-                    var installerHooks = new InstallerHookOperations(log, fileSystem, applicationName);
+                    var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
 
                     var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
 
