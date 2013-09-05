@@ -101,10 +101,10 @@ namespace Shimmer.Client
             // HTTP URL
             try {
                 if (isHttpUrl(updateUrlOrPath)) {
-                    this.Log().Info("Downloading RELEASES file from {0}", updateUrlOrPath);
+                    log.Info("Downloading RELEASES file from {0}", updateUrlOrPath);
                     releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
                 } else {
-                    this.Log().Info("Reading RELEASES file from {0}", updateUrlOrPath);
+                    log.Info("Reading RELEASES file from {0}", updateUrlOrPath);
                     var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
 
                     using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
@@ -508,7 +508,7 @@ namespace Shimmer.Client
         {
             var directory = fileSystem.GetDirectoryInfo(rootAppDirectory);
             if (!directory.Exists) {
-                this.Log().Warn("The directory '{0}' does not exist", rootAppDirectory);
+                log.Warn("The directory '{0}' does not exist", rootAppDirectory);
                 return Enumerable.Empty<ShortcutCreationRequest>();
             }
             
