@@ -205,21 +205,28 @@ namespace Shimmer.Core
             xdoc.Save(specPath);
         }
 
-        IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null)
+        IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null, HashSet<string> packageCache = null)
         {
             package = package ?? new ZipPackage(InputPackageFile);
+            packageCache = packageCache ?? new HashSet<string>();
 
             var deps = package.DependencySets.SelectMany(x => x.Dependencies);
 
             return deps.SelectMany(dependency => {
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
-
+                
                 if (ret == null) {
                     this.Log().Error("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
                     return Enumerable.Empty<IPackage>();
                 }
 
-                return findAllDependentPackages(ret, packagesRootDir).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
+                if (packageCache.Contains(ret.GetFullName())) {
+                    return Enumerable.Empty<IPackage>();
+                }
+
+                packageCache.Add(ret.GetFullName());
+
+                return findAllDependentPackages(ret, packagesRootDir, packageCache).StartWith(ret).Distinct(y => y.GetFullName());
             }).ToArray();
         }
 
