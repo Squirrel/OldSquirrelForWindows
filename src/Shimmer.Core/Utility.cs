@@ -140,16 +140,29 @@ namespace Shimmer.Core
             }
 
             // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
-            string[] files = Directory.GetFiles(directoryPath);
-            string[] dirs = Directory.GetDirectories(directoryPath);
+            var files = new string[0];
+            try {
+                files = Directory.GetFiles(directoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                var message = String.Format("The files inside {0} could not be read", directoryPath);
+                Log().Warn(message, ex);
+            }
 
-            foreach (string file in files) {
+            var dirs = new string[0];
+            try {
+                dirs = Directory.GetDirectories(directoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                var message = String.Format("The directories inside {0} could not be read", directoryPath);
+                Log().Warn(message, ex);
+            }
+
+            foreach (var file in files) {
                 File.SetAttributes(file, FileAttributes.Normal);
-                string filePath = file;
+                var filePath = file;
                 (new Action(() => File.Delete(Path.Combine(directoryPath, filePath)))).Retry();
             }
 
-            foreach (string dir in dirs) {
+            foreach (var dir in dirs) {
                 DeleteDirectory(Path.Combine(directoryPath, dir));
             }
 

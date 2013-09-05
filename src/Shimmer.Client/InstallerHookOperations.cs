@@ -81,11 +81,13 @@ namespace Shimmer.Client
             return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
                 var path = x.GetLinkTarget(applicationName);
                 var fi = fileSystem.GetFileInfo(path);
-	    
+
                 if (fi.Exists) {
                     fi.Delete();
+                    log.Info("Deleting shortcut: {0}", fi.FullName);
                 } else {
                     acc.Add(x);
+                    log.Info("Shortcut not found: {0}, capturing for future reference", fi.FullName);
                 }
                 
                 return acc;
@@ -116,11 +118,17 @@ namespace Shimmer.Client
                     var shortcut = x.GetLinkTarget(applicationName, true);
 
                     var fi = fileSystem.GetFileInfo(shortcut);
-                    if (fi.Exists) fi.Delete();
+
+                    log.Info("installAppVersion: checking shortcut {0}", fi.FullName);
+
+                    if (fi.Exists) {
+                        log.Info("installAppVersion: deleting existing file");
+                        fi.Delete();
+                    }
 
                     fileSystem.CreateDirectoryRecursive(fi.Directory.FullName);
 
-                    var sl = new ShellLink() {
+                    var sl = new ShellLink {
                         Target = x.TargetPath,
                         IconPath = x.IconLibrary,
                         IconIndex = x.IconIndex,
