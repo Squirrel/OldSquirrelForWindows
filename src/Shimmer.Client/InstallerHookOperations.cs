@@ -145,7 +145,7 @@ namespace Shimmer.Client
                 // NB: This can happen if we run into a MoveFileEx'd directory,
                 // where we can't even get the list of files in it.
                 log.WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
-                throw;
+                return Enumerable.Empty<IAppSetup>();
             }
 
             var locatedAppSetups = allExeFiles
