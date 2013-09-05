@@ -73,20 +73,20 @@ function Create-ReleaseForProject {
             Write-Message "Delta release: $deltaRelease"
         }
 
-        $releasePackages += @{
-            "Package" = @{
+        $newItem = New-Object PSObject -Property @{
                 PackageSource = $pkgFullName
                 FullRelease = $fullRelease
                 DeltaRelease = $deltaRelease
-            }
         }
+
+        $releasePackages += $newItem
     }
 
     # use the last package and create an installer
     $latest =  $releasePackages[-1]
 
-    $latestPackageSource = $latest.Values.Item("PackageSource")
-    $latestFullRelease = $latest.Values.Item("FullRelease")
+    $latestPackageSource = $latest.PackageSource
+    $latestFullRelease = $latest.FullRelease
 
     Write-Host ""
     Write-Message "Creating installer for $latestFullRelease"
