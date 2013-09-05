@@ -38,7 +38,8 @@ namespace CreateReleasePackage
 
                 var previousFullRelease = ReleaseEntry.GetPreviousRelease(releaseEntries, package, targetDir);
 
-                if (previousFullRelease != null) {
+                if (previousFullRelease != null
+                    && File.Exists(previousFullRelease.ReleasePackageFile)) {
                     var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
                     Console.WriteLine("{0}; {1}", previousFullRelease.InputPackageFile, deltaFile);
 
