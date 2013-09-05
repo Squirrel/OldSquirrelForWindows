@@ -97,7 +97,11 @@ namespace Shimmer.Client
         string installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
         {
             try {
-                if (isFirstInstall) app.OnAppInstall();
+                if (isFirstInstall) {
+                    log.Info("installAppVersion: Doing first install for {0}", app.Target);
+                    app.OnAppInstall();
+                }
+                log.Info("installAppVersion: Doing install for version {0} {1}", newCurrentVersion, app.Target);
                 app.OnVersionInstalled(newCurrentVersion);
             } catch (Exception ex) {
                 log.ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
@@ -107,6 +111,8 @@ namespace Shimmer.Client
             var shortcutList = Enumerable.Empty<ShortcutCreationRequest>();
             try {
                 shortcutList = app.GetAppShortcutList();
+                shortcutList.ForEach(x =>
+                    log.Info("installAppVersion: we have a shortcut {0}", x.TargetPath));
             } catch (Exception ex) {
                 log.ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
                 throw;

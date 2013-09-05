@@ -442,6 +442,9 @@ namespace Shimmer.Client
 
         List<string> runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
+            shortcutRequestsToIgnore.ForEach(x =>
+                log.Info("Ignoring shortcut: {0}", x.TargetPath));
+
             var postInstallInfo = new PostInstallInfo {
                 NewAppDirectoryRoot = newAppDirectoryRoot,
                 IsFirstInstall = isFirstInstall,
