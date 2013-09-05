@@ -51,7 +51,8 @@ namespace Shimmer.Client
             Contract.Requires(!String.IsNullOrEmpty(urlOrPath));
             Contract.Requires(!String.IsNullOrEmpty(applicationName));
 
-            log = LogManager.GetLogger<UpdateManager>();
+            // XXX: ALWAYS BE LOGGING
+            log = new WrappingFullLogger(new FileLogger(applicationName), typeof(UpdateManager));
 
             updateUrlOrPath = urlOrPath;
             this.applicationName = applicationName;
@@ -100,10 +101,10 @@ namespace Shimmer.Client
             // HTTP URL
             try {
                 if (isHttpUrl(updateUrlOrPath)) {
-                    this.Log().Info("Downloading RELEASES file from {0}", updateUrlOrPath);
+                    log.Info("Downloading RELEASES file from {0}", updateUrlOrPath);
                     releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
                 } else {
-                    this.Log().Info("Reading RELEASES file from {0}", updateUrlOrPath);
+                    log.Info("Reading RELEASES file from {0}", updateUrlOrPath);
                     var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
 
                     using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
@@ -317,7 +318,7 @@ namespace Shimmer.Client
                 return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), new[] {latestFullRelease}, PackageDirectory, appFrameworkVersion));
             }
 
-            if (localReleases.Max(x => x.Version) >= remoteReleases.Max(x => x.Version)) {
+            if (localReleases.Max(x => x.Version) > remoteReleases.Max(x => x.Version)) {
                 log.Warn("hwhat, local version is greater than remote version");
 
                 var latestFullRelease = findCurrentVersion(remoteReleases);
@@ -441,6 +442,9 @@ namespace Shimmer.Client
 
         List<string> runPostInstallOnDirectory(string newAppDirectoryRoot, bool isFirstInstall, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore)
         {
+            shortcutRequestsToIgnore.ForEach(x =>
+                log.Info("Ignoring shortcut: {0}", x.TargetPath));
+
             var postInstallInfo = new PostInstallInfo {
                 NewAppDirectoryRoot = newAppDirectoryRoot,
                 IsFirstInstall = isFirstInstall,
@@ -448,7 +452,7 @@ namespace Shimmer.Client
                 ShortcutRequestsToIgnore = shortcutRequestsToIgnore.ToArray()
             };
 
-            var installerHooks = new InstallerHookOperations(log, fileSystem, applicationName);
+            var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
             return AppDomainHelper.ExecuteInNewAppDomain(postInstallInfo, installerHooks.RunAppSetupInstallers).ToList();
         }
 
@@ -458,7 +462,8 @@ namespace Shimmer.Client
                 return false;
             }
 
-            if (appFrameworkVersion == FrameworkVersion.Net40 && packageFile.Path.StartsWith("lib\\net45", StringComparison.InvariantCultureIgnoreCase)) {
+            if (appFrameworkVersion == FrameworkVersion.Net40
+                && packageFile.Path.StartsWith("lib\\net45", StringComparison.InvariantCultureIgnoreCase)) {
                 return false;
             }
 
@@ -506,7 +511,7 @@ namespace Shimmer.Client
         {
             var directory = fileSystem.GetDirectoryInfo(rootAppDirectory);
             if (!directory.Exists) {
-                this.Log().Warn("The directory '{0}' does not exist", rootAppDirectory);
+                log.Warn("The directory '{0}' does not exist", rootAppDirectory);
                 return Enumerable.Empty<ShortcutCreationRequest>();
             }
             
@@ -516,14 +521,16 @@ namespace Shimmer.Client
                 .OrderBy(x => x.Name)
                 .SelectMany(oldAppRoot => {
                     var path = oldAppRoot.FullName;
-                    var installerHooks = new InstallerHookOperations(log, fileSystem, applicationName);
+                    var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
 
                     var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
 
                     try {
                         Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
                     } catch (Exception ex) {
-                        log.WarnException("Couldn't delete old app directory on next reboot", ex);
+                        var message = String.Format("Couldn't delete old app directory on next reboot {0}",
+                            oldAppRoot.FullName);
+                        log.WarnException(message, ex);
                     }
                     return ret;
                 });
@@ -532,6 +539,7 @@ namespace Shimmer.Client
         void fixPinnedExecutables(Version newCurrentVersion) 
         {
             if (Environment.OSVersion.Version < new Version(6, 1)) {
+                log.Warn("fixPinnedExecutables: Found OS Version '{0}', exiting...", Environment.OSVersion.VersionString);
                 return;
             }
 
@@ -547,9 +555,17 @@ namespace Shimmer.Client
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
-            foreach (var shortcut in fileSystem.GetDirectoryInfo(taskbarPath).GetFiles("*.lnk").Select(x => new ShellLink(x.FullName))) {
+            var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
+                                       .GetFiles("*.lnk")
+                                       .Select(x => new ShellLink(x.FullName));
+
+            foreach (var shortcut in shellLinks) {
+                log.Info("Processing shortcut '{0}'", shortcut.Target);
                 foreach (var oldAppDirectory in oldAppDirectories) {
-                    if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                        log.Info("Does not match '{0}', continuing to next directory", oldAppDirectory);
+                        continue;
+                    }
 
                     // replace old app path with new app path and check, if executable still exists
                     var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
@@ -559,12 +575,14 @@ namespace Shimmer.Client
 
                         // replace working directory too if appropriate
                         if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                            log.Info("Changing new directory to '{0}'", newAppPath);
                             shortcut.WorkingDirectory = Path.Combine(newAppPath,
                                 shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
                         }
 
                         shortcut.Save();
                     } else {
+                        log.Info("Unpinning {0} from taskbar", shortcut.Target);
                         TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
                     }
 

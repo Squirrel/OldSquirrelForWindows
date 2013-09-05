@@ -44,6 +44,55 @@ namespace Shimmer.Tests.Client
         }
 
         [Fact]
+        public void WhenNoNewReleasesAreAvailableTheListIsEmpty()
+        {
+            string tempDir;
+            using (Utility.WithTempDirectory(out tempDir)) {
+                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
+                var packages = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packages);
+
+                var package = "Shimmer.Core.1.0.0.0-full.nupkg";
+                File.Copy(IntegrationTestHelper.GetPath("fixtures", package),
+                          Path.Combine(packages, package));
+
+                var aGivenPackage = Path.Combine(packages, package);
+                var baseEntry = ReleaseEntry.GenerateFromFile(aGivenPackage);
+
+                var updateInfo = UpdateInfo.Create(baseEntry, new[] { baseEntry }, "dontcare", FrameworkVersion.Net40);
+
+                Assert.Empty(updateInfo.ReleasesToApply);
+            }
+        }
+
+        [Fact]
+        public void ThrowsWhenOnlyDeltaReleasesAreAvailable()
+        {
+            string tempDir;
+            using (Utility.WithTempDirectory(out tempDir))
+            {
+                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
+                var packages = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packages);
+
+                var baseFile = "Shimmer.Core.1.0.0.0-full.nupkg";
+                File.Copy(IntegrationTestHelper.GetPath("fixtures", baseFile),
+                          Path.Combine(packages, baseFile));
+                var basePackage = Path.Combine(packages, baseFile);
+                var baseEntry = ReleaseEntry.GenerateFromFile(basePackage);
+
+                var deltaFile = "Shimmer.Core.1.1.0.0-delta.nupkg";
+                File.Copy(IntegrationTestHelper.GetPath("fixtures", deltaFile),
+                          Path.Combine(packages, deltaFile));
+                var deltaPackage = Path.Combine(packages, deltaFile);
+                var deltaEntry = ReleaseEntry.GenerateFromFile(deltaPackage);
+
+                Assert.Throws<Exception>(
+                    () => UpdateInfo.Create(baseEntry, new[] { deltaEntry }, "dontcare", FrameworkVersion.Net40));
+            }
+        }
+
+        [Fact]
         public void ApplyReleasesWithOneReleaseFile()
         {
             string tempDir;

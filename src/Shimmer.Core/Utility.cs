@@ -65,8 +65,7 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(to));
 
             if (!File.Exists(from)) {
-                LogManager.GetLogger(typeof(Utility))
-                          .Warn("The file {0} does not exist", from);
+                Log().Warn("The file {0} does not exist", from);
 
                 // TODO: should we fail this operation?
                 return Observable.Return(Unit.Default);
@@ -136,27 +135,45 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(directoryPath));
 
             if (!Directory.Exists(directoryPath)) {
-                LogManager.GetLogger(typeof(Utility))
-                    .Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
                 return;
             }
 
             // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
-            string[] files = Directory.GetFiles(directoryPath);
-            string[] dirs = Directory.GetDirectories(directoryPath);
+            var files = new string[0];
+            try {
+                files = Directory.GetFiles(directoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                var message = String.Format("The files inside {0} could not be read", directoryPath);
+                Log().Warn(message, ex);
+            }
 
-            foreach (string file in files) {
+            var dirs = new string[0];
+            try {
+                dirs = Directory.GetDirectories(directoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                var message = String.Format("The directories inside {0} could not be read", directoryPath);
+                Log().Warn(message, ex);
+            }
+
+            foreach (var file in files) {
                 File.SetAttributes(file, FileAttributes.Normal);
-                string filePath = file;
+                var filePath = file;
                 (new Action(() => File.Delete(Path.Combine(directoryPath, filePath)))).Retry();
             }
 
-            foreach (string dir in dirs) {
+            foreach (var dir in dirs) {
                 DeleteDirectory(Path.Combine(directoryPath, dir));
             }
 
             File.SetAttributes(directoryPath, FileAttributes.Normal);
-            Directory.Delete(directoryPath, false);
+            try {
+                Directory.Delete(directoryPath, false);
+            } catch (Exception ex) {
+                var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
+                Log().ErrorException(message, ex);
+                throw;
+            }
         }
 
         public static Tuple<string, Stream> CreateTempFile()
@@ -182,21 +199,29 @@ namespace Shimmer.Core
             var di = new DirectoryInfo(directoryPath);
 
             if (!di.Exists) {
-                LogManager.GetLogger(typeof(Utility))
-                    .Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
                 return;
             }
 
             // NB: MoveFileEx blows up if you're a non-admin, so you always need a backup plan
-            di.GetFiles().ForEach(x => safeDeleteFileAtNextDir(x.FullName));
+            di.GetFiles().ForEach(x => safeDeleteFileAtNextReboot(x.FullName));
             di.GetDirectories().ForEach(x => DeleteDirectoryAtNextReboot(x.FullName));
 
-            safeDeleteFileAtNextDir(directoryPath);
+            safeDeleteFileAtNextReboot(directoryPath);
         }
 
-        static void safeDeleteFileAtNextDir(string name)
+        static void safeDeleteFileAtNextReboot(string name)
         {
-            if (!MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) throw new Win32Exception();
+            if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
+
+            Log().Error("safeDeleteFileAtNextReboot: failed - {0}", name);
+
+            throw new Win32Exception();
+        }
+
+        static IRxUIFullLogger Log()
+        {
+            return LogManager.GetLogger(typeof(Utility));
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]

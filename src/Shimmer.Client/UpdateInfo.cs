@@ -29,7 +29,9 @@ namespace Shimmer.Client
             // NB: When bootstrapping, CurrentlyInstalledVersion is null!
             CurrentlyInstalledVersion = currentlyInstalledVersion;
             ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
-            FutureReleaseEntry = ReleasesToApply.MaxBy(x => x.Version).FirstOrDefault();
+            FutureReleaseEntry = ReleasesToApply.Any()
+                    ? ReleasesToApply.MaxBy(x => x.Version).FirstOrDefault()
+                    : null;
             AppFrameworkVersion = appFrameworkVersion;
 
             this.packageDirectory = packageDirectory;
@@ -54,6 +56,10 @@ namespace Shimmer.Client
 
             if (currentVersion == null) {
                 return new UpdateInfo(currentVersion, new[] { latestFull }, packageDirectory, appFrameworkVersion);
+            }
+
+            if (currentVersion.Version == latestFull.Version) {
+                return new UpdateInfo(currentVersion, Enumerable.Empty<ReleaseEntry>(), packageDirectory, appFrameworkVersion);
             }
 
             var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);

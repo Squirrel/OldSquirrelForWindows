@@ -16,9 +16,11 @@ namespace Shimmer.Client
         readonly IFileSystemFactory fileSystem;
         readonly string applicationName;
 
-        public InstallerHookOperations(IRxUIFullLogger log, IFileSystemFactory fileSystem, string applicationName)
+        public InstallerHookOperations(IFileSystemFactory fileSystem, string applicationName)
         {
-            this.log = log;
+            // XXX: ALWAYS BE LOGGING
+            this.log = new WrappingFullLogger(new FileLogger(applicationName), typeof(InstallerHookOperations));
+            
             this.fileSystem = fileSystem;
             this.applicationName = applicationName;
         }
@@ -79,11 +81,13 @@ namespace Shimmer.Client
             return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
                 var path = x.GetLinkTarget(applicationName);
                 var fi = fileSystem.GetFileInfo(path);
-	    
+
                 if (fi.Exists) {
                     fi.Delete();
+                    log.Info("Deleting shortcut: {0}", fi.FullName);
                 } else {
                     acc.Add(x);
+                    log.Info("Shortcut not found: {0}, capturing for future reference", fi.FullName);
                 }
                 
                 return acc;
@@ -93,7 +97,11 @@ namespace Shimmer.Client
         string installAppVersion(IAppSetup app, Version newCurrentVersion, IEnumerable<ShortcutCreationRequest> shortcutRequestsToIgnore, bool isFirstInstall)
         {
             try {
-                if (isFirstInstall) app.OnAppInstall();
+                if (isFirstInstall) {
+                    log.Info("installAppVersion: Doing first install for {0}", app.Target);
+                    app.OnAppInstall();
+                }
+                log.Info("installAppVersion: Doing install for version {0} {1}", newCurrentVersion, app.Target);
                 app.OnVersionInstalled(newCurrentVersion);
             } catch (Exception ex) {
                 log.ErrorException("App threw exception on install:  " + app.GetType().FullName, ex);
@@ -103,6 +111,8 @@ namespace Shimmer.Client
             var shortcutList = Enumerable.Empty<ShortcutCreationRequest>();
             try {
                 shortcutList = app.GetAppShortcutList();
+                shortcutList.ForEach(x =>
+                    log.Info("installAppVersion: we have a shortcut {0}", x.TargetPath));
             } catch (Exception ex) {
                 log.ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
                 throw;
@@ -114,11 +124,17 @@ namespace Shimmer.Client
                     var shortcut = x.GetLinkTarget(applicationName, true);
 
                     var fi = fileSystem.GetFileInfo(shortcut);
-                    if (fi.Exists) fi.Delete();
+
+                    log.Info("installAppVersion: checking shortcut {0}", fi.FullName);
+
+                    if (fi.Exists) {
+                        log.Info("installAppVersion: deleting existing file");
+                        fi.Delete();
+                    }
 
                     fileSystem.CreateDirectoryRecursive(fi.Directory.FullName);
 
-                    var sl = new ShellLink() {
+                    var sl = new ShellLink {
                         Target = x.TargetPath,
                         IconPath = x.IconLibrary,
                         IconIndex = x.IconIndex,
@@ -143,7 +159,7 @@ namespace Shimmer.Client
                 // NB: This can happen if we run into a MoveFileEx'd directory,
                 // where we can't even get the list of files in it.
                 log.WarnException("Couldn't search directory for IAppSetups: " + appDirectory, ex);
-                throw;
+                return Enumerable.Empty<IAppSetup>();
             }
 
             var locatedAppSetups = allExeFiles
@@ -160,11 +176,14 @@ namespace Shimmer.Client
                 .Select(createInstanceOrWhine).Where(x => x != null)
                 .ToArray();
 
-            return locatedAppSetups.Length > 0
-                ? locatedAppSetups
-                : allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName)).ToArray();
+            if (!locatedAppSetups.Any()) {
+                log.Warn("Could not find any AppSetup instances");
+                allExeFiles.ForEach(f => log.Info("We have an exe: {0}", f.FullName));
+                return allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName))
+                                  .ToArray();
+            }
+            return locatedAppSetups;
         }
-
 
         IAppSetup createInstanceOrWhine(Type typeToCreate)
         {
