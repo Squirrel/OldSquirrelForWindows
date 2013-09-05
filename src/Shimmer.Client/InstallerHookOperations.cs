@@ -162,11 +162,14 @@ namespace Shimmer.Client
                 .Select(createInstanceOrWhine).Where(x => x != null)
                 .ToArray();
 
-            return locatedAppSetups.Length > 0
-                ? locatedAppSetups
-                : allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName)).ToArray();
+            if (!locatedAppSetups.Any()) {
+                log.Warn("Could not find any AppSetup instances");
+                allExeFiles.ForEach(f => log.Info("We have an exe: {0}", f.FullName));
+                return allExeFiles.Select(x => new DidntFollowInstructionsAppSetup(x.FullName))
+                                  .ToArray();
+            }
+            return locatedAppSetups;
         }
-
 
         IAppSetup createInstanceOrWhine(Type typeToCreate)
         {
