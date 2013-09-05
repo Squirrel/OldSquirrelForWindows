@@ -524,7 +524,9 @@ namespace Shimmer.Client
                     try {
                         Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
                     } catch (Exception ex) {
-                        log.WarnException("Couldn't delete old app directory on next reboot", ex);
+                        var message = String.Format("Couldn't delete old app directory on next reboot {0}",
+                            oldAppRoot.FullName);
+                        log.WarnException(message, ex);
                     }
                     return ret;
                 });
