@@ -459,7 +459,8 @@ namespace Shimmer.Client
                 return false;
             }
 
-            if (appFrameworkVersion == FrameworkVersion.Net40 && packageFile.Path.StartsWith("lib\\net45", StringComparison.InvariantCultureIgnoreCase)) {
+            if (appFrameworkVersion == FrameworkVersion.Net40
+                && packageFile.Path.StartsWith("lib\\net45", StringComparison.InvariantCultureIgnoreCase)) {
                 return false;
             }
 
@@ -535,6 +536,7 @@ namespace Shimmer.Client
         void fixPinnedExecutables(Version newCurrentVersion) 
         {
             if (Environment.OSVersion.Version < new Version(6, 1)) {
+                log.Warn("fixPinnedExecutables: Found OS Version '{0}', exiting...", Environment.OSVersion.VersionString);
                 return;
             }
 
@@ -550,9 +552,17 @@ namespace Shimmer.Client
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
-            foreach (var shortcut in fileSystem.GetDirectoryInfo(taskbarPath).GetFiles("*.lnk").Select(x => new ShellLink(x.FullName))) {
+            var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
+                                       .GetFiles("*.lnk")
+                                       .Select(x => new ShellLink(x.FullName));
+
+            foreach (var shortcut in shellLinks) {
+                log.Info("Processing shortcut '{0}'", shortcut.Target);
                 foreach (var oldAppDirectory in oldAppDirectories) {
-                    if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                        log.Info("Does not match '{0}', continuing to next directory", oldAppDirectory);
+                        continue;
+                    }
 
                     // replace old app path with new app path and check, if executable still exists
                     var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
@@ -562,12 +572,14 @@ namespace Shimmer.Client
 
                         // replace working directory too if appropriate
                         if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                            log.Info("Changing new directory to '{0}'", newAppPath);
                             shortcut.WorkingDirectory = Path.Combine(newAppPath,
                                 shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
                         }
 
                         shortcut.Save();
                     } else {
+                        log.Info("Unpinning {0} from taskbar", shortcut.Target);
                         TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
                     }
 
