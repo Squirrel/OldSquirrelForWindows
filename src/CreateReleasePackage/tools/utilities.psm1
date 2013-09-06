@@ -200,3 +200,29 @@ function Add-InstallerTemplate {
         Set-Content -Path $Destination -Value $content	| Out-Null
     }
 }
+
+function Get-NuGetPackagesPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$directory
+    )
+
+    $cfg = Get-ChildItem -Path $directory -Filter nuget.config | Select-Object -first 1
+    if($cfg) {
+        [xml]$config = Get-Content $cfg.FullName
+        $path = $config.configuration.config.add | ?{ $_.key -eq "repositorypath" } | select value
+        # Found nuget.config but it don't has repositorypath attribute
+        if($path) {
+            return $path.value.Replace("$", $directory)
+        }
+    }
+
+    $parent = Split-Path $solutionDir
+
+    if(-not $parent) {
+        return $null
+    }
+
+    return Get-NuGetPackagesPath($parent)
+}
+
