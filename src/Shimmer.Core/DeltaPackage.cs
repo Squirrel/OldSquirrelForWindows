@@ -215,7 +215,11 @@ namespace Shimmer.Core
                 }
             }
 
-            File.Delete(finalTarget);
+            if (File.Exists(finalTarget)) File.Delete(finalTarget);
+
+            var targetPath = Directory.GetParent(finalTarget);
+            if (!targetPath.Exists) targetPath.Create();
+
             File.Move(tempTargetFile, finalTarget);
         }
 

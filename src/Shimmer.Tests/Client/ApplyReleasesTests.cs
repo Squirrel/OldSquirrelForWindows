@@ -126,7 +126,7 @@ namespace Shimmer.Tests.Client
                 var filesToFind = new[] {
                     new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
                     new {Name = "NSync.Core.dll", Version = new Version("1.1.0.0")},
-                    new {Name = "Ionic.Zip.dll", Version = new Version("1.9.1.8")},
+                    new {Name = Path.Combine("sub", "Ionic.Zip.dll"), Version = new Version("1.9.1.8")},
                 };
 
                 filesToFind.ForEach(x => {
@@ -177,7 +177,7 @@ namespace Shimmer.Tests.Client
                 var filesToFind = new[] {
                     new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
                     new {Name = "NSync.Core.dll", Version = new Version("1.1.0.0")},
-                    new {Name = "Ionic.Zip.dll", Version = new Version("1.9.1.8")},
+                    new {Name = Path.Combine("sub", "Ionic.Zip.dll"), Version = new Version("1.9.1.8")},
                 };
 
                 filesToFind.ForEach(x => {

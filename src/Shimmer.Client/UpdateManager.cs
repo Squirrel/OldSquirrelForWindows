@@ -408,10 +408,13 @@ namespace Shimmer.Client
             // with the 4.0 version.
             pkg.GetFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion)).OrderBy(x => x.Path)
                 .ForEach(x => {
-                    var targetPath = Path.Combine(target.FullName, Path.GetFileName(x.Path));
+                    var targetPath = Path.Combine(target.FullName, x.EffectivePath);
 
                     var fi = fileSystem.GetFileInfo(targetPath);
                     if (fi.Exists) fi.Delete();
+
+                    var dir = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(targetPath));
+                    if (!dir.Exists) dir.Create();
 
                     using (var inf = x.GetStream())
                     using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
