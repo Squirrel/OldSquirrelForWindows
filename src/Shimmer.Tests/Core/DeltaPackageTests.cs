@@ -120,8 +120,6 @@ namespace Shimmer.Tests.Core
             }
         }
 
-
-
         [Fact]
         public void WhenBasePackageIsNewerThanNewPackageThrowException()
         {
@@ -147,6 +145,111 @@ namespace Shimmer.Tests.Core
                 (new FileInfo(fixture.ReleasePackageFile)).Exists.ShouldBeTrue();
 
                 Assert.Throws<InvalidOperationException>(() =>
+                {
+                    var deltaBuilder = new DeltaPackageBuilder();
+                    deltaBuilder.CreateDeltaPackage(baseFixture, fixture, tempFiles[2]);
+                });
+            }
+            finally
+            {
+                tempFiles.ForEach(File.Delete);
+            }
+        }
+
+        [Fact]
+        public void WhenBasePackageReleaseIsNullThrowsException()
+        {
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            var baseFixture = new ReleasePackage(basePackage);
+            var fixture = new ReleasePackage(newPackage);
+
+            var tempFile = Path.GetTempPath() + Guid.NewGuid() + ".nupkg";
+
+            try
+            {
+                Assert.Throws<ArgumentException>(() =>
+                {
+                    var deltaBuilder = new DeltaPackageBuilder();
+                    deltaBuilder.CreateDeltaPackage(baseFixture, fixture, tempFile);
+                });
+            }
+            finally {
+                File.Delete(tempFile);
+            }
+        }
+
+        [Fact]
+        public void WhenBasePackageDoesNotExistThrowException()
+        {
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            var baseFixture = new ReleasePackage(basePackage);
+            var fixture = new ReleasePackage(newPackage);
+
+            var tempFiles = Enumerable.Range(0, 3)
+                .Select(_ => Path.GetTempPath() + Guid.NewGuid().ToString() + ".nupkg")
+                .ToArray();
+
+            try
+            {
+                baseFixture.CreateReleasePackage(tempFiles[0], sourceDir);
+                fixture.CreateReleasePackage(tempFiles[1], sourceDir);
+
+                (new FileInfo(baseFixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+                (new FileInfo(fixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+
+                // NOW WATCH AS THE FILE DISAPPEARS
+                File.Delete(baseFixture.ReleasePackageFile);
+
+                Assert.Throws<FileNotFoundException>(() =>
+                {
+                    var deltaBuilder = new DeltaPackageBuilder();
+                    deltaBuilder.CreateDeltaPackage(baseFixture, fixture, tempFiles[2]);
+                });
+            }
+            finally
+            {
+                tempFiles.ForEach(File.Delete);
+            }
+        }
+
+        [Fact]
+        public void WhenNewPackageDoesNotExistThrowException()
+        {
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            var baseFixture = new ReleasePackage(basePackage);
+            var fixture = new ReleasePackage(newPackage);
+
+            var tempFiles = Enumerable.Range(0, 3)
+                .Select(_ => Path.GetTempPath() + Guid.NewGuid().ToString() + ".nupkg")
+                .ToArray();
+
+            try
+            {
+                baseFixture.CreateReleasePackage(tempFiles[0], sourceDir);
+                fixture.CreateReleasePackage(tempFiles[1], sourceDir);
+
+                (new FileInfo(baseFixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+                (new FileInfo(fixture.ReleasePackageFile)).Exists.ShouldBeTrue();
+
+                // NOW WATCH AS THE FILE DISAPPEARS
+                File.Delete(fixture.ReleasePackageFile);
+
+                Assert.Throws<FileNotFoundException>(() =>
                 {
                     var deltaBuilder = new DeltaPackageBuilder();
                     deltaBuilder.CreateDeltaPackage(baseFixture, fixture, tempFiles[2]);

@@ -31,6 +31,18 @@ namespace Shimmer.Core
                 throw new InvalidOperationException(message);
             }
 
+            if (basePackage.ReleasePackageFile == null) {
+                throw new ArgumentException("The base package's release file is null", "basePackage");
+            }
+
+            if (!File.Exists(basePackage.ReleasePackageFile)) {
+                throw new FileNotFoundException("The base package release does not exist", basePackage.ReleasePackageFile);
+            }
+
+            if (!File.Exists(newPackage.ReleasePackageFile)) {
+                throw new FileNotFoundException("The new package release does not exist", newPackage.ReleasePackageFile);
+            }
+
             string baseTempPath = null;
             string tempPath = null;
 
