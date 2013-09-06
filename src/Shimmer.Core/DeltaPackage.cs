@@ -20,7 +20,7 @@ namespace Shimmer.Core
     {
         public ReleasePackage CreateDeltaPackage(ReleasePackage basePackage, ReleasePackage newPackage, string outputFile)
         {
-            Contract.Requires(basePackage != null && basePackage.ReleasePackageFile != null);
+            Contract.Requires(basePackage != null);
             Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
 
             if (basePackage.Version > newPackage.Version) {
