@@ -69,14 +69,16 @@ function Create-ReleaseForProject {
         $releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         $packages = $releaseOutput.Split(";")
-        $fullRelease = $packages[0]
+        $fullRelease = $packages[0].Trim()
 
         Write-Host ""
         Write-Message "Full release: $fullRelease"
 
         if ($packages.Length -gt 1) {
-            $deltaRelease = $packages[-1]
-            Write-Message "Delta release: $deltaRelease"
+            $deltaRelease = $packages[-1].Trim()
+            if ([string]::IsNullOrWhitespace($deltaRelease) -eq $false) {
+                Write-Message "Delta release: $deltaRelease"
+            }
         }
 
         $newItem = New-Object PSObject -Property @{

@@ -20,7 +20,7 @@ namespace Shimmer.Core
     {
         public ReleasePackage CreateDeltaPackage(ReleasePackage basePackage, ReleasePackage newPackage, string outputFile)
         {
-            Contract.Requires(basePackage != null && basePackage.ReleasePackageFile != null);
+            Contract.Requires(basePackage != null);
             Contract.Requires(!String.IsNullOrEmpty(outputFile) && !File.Exists(outputFile));
 
             if (basePackage.Version > newPackage.Version) {
@@ -29,6 +29,18 @@ namespace Shimmer.Core
                     basePackage.Version,
                     newPackage.Version);
                 throw new InvalidOperationException(message);
+            }
+
+            if (basePackage.ReleasePackageFile == null) {
+                throw new ArgumentException("The base package's release file is null", "basePackage");
+            }
+
+            if (!File.Exists(basePackage.ReleasePackageFile)) {
+                throw new FileNotFoundException("The base package release does not exist", basePackage.ReleasePackageFile);
+            }
+
+            if (!File.Exists(newPackage.ReleasePackageFile)) {
+                throw new FileNotFoundException("The new package release does not exist", newPackage.ReleasePackageFile);
             }
 
             string baseTempPath = null;
