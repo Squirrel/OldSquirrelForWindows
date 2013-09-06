@@ -56,10 +56,16 @@ function Create-ReleaseForProject {
 
     $releasePackages = @()
 
+    $packageDir = Get-NuGetPackagesPath($solutionDir)
+    if(-not $packageDir) {
+        $packageDir = Join-Path $solutionDir "packages"
+    }
+
+    Write-Host ""
+    Write-Message "Using packages directory $packageDir"
+
     foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
-       
-        $packageDir = Join-Path $solutionDir "packages"
         $releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
 
         $packages = $releaseOutput.Split(";")
