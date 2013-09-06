@@ -63,7 +63,7 @@ function Create-ReleaseForProject {
         $pkgFullName = $pkg.FullName
         echo "Found package $pkgFullName"
 
-        $packageDir = Get-NugetPackagesPath($solutionDir)
+        $packageDir = Get-NuGetPackagesPath($solutionDir)
         if(-not $packageDir) {
             $packageDir = Join-Path $solutionDir "packages"
         }
@@ -91,29 +91,29 @@ function Create-ReleaseForProject {
 	}
 }
 
-function Get-NugetPackagesPath {
+function Get-NuGetPackagesPath {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$solutionDir
+        [string]$directory
     )
 
-    $cfg = Get-ChildItem -Path $solutionDir -Filter nuget.config | Select-Object -first 1
+    $cfg = Get-ChildItem -Path $directory -Filter nuget.config | Select-Object -first 1
     if($cfg) {
         [xml]$config = Get-Content $cfg.FullName
         $path = $config.configuration.config.add | ?{ $_.key -eq "repositorypath" } | select value
-		# Found nuget.config but it don't has repositorypath attribute
+        # Found nuget.config but it don't has repositorypath attribute
         if($path) {
-			return $path.value
-		}
+            return $path.value.Replace("$", $directory)
+        }
     }
 
     $parent = Split-Path $solutionDir
 
     if(-not $parent) {
-        return ""
+        return $null
     }
 
-    return Get-NugetPackagesPath($parent)
+    return Get-NuGetPackagesPath($parent)
 }
 
 if (-not $ProjectNameToBuild) {
