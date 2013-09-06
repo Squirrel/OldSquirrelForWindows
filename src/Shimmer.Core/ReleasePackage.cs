@@ -56,6 +56,8 @@ namespace Shimmer.Core
 
     public class ReleasePackage : IEnableLogger, IReleasePackage
     {
+        IEnumerable<IPackage> localPackageCache;
+
         public ReleasePackage(string inputPackageFile, bool isReleasePackage = false)
         {
             InputPackageFile = inputPackageFile;
@@ -205,9 +207,10 @@ namespace Shimmer.Core
             xdoc.Save(specPath);
         }
 
-        IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null)
+        IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null, HashSet<string> packageCache = null)
         {
             package = package ?? new ZipPackage(InputPackageFile);
+            packageCache = packageCache ?? new HashSet<string>();
 
             var deps = package.DependencySets.SelectMany(x => x.Dependencies);
 
@@ -219,26 +222,32 @@ namespace Shimmer.Core
                     return Enumerable.Empty<IPackage>();
                 }
 
-                return findAllDependentPackages(ret, packagesRootDir).StartWith(ret).Distinct(y => y.GetFullName() + y.Version);
+                if (packageCache.Contains(ret.GetFullName())) {
+                    return Enumerable.Empty<IPackage>();
+                }
+
+                packageCache.Add(ret.GetFullName());
+
+                return findAllDependentPackages(ret, packagesRootDir, packageCache).StartWith(ret).Distinct(y => y.GetFullName());
             }).ToArray();
         }
 
         IPackage findPackageFromName(string id, IVersionSpec versionSpec, string packagesRootDir = null, IQueryable<IPackage> machineCache = null)
         {
-            var localPackages = Enumerable.Empty<IPackage>().AsQueryable();
             machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
 
-            if (packagesRootDir != null) {
-                localPackages = new DirectoryInfo(packagesRootDir).GetAllFilesRecursively()
-                    .Where(x => x.Name.ToLowerInvariant().EndsWith("nupkg"))
-                    .Select(x => new ZipPackage(x.FullName))
-                    .ToArray().AsQueryable();
+            if (packagesRootDir != null && localPackageCache == null) {
+                localPackageCache = Utility.GetAllFilePathsRecursively(packagesRootDir)
+                    .Where(x => x.EndsWith("nupkg", StringComparison.InvariantCultureIgnoreCase))
+                    .Select(x => new ZipPackage(x))
+                    .ToArray();
             }
 
-            return findPackageFromNameInList(id, versionSpec, localPackages) ?? findPackageFromNameInList(id, versionSpec, machineCache);
+            return findPackageFromNameInList(id, versionSpec, localPackageCache ?? Enumerable.Empty<IPackage>()) ?? 
+                findPackageFromNameInList(id, versionSpec, machineCache);
         }
 
-        static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IQueryable<IPackage> packageList)
+        static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IEnumerable<IPackage> packageList)
         {
             return packageList.Where(x => x.Id == id).ToArray()
                 .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));

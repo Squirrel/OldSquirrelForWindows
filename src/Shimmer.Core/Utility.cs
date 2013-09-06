@@ -29,6 +29,15 @@ namespace Shimmer.Core
                 .Concat(rootPath.GetFiles());
         }
 
+        public static IEnumerable<string> GetAllFilePathsRecursively(string rootPath)
+        {
+            Contract.Requires(rootPath != null);
+
+            return Directory.GetDirectories(rootPath)
+                .SelectMany(GetAllFilePathsRecursively)
+                .Concat(Directory.GetFiles(rootPath));
+        }
+
         public static DirectoryInfo CreateRecursive(this DirectoryInfo This)
         {
             This.FullName.Split(Path.DirectorySeparatorChar).scan("", (acc, x) =>
