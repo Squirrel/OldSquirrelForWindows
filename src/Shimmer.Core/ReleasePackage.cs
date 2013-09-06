@@ -106,7 +106,6 @@ namespace Shimmer.Core
                 var specPath = tempDir.GetFiles("*.nuspec").First().FullName;
 
                 removeDependenciesFromPackageSpec(specPath);
-                removeNonDesktopAssemblies(tempDir);
                 removeDeveloperDocumentation(tempDir);
 
                 if (releaseNotesProcessor != null) {
@@ -133,6 +132,11 @@ namespace Shimmer.Core
                 pkg.GetFiles().Where(x => x.Path.StartsWith("lib", true, CultureInfo.InvariantCulture)).ForEach(file => {
                     var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
 
+                    if(isNonDesktopAssembly(file.Path)) {
+                        this.Log().Info("Ignoring {0} ", outPath);
+                        return;
+                    }
+
                     outPath.Directory.CreateRecursive();
 
                     using (var of = File.Create(outPath.FullName)) {
@@ -152,20 +156,16 @@ namespace Shimmer.Core
                 .ForEach(x => x.Delete());
         }
 
-        void removeNonDesktopAssemblies(DirectoryInfo expandedRepoPath)
+        bool isNonDesktopAssembly(string path)
         {
             // NB: Nuke Silverlight, WinRT, WindowsPhone and Xamarin assemblies. 
             // We can't tell as easily if other profiles can be removed because 
             // you can load net20 DLLs inside .NET 4.0 apps
-            var libPath = expandedRepoPath.GetDirectories().First(x => x.Name.ToLowerInvariant() == "lib");
-            this.Log().Debug(libPath.FullName);
-
             var bannedFrameworks = new[] {"sl", "winrt", "netcore", "win8", "windows8", "MonoAndroid", "MonoTouch", "MonoMac", "wp", };
 
-            libPath.GetDirectories()
-                .Where(x => bannedFrameworks.Any(y => x.Name.ToLowerInvariant().StartsWith(y, StringComparison.InvariantCultureIgnoreCase)))
-                .Do(x => this.Log().Info("Deleting {0}", x.Name))
-                .ForEach(x => x.Delete(true));
+            string frameworkPath = path.Substring(4);
+
+            return bannedFrameworks.Any(x => frameworkPath.StartsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
 
         void renderReleaseNotesMarkdown(string specPath, Func<string, string> releaseNotesProcessor)
