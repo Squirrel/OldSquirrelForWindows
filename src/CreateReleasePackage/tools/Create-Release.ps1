@@ -107,7 +107,7 @@ function Get-NuGetPackagesPath {
         }
     }
 
-    $parent = Split-Path $solutionDir
+    $parent = Split-Path $directory
 
     if(-not $parent) {
         return $null
