@@ -27,9 +27,17 @@ Write-Host "passing the magic parameter -Tool so that the project reference"
 Write-Host "goes away"
 WRite-Host ""
 
-. $rootFolder\src\.nuget\NuGet.exe pack $rootFolder\src\CreateReleasePackage\CreateReleasePackage.csproj -Tool -OutputDirectory $rootFolder\bin\
+. $rootFolder\src\.nuget\NuGet.exe pack $rootFolder\src\CreateReleasePackage\CreateReleasePackage.csproj -Tool -OutputDirectory $rootFolder\bin\ -Verbosity quiet -NoPackageAnalysis
 
 if (Test-Path $binaries) {
     Remove-Item "$rootFolder\bin\Shimmer.Tests.*.nupkg"
     Remove-Item "$rootFolder\bin\Shimmer.WiXUi.*.nupkg"
 }
+
+$currentDir = Get-Location
+
+Set-Location "$rootFolder\tests"
+
+. $rootFolder\ext\pester\bin\pester.bat
+
+Set-Location $currentDir

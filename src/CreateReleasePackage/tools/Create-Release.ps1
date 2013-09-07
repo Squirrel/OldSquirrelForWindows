@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
-    [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$false)]
-    [string] $ProjectNameToBuild = '',
+    [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
+    [string] $ProjectNameToBuild,
 	[Parameter(Mandatory=$false)]
 	[string] $SolutionDir,
 	[Parameter(Mandatory=$false)]
@@ -15,6 +15,9 @@ $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
 $wixDir = Join-Path $toolsDir "wix"
 $support = Join-Path $toolsDir "support.ps1"
 . $support
+
+Import-Module $toolsDir\utilities.psm1
+Import-Module $toolsDir\commands.psm1
 
 function Get-ProjectBuildOutputDir {
     param(
@@ -142,11 +145,4 @@ if (-not $BuildDirectory) {
 	}
 }
 
-### DEBUG:
-#$createReleasePackageExe = [IO.Path]::Combine($toolsDir, '..', 'bin', 'Debug', 'CreateReleasePackage.exe')
-#$wixDir = [IO.Path]::Combine($toolsDir, '..', '..', '..', 'ext', 'wix')
-### End DEBUG
-
-$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-
-Create-ReleaseForProject $SolutionDir $BuildDirectory
+# Create-ReleaseForProject $SolutionDir $BuildDirectory

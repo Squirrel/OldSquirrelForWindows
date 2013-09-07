@@ -171,3 +171,6 @@ pip-log.txt
 
 ## NUnit Test Output
 nunit-Shimmer.Tests.xml
+
+## Pester Test Output
+tests/Test.xml

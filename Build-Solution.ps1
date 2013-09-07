@@ -8,7 +8,7 @@ param(
     $config = "Debug"
     ,
     [string]
-    $MSBuildVerbosity = "normal"
+    $MSBuildVerbosity = "quiet"
 )
 
 

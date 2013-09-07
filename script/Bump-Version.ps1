@@ -68,8 +68,6 @@ $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $rootFolder = (Get-Item $scriptPath).Parent.FullName
 $srcFolder = "$rootFolder\src"
 
-Write-Host "Root folder is $rootFolder"
-
 $items = Get-ChildItem -Path "$srcFolder" -Filter "AssemblyInfo.cs" -Recurse
 
 $items = $items | Where-Object {$_.FullName.Contains("Shimmer.") -or $_.FullName.COntains("CreateReleasePackage")}

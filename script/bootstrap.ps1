@@ -5,12 +5,9 @@ $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 $rootFolder = (Get-Item $scriptPath).Parent.FullName
 $srcFolder = "$rootFolder\src"
 
-Write-Host "Root folder is $rootFolder"
+git submodule init
 
 $nuget = "$srcFolder\.nuget\nuget.exe"
-$items = Get-ChildItem -Path "$srcFolder" -Filter "packages.config" -Recurse
 
-foreach ($item in $items)
-{
-   . $nuget install $item.FullName -OutputDirectory "$srcFolder\packages"
-}
+. $nuget config -Set Verbosity=quiet
+. $nuget restore "$srcFolder\Shimmer.sln" -OutputDirectory "$srcFolder\packages"
