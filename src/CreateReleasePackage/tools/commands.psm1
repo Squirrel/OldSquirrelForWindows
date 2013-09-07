@@ -139,9 +139,3 @@ function New-Release {
     Create-ReleaseForProject -SolutionDir $solutionDir `
                              -BuildDirectory (Join-Path $projectDir $outputDir)
 }
-
-Register-TabExpansion 'New-Release' @{
-        ProjectName = { Get-Project -All | Select -ExpandProperty Name }
-}
-
-Export-ModuleMember New-Release
