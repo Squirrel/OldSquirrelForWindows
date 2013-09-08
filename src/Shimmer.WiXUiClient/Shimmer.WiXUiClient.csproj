@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Shimmer.WixUiClient.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shimmer.Client\Shimmer.Client.csproj">
