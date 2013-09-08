@@ -190,6 +190,58 @@ namespace Shimmer.Tests.Client
         }
 
         [Fact]
+        public void ApplyReleaseWhichMovesAFileToADifferentDirectory()
+        {
+            string tempDir;
+
+            using (Utility.WithTempDirectory(out tempDir))
+            {
+                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
+                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+
+                new[] {
+                    "Shimmer.Core.1.1.0.0-full.nupkg",
+                    "Shimmer.Core.1.3.0.0-full.nupkg",
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
+
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.3.0.0-full.nupkg"));
+
+                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
+
+                using (fixture) {
+                    var progress = new ReplaySubject<int>();
+                    fixture.ApplyReleases(updateInfo, progress).First();
+                    this.Log().Info("Progress: [{0}]", String.Join(",", progress));
+
+                    progress.Buffer(2, 1).All(x => x.Count != 2 || x[1] > x[0]).First().ShouldBeTrue();
+                    progress.Last().ShouldEqual(100);
+                }
+
+                var rootDirectory = Path.Combine(tempDir, "theApp", "app-1.3.0.0");
+
+                new[] {
+                    new {Name = "NLog.dll", Version = new Version("2.0.0.0")},
+                    new {Name = "NSync.Core.dll", Version = new Version("1.1.0.0")},
+                }.ForEach(x =>
+                {
+                    var path = Path.Combine(rootDirectory, x.Name);
+                    this.Log().Info("Looking for {0}", path);
+                    File.Exists(path).ShouldBeTrue();
+                });
+
+                var oldFile = Path.Combine(rootDirectory, "sub", "Ionic.Zip.dll");
+                File.Exists(oldFile).ShouldBeFalse();
+
+                var newFile = Path.Combine(rootDirectory, "other", "Ionic.Zip.dll");
+                File.Exists(newFile).ShouldBeTrue();
+            }
+        }
+
+        [Fact]
         public void ApplyReleasesWithDeltaReleases()
         {
             string tempDir;
