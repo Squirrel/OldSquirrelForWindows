@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>$version$-beta</version>
+    <version>$version$</version>
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
@@ -15,7 +15,7 @@
     <tags>Installer Desktop WiX</tags>
 
     <dependencies>
-      <dependency id="Shimmer.Client" version="[$version$-beta]" />
+      <dependency id="Shimmer.Client" version="[$version$]" />
     </dependencies>
   </metadata>
 </package>
