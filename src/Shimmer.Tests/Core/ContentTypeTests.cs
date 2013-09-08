@@ -1,50 +1,57 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Xml;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;
 using Xunit;
+using Xunit.Extensions;
+using Assert = Xunit.Assert;
 
 namespace Shimmer.Tests.Core
 {
     public class ContentTypeTests
     {
-        [Fact]
-        public void SimpleFileIsProcessed()
+        [Theory]
+        [InlineData("basic.xml", "basic-merged.xml")]
+        [InlineData("complex.xml", "complex-merged.xml")]
+        public void MergeContentTypes(string inputFileName, string expectedFileName)
         {
-            var contentType = IntegrationTestHelper.GetPath("fixtures", "content-types", "basic.xml");
+            var inputFile = IntegrationTestHelper.GetPath("fixtures", "content-types", inputFileName);
+            var expectedFile = IntegrationTestHelper.GetPath("fixtures", "content-types", expectedFileName);
             var tempFile = Path.GetTempFileName() + ".xml";
 
-            try {
-                File.Copy(contentType, tempFile);
+            var expected = new XmlDocument();
+            expected.Load(expectedFile);
 
-                var doc = new XmlDocument();
-                doc.Load(tempFile);
-
-                Assert.DoesNotThrow(() => ContentType.Merge(doc));
-            } finally {
-                File.Delete(tempFile);
-            }
-        }
-
-        [Fact]
-        public void ComplexFileIsProcessed()
-        {
-            var contentType = IntegrationTestHelper.GetPath("fixtures", "content-types", "complex.xml");
-            var tempFile = Path.GetTempFileName() + ".xml";
+            var existingTypes = GetContentTypes(expected);
 
             try
             {
-                File.Copy(contentType, tempFile);
+                File.Copy(inputFile, tempFile);
 
-                var doc = new XmlDocument();
-                doc.Load(tempFile);
+                var actual = new XmlDocument();
+                actual.Load(tempFile);
 
-                Assert.DoesNotThrow(() => ContentType.Merge(doc));
+                ContentType.Merge(actual);
+
+                var actualTypes = GetContentTypes(actual);
+
+                Assert.Equal(existingTypes, actualTypes);
             }
             finally
             {
                 File.Delete(tempFile);
             }
+        }
+
+        static IEnumerable<XmlElement> GetContentTypes(XmlNode doc)
+        {
+            var expectedTypesElement = doc.FirstChild.NextSibling;
+            return expectedTypesElement.ChildNodes.OfType<XmlElement>();
         }
     }
 }
