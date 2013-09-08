@@ -271,11 +271,11 @@ namespace Shimmer.Core
     {
         public static void Merge(XmlDocument doc)
         {
-            var elements = new[] {
-                new { Extension = "diff", ContentType = "application/octet" },
-                new { Extension = "exe", ContentType = "application/octet" },
-                new { Extension = "dll", ContentType = "application/octet" },
-                new { Extension = "shasum", ContentType = "text/plain" },
+            var elements = new [] {
+                Tuple.Create("Default", "diff", "application/octet" ),
+                Tuple.Create("Default", "exe", "application/octet" ),
+                Tuple.Create("Default", "dll", "application/octet" ),
+                Tuple.Create("Default", "shasum", "text/plain" ),
             };
 
             var typesElement = doc.FirstChild.NextSibling;
@@ -285,16 +285,17 @@ namespace Shimmer.Core
             }
 
             var existingTypes = typesElement.ChildNodes.OfType<XmlElement>()
-                .ToDictionary(k => k.GetAttribute("Extension").ToLowerInvariant(),
-                              k => k.GetAttribute("ContentType").ToLowerInvariant());
+                .Select(k => Tuple.Create(k.Name,
+                                          k.GetAttribute("Extension").ToLowerInvariant(),
+                                          k.GetAttribute("ContentType").ToLowerInvariant()));
 
             elements
-                .Where(x => !existingTypes.ContainsKey(x.Extension.ToLowerInvariant()))
+                .Where(x => existingTypes.All(t => t.Item2 != x.Item2.ToLowerInvariant()))
                 .Select(element =>
                 {
-                    var ret = doc.CreateElement("Default", typesElement.NamespaceURI);
-                    var ext = doc.CreateAttribute("Extension"); ext.Value = element.Extension;
-                    var ct = doc.CreateAttribute("ContentType"); ct.Value = element.ContentType;
+                    var ret = doc.CreateElement(element.Item1, typesElement.NamespaceURI);
+                    var ext = doc.CreateAttribute("Extension"); ext.Value = element.Item2;
+                    var ct = doc.CreateAttribute("ContentType"); ct.Value = element.Item3;
                     new[] { ext, ct }.ForEach(x => ret.Attributes.Append(x));
 
                     return ret;
