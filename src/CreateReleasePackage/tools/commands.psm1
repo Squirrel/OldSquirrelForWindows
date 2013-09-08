@@ -1,4 +1,7 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+Import-Module (Join-Path $toolsDir "utilities.psm1")
+
 $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
 
 $wixDir = Join-Path $toolsDir "wix"

@@ -34,10 +34,4 @@ if (Test-Path $binaries) {
     Remove-Item "$rootFolder\bin\Shimmer.WiXUi.*.nupkg"
 }
 
-$currentDir = Get-Location
-
-Set-Location "$rootFolder\tests"
-
-. $rootFolder\ext\pester\bin\pester.bat
-
-Set-Location $currentDir
+. $rootFolder\script\Run-PowershellTests.ps1
