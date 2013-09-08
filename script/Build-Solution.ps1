@@ -3,7 +3,7 @@
     $Project
     ,
 
-    [ValidateSet('FullBuild', 'RunUnitTests', 'RunIntegrationTests', 'Build', 'Clean')]
+    [ValidateSet('Rebuild', 'Build', 'Clean')]
     [string]
     $build = "Build"
     ,
