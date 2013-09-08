@@ -1,10 +1,10 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+Import-Module (Join-Path $toolsDir "utilities.psm1")
+
 $createReleasePackageExe = Join-Path $toolsDir "CreateReleasePackage.exe"
 
 $wixDir = Join-Path $toolsDir "wix"
-$support = Join-Path $toolsDir "support.ps1"
-$echoArgs = Join-Path $toolsDir "EchoArgs.exe"
-
 $candleExe = Join-Path $wixDir "candle.exe"
 $lightExe = Join-Path $wixDir "light.exe"
 
@@ -113,35 +113,3 @@ function Create-ReleaseForProject {
     Write-Message "Running light.exe"
     & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 }
-
-function New-Release {
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, ValueFromPipeLine=$true)]
-        [string] $ProjectName
-    )
-
-    . $support
-
-    if (-not $ProjectName) {
-        $ProjectName = (Get-Project).Name
-    }
-
-    Write-Message "Publishing release for project $ProjectName"
-
-    $solutionDir = (gci $dte.Solution.FullName).Directory
-
-    $project = Get-Project $ProjectName
-
-    $projectDir = (gci $project.FullName).Directory
-    $outputDir =  $project.ConfigurationManager.ActiveConfiguration.Properties.Item("OutputPath").Value
-    
-    Create-ReleaseForProject -SolutionDir $solutionDir `
-                             -BuildDirectory (Join-Path $projectDir $outputDir)
-}
-
-Register-TabExpansion 'New-Release' @{
-        ProjectName = { Get-Project -All | Select -ExpandProperty Name }
-}
-
-Export-ModuleMember New-Release
