@@ -131,9 +131,6 @@
     <None Include="tools\init.ps1" />
     <None Include="tools\Install.ps1" />
     <None Include="keep.me" />
-    <None Include="tools\support.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="tools\template.nuspec.temp" />
     <None Include="tools\visualstudio.psm1" />
   </ItemGroup>

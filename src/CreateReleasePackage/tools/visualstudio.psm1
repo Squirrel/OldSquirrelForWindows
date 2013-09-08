@@ -1,6 +1,7 @@
 ﻿$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Import-Module (Join-Path $toolsDir "utilities.psm1")
+Import-Module (Join-Path $toolsDir "commands.psm1")
 
 function New-Release {
     [CmdletBinding()]
@@ -8,8 +9,6 @@ function New-Release {
         [Parameter(Position=0, ValueFromPipeLine=$true)]
         [string] $ProjectName
     )
-
-    . $support
 
     if (-not $ProjectName) {
         $ProjectName = (Get-Project).Name
