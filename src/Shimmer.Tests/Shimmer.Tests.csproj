@@ -181,6 +181,7 @@
     <Compile Include="Client\InstallManagerTests.cs" />
     <Compile Include="Client\UpdateManagerTests.cs" />
     <Compile Include="Core\AppDomainHelperTests.cs" />
+    <Compile Include="Core\ContentTypeTests.cs" />
     <Compile Include="Core\DeltaPackageTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
