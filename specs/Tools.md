@@ -2,12 +2,12 @@
 
 At the end of the day, here's how a developer will use Shimmer:
 
-1. Add the "Shimmer" package to your application
-1. The post-install for Shimmer enables NuGet Package Build (i.e. flips the
-   bits in NuGet.targets and enables NuGet Package Restore)
-1. From the NuGet package console, run `Create-Release` - this builds the
-   world, and you end up with `$SolutionDir/Releases` folder that has both a
-   Shimmer release folder as well as a `Setup.exe`
+1. Add the **Shimmer** package to your application
+1. As part of the install for Shimmer, NuGet Package Build  is enabled in the csproj file
+1. The user edits the generated `.nuspec` to specify some details about their app
+1. From the NuGet package console, run `New-Release` - this builds the
+   world, and you end up with a `$SolutionDir/Releases` folder that has both a
+   Shimmer release package as well as a `Setup.exe`
 
 ## How does this work:
 

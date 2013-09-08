@@ -1,11 +1,11 @@
-# Implementation (Well that all sounds great Pauls, but how we gonna do this?)
+# Implementation 
 
 ## Major Pieces
 
 We need:
 
 - A client library, which includes the core update logic
-- An executable / PowerShell script to implement `Create-Release`
+- An executable / PowerShell script to implement `New-Release`
 - The actual Setup.exe that Create-Release hacks up, as well as any related
   implementation (WiX stuff?) that we need.
 

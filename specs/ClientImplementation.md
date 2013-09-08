@@ -69,73 +69,75 @@ doesn't actually exist, we'll download the latest full release and set up the
 app.
 
 ### Client-side API
-Referencing Shimmer.dll, `UpdateManager` is all the app dev needs to use.
 
-	UpdateManager
-		UpdateInformation CheckForUpdates()
-		UpdateInformation DownloadUpdate()
-		bool Upgrade()
-		UpdateState State
+Referencing Shimmer.Client.dll, `UpdateManager` is all the app dev needs to use.
+
+    UpdateManager
+        UpdateInfo CheckForUpdates()
+        UpdateInfo DownloadUpdate()
+        List<string> ApplyUpdates()
 		
-`UpdateInformation` contains information about pending updates if there is
+`UpdateInfo` contains information about pending updates if there is
 any, and is null if there isn't.
 
-	UpdateInformation
-		string Version
-		double Filesize
-		string ReleaseNotes*
-		
-`UpdateInformation.ReleaseNotes` would be blank/empty/null until the update is
-downloaded. The ["Latest" Pointer](Implementation.md) information doesn't
-(shouldn't?) contain that.
-		
-	UpdateState (enum)
-		Idle
-		Checking
-		Downloading
-		Updating
-		
-`UpdateManager.UpdateState` could/should be used for UI bindings, reflecting
-different states of the UI based on the update manager. Something stupid like
-the following could work, based on a State
+    UpdateInfo
+        ReleaseEntry CurrentlyInstalledVersion
+        ReleaseEntry FutureReleaseEntry
+        IEnumerable<ReleaseEntry> ReleasesToApply
 
-	<Button FontFamily="../Fonts/#Entypo" FontSize="28" Margin="0,-15,10,-15" RenderTransformOrigin="0.45,0.5">
-        <Button.RenderTransform>
-            <TransformGroup>
-                <ScaleTransform/>
-                <SkewTransform/>
-                <RotateTransform/>
-                <TranslateTransform/>
-            </TransformGroup>
-        </Button.RenderTransform>
-        <Button.Style>
-            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ChromelessButtonStyle}">
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding UpdateState}" Value="Unchecked">
-                        <Setter Property="Button.Content" Value="d" />
-                        <Setter Property="Button.ToolTip" Value="{DynamicResource CheckForUpdatesTooltip}" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding Background}" Value="True">
-                        <DataTrigger.EnterActions>
-                            <BeginStoryboard x:Name="rotatestart" Storyboard="{StaticResource rotate}" />
-                        </DataTrigger.EnterActions>
-                        <DataTrigger.ExitActions>
-                            <StopStoryboard BeginStoryboardName="rotatestart" />
-                        </DataTrigger.ExitActions>
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding UpdateState}" Value="UpToDate">
-                        <Setter Property="Button.Content" Value="W" />
-                        <Setter Property="Button.ToolTip" Value="{DynamicResource UpToDateTooltip}" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding UpdateState}" Value="UpdatePending">
-                        <Setter Property="Button.Content" Value="?" />
-                        <Setter Property="Button.ToolTip" Value="{DynamicResource UpdatePendingTooltip}" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding UpdateState}" Value="Downloading">
-                        <Setter Property="Button.Content" Value="x" />
-                        <Setter Property="Button.ToolTip" Value="{DynamicResource CheckingForUpdatesTooltip}" />
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </Button.Style>
-    </Button>
+And `ReleaseEntry` contains the specifics of each release:
+
+    ReleaseEntry
+        string SHA1
+        string Filename
+        long Filesize
+        bool IsDelta
+
+## Applying Updates
+
+#### A note about Reactive Extensions
+
+Shimmer uses Reactive Extensions (Rx) heavily as the process necessary to retrieve, download and apply updates is best done asynchronously. If you are using the `Microsoft.Bcl.Async` package (which Shimmer also uses) you can combine the Rx APIs with the TPL async/await keywords, for maximum simplicity.
+
+### Check yourself
+
+First, check the location where your application updates are hosted:
+
+    var updateManager = new UpdateManager(@"C:\Users\brendanforster\Desktop\TestApp", 
+                                          "TestApp", 
+                                          FrameworkVersion.Net40);
+
+    var updateInfo = await updateManager.CheckForUpdate();
+
+    if (updateInfo == null) {
+        Console.WriteLine("No updates found");
+    } else if (!info.ReleasesToApply.Any()) {
+        Console.WriteLine("You're up to date!"); 
+    } else {
+        var latest = info.ReleasesToApply.MaxBy(x => x.Version).First();
+        Console.WriteLine("You can update to {0}", latest.Version);
+    }
+
+Depending on the result you get from this operation, you might:
+
+ - not detect any updates
+ - be on the latest version
+ - have one or more versions to apply
+
+### Fetch all the Updates
+
+The result from `CheckForUpdates` will contain a list of releases to apply to your current application.
+
+That result becomes the input to `DownloadReleases`:
+
+    var releases = updateInfo.ReleasesToApply;
+
+    await updateManager.DownloadReleases(releases);
+
+
+### Apply dem Updates
+
+And lastly, once those updates have been downloaded, tell Shimmer to apply them:
+
+    var results = await updateManager.ApplyReleases(downloadedUpdateInfo);
+    updateManager.Dispose(); // don't forget to tidy up after yourself
