@@ -24,6 +24,6 @@ $nugetExe = join-path $srcFolder .nuget\NuGet.exe
 
 . $nugetExe restore $projFile
 
-& "$(get-content env:windir)\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe" $projFile /t:$build /p:Configuration=$config /verbosity:$MSBuildVerbosity
+& $scriptPath\Build-Solution.ps1 -Project $projFile -Build $build -config $config -MSBuildVerbosity $MSBuildVerbosity
 
 & $scriptPath\Run-UnitTests.ps1
