@@ -406,9 +406,9 @@ namespace Shimmer.Client
             // NB: We sort this list in order to guarantee that if a Net20
             // and a Net40 version of a DLL get shipped, we always end up
             // with the 4.0 version.
-            pkg.GetFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion))
-                          .OrderBy(x => x.Path)
-                          .ForEach(x => CopyFileToLocation(target, x));
+            pkg.GetLibFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion))
+                             .OrderBy(x => x.Path)
+                             .ForEach(x => CopyFileToLocation(target, x));
 
             pkg.GetContentFiles().ForEach(x => CopyFileToLocation(target, x));
 

@@ -129,7 +129,7 @@ namespace Shimmer.Core
             dependencies.ForEach(pkg => {
                 this.Log().Info("Scanning {0}", pkg.Id);
 
-                pkg.GetFiles().Where(x => x.Path.StartsWith("lib", true, CultureInfo.InvariantCulture)).ForEach(file => {
+                pkg.GetLibFiles().ForEach(file => {
                     var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
 
                     if(isNonDesktopAssembly(file.Path)) {
@@ -238,7 +238,7 @@ namespace Shimmer.Core
 
             if (packagesRootDir != null && localPackageCache == null) {
                 localPackageCache = Utility.GetAllFilePathsRecursively(packagesRootDir)
-                    .Where(x => x.EndsWith("nupkg", StringComparison.InvariantCultureIgnoreCase))
+                    .Where(PackageHelper.IsPackageFile)
                     .Select(x => new ZipPackage(x))
                     .ToArray();
             }
