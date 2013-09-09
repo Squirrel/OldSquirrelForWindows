@@ -140,7 +140,7 @@ namespace Shimmer.Tests.Client
             using (Utility.WithTempDirectory(out tempDir)) {
                 // NB: This is normally done by CheckForUpdates, but since 
                 // we're skipping that in the test we have to do it ourselves
-                (new DirectoryInfo(Path.Combine(tempDir, "SampleUpdatingApp", "packages"))).CreateRecursive();
+                Directory.CreateDirectory(Path.Combine(tempDir, "SampleUpdatingApp", "packages"));
 
                 var fixture = new UpdateManager("http://localhost:30405", "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture) {
@@ -181,7 +181,7 @@ namespace Shimmer.Tests.Client
             using (Utility.WithTempDirectory(out tempDir)) {
                 // NB: This is normally done by CheckForUpdates, but since 
                 // we're skipping that in the test we have to do it ourselves
-                (new DirectoryInfo(Path.Combine(tempDir, "SampleUpdatingApp", "packages"))).CreateRecursive();
+                Directory.CreateDirectory(Path.Combine(tempDir, "SampleUpdatingApp", "packages"));
 
                 var fixture = new UpdateManager(updateDir.FullName, "SampleUpdatingApp", FrameworkVersion.Net40, tempDir);
                 using (fixture) {

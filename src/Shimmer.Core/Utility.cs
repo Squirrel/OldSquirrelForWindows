@@ -38,28 +38,6 @@ namespace Shimmer.Core
                 .Concat(Directory.GetFiles(rootPath));
         }
 
-        public static DirectoryInfo CreateRecursive(this DirectoryInfo This)
-        {
-            This.FullName.Split(Path.DirectorySeparatorChar).scan("", (acc, x) =>
-            {
-                var path = Path.Combine(acc, x);
-
-                if (path[path.Length - 1] == Path.VolumeSeparatorChar)
-                {
-                    path += Path.DirectorySeparatorChar;
-                }
-
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                return (new DirectoryInfo(path)).FullName;
-            });
-
-            return This;
-        }
-
         public static string CalculateStreamSHA1(Stream file)
         {
             Contract.Requires(file != null && file.CanRead);

@@ -44,7 +44,7 @@ namespace Shimmer.Client
             }
 
             if (createDirectoryIfNecessary && Directory.Exists(dir)) {
-                (new DirectoryInfo(dir)).CreateRecursive();
+                Directory.CreateDirectory(dir);
             }
 
             return Path.Combine(dir, Title + ".lnk");

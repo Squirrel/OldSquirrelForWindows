@@ -92,7 +92,7 @@ namespace Shimmer.Core
                     s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s)),
                     s => new FileInfoWrapper(new System.IO.FileInfo(s)),
                     s => new FileWrapper(),
-                    s => new DirectoryInfoWrapper(new System.IO.DirectoryInfo(s).CreateRecursive()),
+                    s => new DirectoryInfoWrapper(System.IO.Directory.CreateDirectory(s)),
                     s => new System.IO.DirectoryInfo(s).Delete(true),
                     Utility.CopyToAsync,
                     Utility.CreateTempFile);

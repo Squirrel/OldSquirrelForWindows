@@ -137,7 +137,7 @@ namespace Shimmer.Core
                         return;
                     }
 
-                    outPath.Directory.CreateRecursive();
+                    Directory.CreateDirectory(outPath.Directory.FullName);
 
                     using (var of = File.Create(outPath.FullName)) {
                         this.Log().Info("Writing {0} to {1}", file.Path, outPath);
