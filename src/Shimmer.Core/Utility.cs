@@ -224,8 +224,6 @@ namespace Shimmer.Core
             if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
 
             Log().Error("safeDeleteFileAtNextReboot: failed - {0}", name);
-
-            throw new Win32Exception();
         }
 
         static IRxUIFullLogger Log()
