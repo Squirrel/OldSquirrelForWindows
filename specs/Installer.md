@@ -11,14 +11,14 @@ Installer just installs `WixUI` whose job is to:
 
 1. WiX unpacks `WixUI` and runs it, and puts an entry in *Programs and
    Features*.
-1. `WixUI` executes initial install using `Shimmer.Core` for the full
+1. `WixUI` executes initial install using `Shimmer.Client` for the full
    NuGet package, doing the update in-place so the installer never needs to be
    rebuilt.  
 
 ### On Uninstall:
 
 1. WiX gets notified about the uninstall, calls `WixUI` to do app
-   uninstall via `Shimmer.Core`
+   uninstall via `Shimmer.Client`
 1. WiX then blows away `WixUI`, the "real" installed app.
 
 ## Bootstrap UI

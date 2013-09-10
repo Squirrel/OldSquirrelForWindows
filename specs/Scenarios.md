@@ -6,21 +6,21 @@ I'm a developer with a WPF application. I have *zero* way to distribute my
 application at the moment. I go to NuGet and install the Shimmer client library.
 
 Now, I want to publish a release. To do so, I pop into the PowerShell Console
-and type `Create-Release`. What does this do? It:
+and type `New-Release`. What does this do? It:
 
 * Creates a NuGet package of my app (i.e. via shelling out to NuGet.exe or w/e)
 * It puts the package in a special "Releases" directory of my solution (along
   perhaps with a special "delta package" for updates)
 * It also creates a Setup.exe that I can distribute to people
-* Can also transform `changelog.md` to `changelog.html` using either bundled
-  Pretzel in the Shimmer nuget, or wrapping around MarkdownDeep
+* Can also transform `changelog.md` to `changelog.html` using the bundled
+  Markdown library that ships with Shimmer
 
 I've created a new release. Now, I want to share it with the world! I upload
 the contents of my Releases directory verbatim to the web via S3 / FTP /
 whatever.
 
 In my app, I call `bool
-UpdateManager.CheckForUpdates("http://mycoolsite.com/setup.exe")` - similar to
+UpdateManager.CheckForUpdates("http://mycoolsite.com/releases/")` - similar to
 ClickOnce API but not awful. The library helps me check for updates, get the
 ChangeLog HTML to render, and if I'm really lazy, I can just call
 `UpdateManager.ShowUpdateNotification()` and get a stock WPF dialog walking
@@ -36,6 +36,6 @@ restarts, it's the new version.
 #### Users
 
 I click on a link, and a setup experience starts up. Instead of the usual
-"Next >" buttons, I see a single "Install" button (think VS11 Beta setup).
+"Next >" buttons, I see a single "Install" button (think Visual Studio 2012 installer).
 Clicking that installs and immediately opens the application. No UAC prompts,
 no long waits.
