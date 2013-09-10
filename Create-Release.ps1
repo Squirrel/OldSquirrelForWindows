@@ -8,24 +8,41 @@ param(
     [bool] $BumpVersion = $true
 )
 
+function Write-Diagnostic {
+    param([string]$message)
+
+    Write-Host
+    Write-Host $message -ForegroundColor Green
+    Write-Host
+}
+
 $rootFolder = split-path -parent $MyInvocation.MyCommand.Definition
+
+$scriptsFolder = Join-Path $rootFolder "script"
 
 $binaries = "$rootFolder\bin\"
 
 if (Test-Path $binaries) { Remove-Item $binaries -Recurse -Force }
 
-. $rootFolder\script\bootstrap.ps1
-if ($BumpVersion) {
-    . $rootFolder\script\Bump-Version.ps1 -Increment Patch
-}
-. $rootFolder\Build-Solution.ps1 -Build $build -Config $config
+Write-Diagnostic  "Bootstrapping environment"
 
-Write-Host ""
+. $scriptsFolder\bootstrap.ps1
+if ($BumpVersion) {
+    Write-Diagnostic  "Increment version of libraries"
+    . $scriptsFolder\Bump-Version.ps1 -Increment Patch
+}
+
+Write-Diagnostic "Building solution"
+
+. $scriptsFolder\Build-Solution.ps1 -Project "$rootFolder\src\Shimmer.sln" `
+                                    -Build $build -Config $config
+
+Write-Diagnostic "Recreating the CreateReleasePackage package"
+
 Write-Host "Because of a limitation in the auto-generated NuGet package"
 Write-Host "I need to re-compile the CreateReleasePackage tool now"
 Write-Host "passing the magic parameter -Tool so that the project reference"
 Write-Host "goes away"
-WRite-Host ""
 
 . $rootFolder\src\.nuget\NuGet.exe pack $rootFolder\src\CreateReleasePackage\CreateReleasePackage.csproj -Tool -OutputDirectory $rootFolder\bin\ -Verbosity quiet -NoPackageAnalysis
 
@@ -34,4 +51,7 @@ if (Test-Path $binaries) {
     Remove-Item "$rootFolder\bin\Shimmer.WiXUi.*.nupkg"
 }
 
-. $rootFolder\script\Run-PowershellTests.ps1
+Write-Diagnostic "Running all the tests"
+
+. $scriptsFolder\Run-UnitTests.ps1
+. $scriptsFolder\Run-PowershellTests.ps1

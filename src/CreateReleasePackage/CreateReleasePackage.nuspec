@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Shimmer</id>
-    <version>$version$-beta</version>
+    <version>$version$</version>
     <title>Shimmer</title>
     <description>It's like ClickOnce but Works™</description>
     <authors>$author$</authors>
@@ -15,8 +15,8 @@
     <tags>Installer Desktop WiX</tags>
 
     <dependencies>
-      <dependency id="Shimmer.Core" version="[$version$-beta]" />
-      <dependency id="Shimmer.Client" version="[$version$-beta]" />
+      <dependency id="Shimmer.Core" version="[$version$]" />
+      <dependency id="Shimmer.Client" version="[$version$]" />
     </dependencies>
   </metadata>
 

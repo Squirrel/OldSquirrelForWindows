@@ -95,5 +95,3 @@ Write-Host "New version: $newVersion"
 foreach ($item in $items) {
     Write-VersionAssemblyInfo -assemblyInfo $item.FullName -version $newVersion
 }
-
-Write-Host "Now commit and do a build, fool!"
