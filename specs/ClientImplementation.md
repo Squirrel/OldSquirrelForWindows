@@ -97,26 +97,32 @@ And `ReleaseEntry` contains the specifics of each release:
 
 #### A note about Reactive Extensions
 
-Shimmer uses Reactive Extensions (Rx) heavily as the process necessary to retrieve, download and apply updates is best done asynchronously. If you are using the `Microsoft.Bcl.Async` package (which Shimmer also uses) you can combine the Rx APIs with the TPL async/await keywords, for maximum simplicity.
+Shimmer uses Reactive Extensions (Rx) heavily as the process necessary to
+retrieve, download and apply updates is best done asynchronously. If you
+are using the `Microsoft.Bcl.Async` package (which Shimmer also uses) you
+can combine the Rx APIs with the TPL async/await keywords, for maximum
+simplicity.
 
 ### Check yourself
 
 First, check the location where your application updates are hosted:
 
-    var updateManager = new UpdateManager(@"C:\Users\brendanforster\Desktop\TestApp", 
-                                          "TestApp", 
-                                          FrameworkVersion.Net40);
+```
+var updateManager = new UpdateManager(@"C:\Users\brendanforster\Desktop\TestApp",
+                                     "TestApp",
+                                     FrameworkVersion.Net40);
 
-    var updateInfo = await updateManager.CheckForUpdate();
+var updateInfo = await updateManager.CheckForUpdate();
 
-    if (updateInfo == null) {
-        Console.WriteLine("No updates found");
-    } else if (!info.ReleasesToApply.Any()) {
+if (updateInfo == null) {
+    Console.WriteLine("No updates found");
+} else if (!info.ReleasesToApply.Any()) {
         Console.WriteLine("You're up to date!"); 
-    } else {
-        var latest = info.ReleasesToApply.MaxBy(x => x.Version).First();
-        Console.WriteLine("You can update to {0}", latest.Version);
-    }
+} else {
+    var latest = info.ReleasesToApply.MaxBy(x => x.Version).First();
+    Console.WriteLine("You can update to {0}", latest.Version);
+}
+```
 
 Depending on the result you get from this operation, you might:
 
@@ -126,18 +132,22 @@ Depending on the result you get from this operation, you might:
 
 ### Fetch all the Updates
 
-The result from `CheckForUpdates` will contain a list of releases to apply to your current application.
+The result from `CheckForUpdates` will contain a list of releases to apply to
+your current application.
 
 That result becomes the input to `DownloadReleases`:
 
-    var releases = updateInfo.ReleasesToApply;
+```
+var releases = updateInfo.ReleasesToApply;
 
-    await updateManager.DownloadReleases(releases);
-
+await updateManager.DownloadReleases(releases);
+```
 
 ### Apply dem Updates
 
 And lastly, once those updates have been downloaded, tell Shimmer to apply them:
 
-    var results = await updateManager.ApplyReleases(downloadedUpdateInfo);
-    updateManager.Dispose(); // don't forget to tidy up after yourself
+```
+var results = await updateManager.ApplyReleases(downloadedUpdateInfo);
+updateManager.Dispose(); // don't forget to tidy up after yourself
+```
