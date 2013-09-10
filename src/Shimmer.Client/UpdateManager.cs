@@ -432,14 +432,14 @@ namespace Shimmer.Client
 
             using (var inf = x.GetStream())
             using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
-                log.Info("Writing {0} to app directory", targetPath);
+                log.Debug("Writing {0} to app directory", targetPath);
                 inf.CopyTo(of);
             }
         }
 
         List<string> runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
         {
-            log.Debug(CultureInfo.InvariantCulture, "AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
+            log.Debug("AppDomain ID: {0}", AppDomain.CurrentDomain.Id);
 
             fixPinnedExecutables(newCurrentVersion);
 
