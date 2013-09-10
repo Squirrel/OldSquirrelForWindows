@@ -214,18 +214,18 @@ namespace Shimmer.Client
 
         IObservable<Unit> fullUninstall()
         {
-            return Observable.Start(() => {
-                cleanUpOldVersions(new Version(255, 255, 255, 255));
-
-                try {
-                    Utility.DeleteDirectory(rootAppDirectory);
-                    return;
-                } catch (Exception ex) {
-                    log.WarnException("Full Uninstall tried to delete root dir but failed, punting until next reboot", ex);
-                }
-                
-                Utility.DeleteDirectoryAtNextReboot(rootAppDirectory);
-            }, RxApp.TaskpoolScheduler);
+            var maxVersion = new Version(255, 255, 255, 255);
+            return
+                Observable.Start(() => cleanUpOldVersions(maxVersion))
+                .SelectMany(_ => Utility.DeleteDirectory(rootAppDirectory))
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Catch<Unit, Exception>(ex => {
+                    log.WarnException(
+                        "Full Uninstall failed to delete root dir, punting to next reboot", ex);
+                    return Observable.Start(
+                        () => Utility.DeleteDirectoryAtNextReboot(rootAppDirectory));
+                })
+                .Aggregate(Unit.Default, (acc, x) => acc); ;
         }
 
         public void Dispose()
@@ -396,7 +396,7 @@ namespace Shimmer.Client
 
             // NB: This might happen if we got killed partially through applying the release
             if (target.Exists) {
-                Utility.DeleteDirectory(target.FullName);
+                Utility.DeleteDirectory(target.FullName).Wait();
             }
             target.Create();
 
@@ -615,8 +615,9 @@ namespace Shimmer.Client
             return di.GetDirectories().ToObservable()
                 .Where(x => x.Name.ToLowerInvariant().Contains("app-"))
                 .Where(x => currentVersion != null ? x.Name != getDirectoryForRelease(currentVersion).Name : true)
-                .MapReduce(x => Observable.Start(() => Utility.DeleteDirectory(x.FullName), RxApp.TaskpoolScheduler)
-                    .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default)))
+                .SelectMany(x => Utility.DeleteDirectory(x.FullName))
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                    .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default))
                 .Aggregate(Unit.Default, (acc, x) => acc);
         }
     }

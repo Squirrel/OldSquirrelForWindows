@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -139,13 +140,13 @@ namespace Shimmer.Core
                 DeleteDirectory(tempDir.FullName));
         }
 
-        public static void DeleteDirectory(string directoryPath)
+        public static IObservable<Unit> DeleteDirectory(string directoryPath)
         {
             Contract.Requires(!String.IsNullOrEmpty(directoryPath));
 
             if (!Directory.Exists(directoryPath)) {
                 Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
-                return;
+                return Observable.Return(Unit.Default);
             }
 
             // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
@@ -165,24 +166,44 @@ namespace Shimmer.Core
                 Log().Warn(message, ex);
             }
 
-            foreach (var file in files) {
-                File.SetAttributes(file, FileAttributes.Normal);
-                var filePath = file;
-                (new Action(() => File.Delete(Path.Combine(directoryPath, filePath)))).Retry();
-            }
+            var fileOperations = Observable.For(files,
+                file => Observable.Start(() => {
+                    Log().Debug("Now deleting file: {0}", file);
+                    File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(Path.Combine(directoryPath, file));
+                }).Retry(3)
+            );
 
-            foreach (var dir in dirs) {
-                DeleteDirectory(Path.Combine(directoryPath, dir));
-            }
+            var directoryOperations = Observable.For(dirs,
+                dir => {
+                    Log().Debug("Recurse into subdirectory: {0}", dir);
+                    return DeleteDirectory(Path.Combine(directoryPath, dir))
+                                .Retry(3);
+                }
+            );
 
-            File.SetAttributes(directoryPath, FileAttributes.Normal);
-            try {
-                Directory.Delete(directoryPath, false);
-            } catch (Exception ex) {
-                var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
-                Log().ErrorException(message, ex);
-                throw;
-            }
+            var subject = new AsyncSubject<Unit>();
+
+            fileOperations
+                .Merge(directoryOperations)
+                .Subscribe(
+                    subject.OnNext,
+                    subject.OnError,
+                    () => {
+                        Log().Debug("Now deleting folder: {0}", directoryPath);
+                        File.SetAttributes(directoryPath, FileAttributes.Normal);
+
+                        try {
+                            Directory.Delete(directoryPath, false);
+                        } catch (Exception ex) {
+                            var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
+                            Log().ErrorException(message, ex);
+                    }
+
+                subject.OnCompleted();
+            });
+
+            return subject;
         }
 
         public static Tuple<string, Stream> CreateTempFile()
