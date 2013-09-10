@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;
 using Xunit;
@@ -11,7 +8,6 @@ namespace Shimmer.Tests.Core
 {
     public class UtilityTests
     {
-
         [Fact]
         public void ShaCheckShouldBeCaseInsensitive()
         {
@@ -22,7 +18,6 @@ namespace Shimmer.Tests.Core
 
             Assert.NotEqual(sha1FromExternalTool, sha1);
             Assert.Equal(sha1FromExternalTool, sha1, StringComparer.OrdinalIgnoreCase);
-
         }
     }
 }
