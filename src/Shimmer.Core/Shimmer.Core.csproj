@@ -132,6 +132,7 @@
   <ItemGroup>
     <Compile Include="AppDomainHelper.cs" />
     <Compile Include="BinaryPatchUtility.cs" />
+    <Compile Include="ContentType.cs" />
     <Compile Include="DeltaPackage.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />

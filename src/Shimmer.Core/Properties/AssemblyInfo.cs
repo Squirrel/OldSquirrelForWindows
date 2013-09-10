@@ -35,3 +35,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyInformationalVersion("0.6.19")]
 
 [assembly: InternalsVisibleTo("Shimmer.Client")]
+[assembly: InternalsVisibleTo("Shimmer.Tests")]

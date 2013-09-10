@@ -255,35 +255,11 @@ namespace Shimmer.Core
 
         static internal void addDeltaFilesToContentTypes(string rootDirectory)
         {
-            var elements = new[] {
-                new { Extension = "diff", ContentType = "application/octet" },
-                new { Extension = "exe", ContentType = "application/octet" },
-                new { Extension = "dll", ContentType = "application/octet" },
-                new { Extension = "shasum", ContentType = "text/plain" },
-            };
-
             var doc = new XmlDocument();
             var path = Path.Combine(rootDirectory, "[Content_Types].xml");
             doc.Load(path);
 
-            var typesElement = doc.FirstChild.NextSibling;
-            if (typesElement.Name.ToLowerInvariant() != "types") {
-                throw new Exception("Invalid ContentTypes file, expected root node should be 'Types'");
-            }
-
-            var existingTypes = typesElement.ChildNodes.OfType<XmlElement>()
-                .ToDictionary(k => k.GetAttribute("Extension").ToLowerInvariant(), k => k.GetAttribute("ContentType").ToLowerInvariant());
-
-            elements
-                .Where(x => !existingTypes.ContainsKey(x.Extension.ToLowerInvariant()))
-                .Select(element => {
-                    var ret = doc.CreateElement("Default", typesElement.NamespaceURI);
-                    var ext = doc.CreateAttribute("Extension"); ext.Value = element.Extension;
-                    var ct = doc.CreateAttribute("ContentType"); ct.Value = element.ContentType;
-                    new[] { ext, ct }.ForEach(x => ret.Attributes.Append(x));
-
-                    return ret;
-                }).ForEach(x => typesElement.AppendChild(x));
+            ContentType.Merge(doc);
 
             using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
                 doc.Save(sw);
