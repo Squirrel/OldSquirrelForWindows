@@ -237,7 +237,14 @@ namespace Shimmer.Tests.Core
 
                 this.Log().Info("Files in release package:");
 
-                Assert.Equal(1, pkg.GetContentFiles().Count());
+                var contentFiles = pkg.GetContentFiles();
+                Assert.Equal(2, contentFiles.Count());
+
+                var contentFilePaths = contentFiles.Select(f => f.EffectivePath);
+
+                Assert.Contains("some-words.txt", contentFilePaths);
+                Assert.Contains("dir\\item-in-subdirectory.txt", contentFilePaths);
+
                 Assert.Equal(1, pkg.GetLibFiles().Count());
             }
             finally

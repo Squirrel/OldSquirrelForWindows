@@ -147,6 +147,7 @@ namespace Shimmer.Tests.Client
                     var filesToLookFor = new[] {
                         "ProjectWithContent\\app-1.0.0.0\\project-with-content.exe",
                         "ProjectWithContent\\app-1.0.0.0\\some-words.txt",
+                        "ProjectWithContent\\app-1.0.0.0\\dir\\item-in-subdirectory.txt",
                         "ProjectWithContent\\packages\\RELEASES",
                         "ProjectWithContent\\packages\\ProjectWithContent.1.0.0.0-beta-full.nupkg",
                     };
