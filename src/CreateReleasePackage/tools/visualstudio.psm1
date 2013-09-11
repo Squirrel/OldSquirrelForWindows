@@ -24,7 +24,7 @@ function New-Release {
     $outputDir =  $project.ConfigurationManager.ActiveConfiguration.Properties.Item("OutputPath").Value
     
     Create-ReleaseForProject -SolutionDir $solutionDir `
-                             -BuildDirectory (Join-Path $projectDir $outputDir)
+                             -BuildDir (Join-Path $projectDir $outputDir)
 }
 
 Register-TabExpansion 'New-Release' @{

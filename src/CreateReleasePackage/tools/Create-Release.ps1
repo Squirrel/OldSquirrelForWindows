@@ -3,9 +3,9 @@ param (
 	[Parameter(Mandatory=$true)]
 	[string] $SolutionDir,
 	[Parameter(Mandatory=$true)]
-	[string] $BuildDirectory,
+	[string] $BuildDir,
 	[Parameter(Mandatory = $false)]
-	[string]$ReleasesDirectory = (Join-Path $SolutionDir "Releases")
+	[string]$ReleasesDir = (Join-Path $SolutionDir "Releases")
 )
 
 Set-PSDebug -Strict
@@ -16,5 +16,5 @@ Import-Module (Join-Path $toolsDir "utilities.psm1")
 Import-Module (Join-Path $toolsDir "commands.psm1")
 
 Create-ReleaseForProject -SolutionDir $SolutionDir `
-                         -BuildDirectory $BuildDirectory `
-                         -ReleasesDirectory $ReleasesDirectory
+                         -BuildDir $BuildDir `
+                         -ReleasesDir $ReleasesDir
