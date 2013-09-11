@@ -406,22 +406,11 @@ namespace Shimmer.Client
             // NB: We sort this list in order to guarantee that if a Net20
             // and a Net40 version of a DLL get shipped, we always end up
             // with the 4.0 version.
-            pkg.GetFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion)).OrderBy(x => x.Path)
-                .ForEach(x => {
-                    var targetPath = Path.Combine(target.FullName, x.EffectivePath);
+            pkg.GetFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion))
+                          .OrderBy(x => x.Path)
+                          .ForEach(x => CopyFileToLocation(target, x));
 
-                    var fi = fileSystem.GetFileInfo(targetPath);
-                    if (fi.Exists) fi.Delete();
-
-                    var dir = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(targetPath));
-                    if (!dir.Exists) dir.Create();
-
-                    using (var inf = x.GetStream())
-                    using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
-                        log.Info("Writing {0} to app directory", targetPath);
-                        inf.CopyTo(of);
-                    }
-                });
+            pkg.GetContentFiles().ForEach(x => CopyFileToLocation(target, x));
 
             var newCurrentVersion = updateInfo.FutureReleaseEntry.Version;
 
@@ -429,6 +418,23 @@ namespace Shimmer.Client
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
             return runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
+        }
+
+        void CopyFileToLocation(FileSystemInfoBase target, IPackageFile x)
+        {
+            var targetPath = Path.Combine(target.FullName, x.EffectivePath);
+
+            var fi = fileSystem.GetFileInfo(targetPath);
+            if (fi.Exists) fi.Delete();
+
+            var dir = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(targetPath));
+            if (!dir.Exists) dir.Create();
+
+            using (var inf = x.GetStream())
+            using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
+                log.Info("Writing {0} to app directory", targetPath);
+                inf.CopyTo(of);
+            }
         }
 
         List<string> runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)

@@ -61,20 +61,24 @@ namespace Shimmer.Tests.TestHelpers
         }
 
         static object gate = 42;
-        public static IDisposable WithFakeInstallDirectory(out string path)
+        public static IDisposable WithFakeInstallDirectory(string packageFileName, out string path)
         {
             var ret = Utility.WithTempDirectory(out path);
 
-            const string pkg = "SampleUpdatingApp.1.1.0.0.nupkg";
-            File.Copy(GetPath("fixtures", pkg), Path.Combine(path, pkg));
-            var rp = ReleaseEntry.GenerateFromFile(Path.Combine(path, pkg));
-            ReleaseEntry.WriteReleaseFile(new[] {rp}, Path.Combine(path, "RELEASES"));
+            File.Copy(GetPath("fixtures", packageFileName), Path.Combine(path, packageFileName));
+            var rp = ReleaseEntry.GenerateFromFile(Path.Combine(path, packageFileName));
+            ReleaseEntry.WriteReleaseFile(new[] { rp }, Path.Combine(path, "RELEASES"));
 
             // NB: This is a temporary hack. The reason we serialize the tests
             // like this, is to make sure that we don't have two tests registering
             // their Service Locators with RxApp.
             Monitor.Enter(gate);
             return new CompositeDisposable(ret, Disposable.Create(() => Monitor.Exit(gate)));
+        }
+
+        public static IDisposable WithFakeInstallDirectory(out string path)
+        {
+            return WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out path);
         }
 
         public static IDisposable WithFakeAlreadyInstalledApp(out string path)

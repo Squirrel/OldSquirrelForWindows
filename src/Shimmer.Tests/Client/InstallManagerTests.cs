@@ -22,8 +22,7 @@ namespace Shimmer.Tests.Client
 {
     public class InstallManagerTests
     {
-        [Fact(Skip="This test needs to be reviewed - it expects the " + 
-            "SampleUpdatingApp.exe and RELEASES but those do not seem to be created")]
+        [Fact(Skip="The Zip test has some zero values - too fast lol")]
         public void EigenUpdateWithoutUpdateURL()
         {
             string dir;
@@ -41,7 +40,7 @@ namespace Shimmer.Tests.Client
                 var progressValues = new List<int>();
                 progress.Subscribe(progressValues.Add);
 
-                fixture.ExecuteInstall(dir, pkg, progress);
+                fixture.ExecuteInstall(dir, pkg, progress).Wait();
 
                 var filesToLookFor = new[] {
                     "SampleUpdatingApp\\app-1.1.0.0\\SampleUpdatingApp.exe",
@@ -122,6 +121,44 @@ namespace Shimmer.Tests.Client
             }
             
             fixture.ExecuteUninstall().First();
+        }
+
+        [Fact]
+        public void InstallWithContentInPackageDropsInSameFolder()
+        {
+            string dir;
+            string outDir;
+
+            var package = "ProjectWithContent.1.0.0.0-beta-full.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                try
+                {
+                    var di = new DirectoryInfo(dir);
+
+                    var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                    var fixture = new InstallManager(bundledRelease, outDir);
+                    var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                    fixture.ExecuteInstall(dir, pkg).Wait();
+
+                    var filesToLookFor = new[] {
+                        "ProjectWithContent\\app-1.0.0.0\\project-with-content.exe",
+                        "ProjectWithContent\\app-1.0.0.0\\some-words.txt",
+                        "ProjectWithContent\\app-1.0.0.0\\dir\\item-in-subdirectory.txt",
+                        "ProjectWithContent\\packages\\RELEASES",
+                        "ProjectWithContent\\packages\\ProjectWithContent.1.0.0.0-beta-full.nupkg",
+                    };
+
+                    filesToLookFor.ForEach(f => Assert.True(File.Exists(Path.Combine(outDir, f)), "Could not find file: " + f));
+                }
+                finally
+                {
+                    Directory.Delete(dir, true);
+                }
+            }
         }
     }
 }
