@@ -420,7 +420,7 @@ namespace Shimmer.Client
             return runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
         }
 
-        void CopyFileToLocation(DirectoryInfoBase target, IPackageFile x)
+        void CopyFileToLocation(FileSystemInfoBase target, IPackageFile x)
         {
             var targetPath = Path.Combine(target.FullName, x.EffectivePath);
 
