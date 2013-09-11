@@ -423,12 +423,31 @@ namespace Shimmer.Client
                     }
                 });
 
+            pkg.GetContentFiles().ForEach(x => CopyFileToLocation(target, x));
+
             var newCurrentVersion = updateInfo.FutureReleaseEntry.Version;
 
             // Perform post-install; clean up the previous version by asking it
             // which shortcuts to install, and nuking them. Then, run the app's
             // post install and set up shortcuts.
             return runPostInstallAndCleanup(newCurrentVersion, updateInfo.IsBootstrapping);
+        }
+
+        void CopyFileToLocation(DirectoryInfoBase target, IPackageFile x)
+        {
+            var targetPath = Path.Combine(target.FullName, x.EffectivePath);
+
+            var fi = fileSystem.GetFileInfo(targetPath);
+            if (fi.Exists) fi.Delete();
+
+            var dir = fileSystem.GetDirectoryInfo(Path.GetDirectoryName(targetPath));
+            if (!dir.Exists) dir.Create();
+
+            using (var inf = x.GetStream())
+            using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
+                log.Info("Writing {0} to app directory", targetPath);
+                inf.CopyTo(of);
+            }
         }
 
         List<string> runPostInstallAndCleanup(Version newCurrentVersion, bool isBootstrapping)
