@@ -25,12 +25,13 @@ function Create-ReleaseForProject {
         [Parameter(Mandatory = $true)]
         [string]$solutionDir,
         [Parameter(Mandatory = $true)]
-        [string]$buildDirectory
+        [string]$buildDirectory,
+        [Parameter(Mandatory = $false)]
+        [string]$releasesDirectory = Join-Path $solutionDir "Releases"
     )
 
-    $releaseDir = Join-Path $solutionDir "Releases"
-    if (!(Test-Path $releaseDir)) { `
-        New-Item -ItemType Directory -Path $releaseDir | Out-Null
+    if (!(Test-Path $releasesDirectory)) { `
+        New-Item -ItemType Directory -Path $releasesDirectory | Out-Null
     }
 
     Write-Message "Checking $buildDirectory for packages`n"
