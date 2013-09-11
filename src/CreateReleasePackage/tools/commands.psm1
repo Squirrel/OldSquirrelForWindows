@@ -27,7 +27,7 @@ function Create-ReleaseForProject {
         [Parameter(Mandatory = $true)]
         [string]$buildDirectory,
         [Parameter(Mandatory = $false)]
-        [string]$releasesDirectory = Join-Path $solutionDir "Releases"
+        [string]$releasesDirectory = (Join-Path $solutionDir "Releases")
     )
 
     if (!(Test-Path $releasesDirectory)) { `
@@ -53,7 +53,7 @@ function Create-ReleaseForProject {
     }
 
     Write-Host ""
-    Write-Message "Publishing artifacts to $releaseDir"
+    Write-Message "Publishing artifacts to $releasesDirectory"
 
     $releasePackages = @()
 
@@ -67,7 +67,7 @@ function Create-ReleaseForProject {
 
     foreach($pkg in $nugetPackages) {
         $pkgFullName = $pkg.FullName
-        $releaseOutput = & $createReleasePackageExe -o $releaseDir -p $packageDir $pkgFullName
+        $releaseOutput = & $createReleasePackageExe -o $releasesDirectory -p $packageDir $pkgFullName
 
         $packages = $releaseOutput.Split(";")
         $fullRelease = $packages[0].Trim()
@@ -109,8 +109,8 @@ function Create-ReleaseForProject {
     Remove-ItemSafe "$buildDirectory\template.wixobj"
 
     Write-Message "Running candle.exe"
-    & $candleExe -d"ToolsDir=$toolsDir" -d"ReleasesFile=$releaseDir\RELEASES" -d"NuGetFullPackage=$latestFullRelease" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
+    & $candleExe -d"ToolsDir=$toolsDir" -d"ReleasesFile=$releasesDirectory\RELEASES" -d"NuGetFullPackage=$latestFullRelease" -out "$buildDirectory\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
 
     Write-Message "Running light.exe"
-    & $lightExe -out "$releaseDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
+    & $lightExe -out "$releasesDirectory\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$buildDirectory\template.wixobj"
 }
