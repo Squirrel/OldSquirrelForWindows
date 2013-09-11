@@ -213,5 +213,37 @@ namespace Shimmer.Tests.Core
                 File.Delete(outputFile);
             }
         }
+
+        [Fact]
+        public void ContentFilesAreIncludedInCreatedPackage()
+        {
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectWithContent.1.0.0.0-beta.nupkg");
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+            var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+
+            var fixture = new ReleasePackage(inputPackage);
+            (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+            try
+            {
+                fixture.CreateReleasePackage(outputPackage, sourceDir);
+
+                this.Log().Info("Resulting package is at {0}", outputPackage);
+                var pkg = new ZipPackage(outputPackage);
+
+                int refs = pkg.FrameworkAssemblies.Count();
+                this.Log().Info("Found {0} refs", refs);
+                refs.ShouldEqual(0);
+
+                this.Log().Info("Files in release package:");
+
+                Assert.Equal(1, pkg.GetContentFiles().Count());
+                Assert.Equal(1, pkg.GetLibFiles().Count());
+            }
+            finally
+            {
+                File.Delete(outputPackage);
+            }
+        }
     }
 }
