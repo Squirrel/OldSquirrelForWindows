@@ -3,11 +3,8 @@ $rootDirectory = join-path $scriptPath ..
 $binFolder = join-path $scriptPath "..\bin\"
 $nugetExe = join-path $scriptPath "..\src\.nuget\NuGet.exe"
 
-Write-Host $binFolder
-Write-Host $nugetExe
-
-$packages = Get-ChildItem $binFolder\*.nupkg -Exclude *.symbols.nupkg
-
+$packages = Get-ChildItem $binFolder\*.nupkg -Exclude *.symbols.nupkg `
+             | Sort { $_.Length }
 $packages | foreach { 
  $file = $_.FullName
  Write-Host "Publishing file to NuGet:" $file
