@@ -106,10 +106,20 @@ function Create-ReleaseForProject {
     Remove-ItemSafe $wixTemplate
     mv $candleTemplate $wixTemplate | Out-Null
 
+    # we are all made of stars and string replacement code
+    $releasesFile = Join-Path $ReleasesDir "RELEASES"
+    $templateText = Get-Content $wixTemplate
+    $templateText = $templateText `
+                        -Replace "\$\(var.ToolsDir\)", $toolsDir `
+                        -Replace "\$\(var.ReleasesFile\)", $releasesFile `
+                        -Replace "\$\(var.NuGetFullPackage\)", $latestFullRelease
+    
+    Set-Content $wixTemplate $templateText
+    
     Remove-ItemSafe "$BuildDir\template.wixobj"
 
     Write-Message "Running candle.exe"
-    & $candleExe -d"ToolsDir=$toolsDir" -d"ReleasesFile=$ReleasesDir\RELEASES" -d"NuGetFullPackage=$latestFullRelease" -out "$BuildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
+    & $candleExe -out "$BuildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
 
     Write-Message "Running light.exe"
     & $lightExe -out "$ReleasesDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$BuildDir\template.wixobj"
