@@ -23,7 +23,7 @@ function New-Release {
     $projectDir = (gci $project.FullName).Directory
     $outputDir =  $project.ConfigurationManager.ActiveConfiguration.Properties.Item("OutputPath").Value
     
-    Create-ReleaseForProject -SolutionDir $solutionDir `
+    New-ReleaseForPackage -SolutionDir $solutionDir `
                              -BuildDir (Join-Path $projectDir $outputDir)
 }
 

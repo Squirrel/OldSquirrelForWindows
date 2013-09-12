@@ -104,14 +104,9 @@ function Get-ProjectItem {
     )
 
     (Resolve-ProjectName $ProjectName) | %{
+        $_.ProjectItems | Where-Object { $_.Name -eq $FileName } `
+                        | Select-Object -first 1
 
-        $existingFile = $_.ProjectItems | Where-Object { $_.Name -eq $FileName }
-
-        if ($existingFile.length -eq 0) {
-            $null
-        } else {
-            $existingFile[0]
-        }
     }
 }
 

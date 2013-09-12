@@ -15,6 +15,6 @@ $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Import-Module (Join-Path $toolsDir "utilities.psm1")
 Import-Module (Join-Path $toolsDir "commands.psm1")
 
-Create-ReleaseForProject -SolutionDir $SolutionDir `
+New-ReleaseForPackage -SolutionDir $SolutionDir `
                          -BuildDir $BuildDir `
                          -ReleasesDir $ReleasesDir

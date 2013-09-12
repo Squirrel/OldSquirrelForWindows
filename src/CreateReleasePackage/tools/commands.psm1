@@ -8,7 +8,7 @@ $wixDir = Join-Path $toolsDir "wix"
 $candleExe = Join-Path $wixDir "candle.exe"
 $lightExe = Join-Path $wixDir "light.exe"
 
-function Generate-TemplateFromPackage {
+function New-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
         [string]$packageFile,
@@ -20,7 +20,7 @@ function Generate-TemplateFromPackage {
     $resultFile
 }
 
-function Create-ReleaseForProject {
+function New-ReleaseForPackage {
     param(
         [Parameter(Mandatory = $true)]
         [string]$SolutionDir,
@@ -100,16 +100,26 @@ function Create-ReleaseForProject {
     Write-Host ""
     Write-Message "Creating installer for $latestFullRelease"
 
-    $candleTemplate = Generate-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
+    $candleTemplate = New-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
     $wixTemplate = Join-Path $BuildDir "template.wxs"
 
     Remove-ItemSafe $wixTemplate
     mv $candleTemplate $wixTemplate | Out-Null
 
+    # we are all made of stars and string replacement code
+    $releasesFile = Join-Path $ReleasesDir "RELEASES"
+    $templateText = Get-Content $wixTemplate
+    $templateText = $templateText `
+                        -Replace "\$\(var.ToolsDir\)", $toolsDir `
+                        -Replace "\$\(var.ReleasesFile\)", $releasesFile `
+                        -Replace "\$\(var.NuGetFullPackage\)", $latestFullRelease
+    
+    Set-Content $wixTemplate $templateText
+    
     Remove-ItemSafe "$BuildDir\template.wixobj"
 
     Write-Message "Running candle.exe"
-    & $candleExe -d"ToolsDir=$toolsDir" -d"ReleasesFile=$ReleasesDir\RELEASES" -d"NuGetFullPackage=$latestFullRelease" -out "$BuildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
+    & $candleExe -out "$BuildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
 
     Write-Message "Running light.exe"
     & $lightExe -out "$ReleasesDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$BuildDir\template.wixobj"
