@@ -8,7 +8,7 @@ $wixDir = Join-Path $toolsDir "wix"
 $candleExe = Join-Path $wixDir "candle.exe"
 $lightExe = Join-Path $wixDir "light.exe"
 
-function Generate-TemplateFromPackage {
+function New-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
         [string]$packageFile,
@@ -20,7 +20,7 @@ function Generate-TemplateFromPackage {
     $resultFile
 }
 
-function Create-ReleaseForProject {
+function New-ReleaseForPackage {
     param(
         [Parameter(Mandatory = $true)]
         [string]$SolutionDir,
@@ -100,7 +100,7 @@ function Create-ReleaseForProject {
     Write-Host ""
     Write-Message "Creating installer for $latestFullRelease"
 
-    $candleTemplate = Generate-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
+    $candleTemplate = New-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
     $wixTemplate = Join-Path $BuildDir "template.wxs"
 
     Remove-ItemSafe $wixTemplate
