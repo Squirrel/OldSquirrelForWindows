@@ -166,44 +166,34 @@ namespace Shimmer.Core
                 Log().Warn(message, ex);
             }
 
-            var fileOperations = Observable.For(files,
-                file => Observable.Start(() => {
+            var fileOperations = files.MapReduce(file =>
+                Observable.Start(() => {
                     Log().Debug("Now deleting file: {0}", file);
                     File.SetAttributes(file, FileAttributes.Normal);
                     File.Delete(Path.Combine(directoryPath, file));
-                }).Retry(3)
-            );
+                }, RxApp.TaskpoolScheduler))
+            .Select(_ => Unit.Default);
 
-            var directoryOperations = Observable.For(dirs,
-                dir => {
-                    Log().Debug("Recurse into subdirectory: {0}", dir);
-                    return DeleteDirectory(Path.Combine(directoryPath, dir))
-                                .Retry(3);
-                }
-            );
+            var directoryOperations =
+                dirs.MapReduce(dir => DeleteDirectory(Path.Combine(directoryPath, dir))
+                    .Retry(3))
+                    .Select(_ => Unit.Default);
 
-            var subject = new AsyncSubject<Unit>();
+            return fileOperations
+                .Merge(directoryOperations, RxApp.TaskpoolScheduler)
+                .ToList() // still feeling a bit icky
+                .Select(_ => {
+                    Log().Debug("Now deleting folder: {0}", directoryPath);
+                    File.SetAttributes(directoryPath, FileAttributes.Normal);
 
-            fileOperations
-                .Merge(directoryOperations)
-                .Subscribe(
-                    subject.OnNext,
-                    subject.OnError,
-                    () => {
-                        Log().Debug("Now deleting folder: {0}", directoryPath);
-                        File.SetAttributes(directoryPath, FileAttributes.Normal);
-
-                        try {
-                            Directory.Delete(directoryPath, false);
-                        } catch (Exception ex) {
-                            var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
-                            Log().ErrorException(message, ex);
+                    try {
+                        Directory.Delete(directoryPath, false);
+                    } catch (Exception ex) {
+                        var message = String.Format("DeleteDirectory: could not delete - {0}", directoryPath);
+                        Log().ErrorException(message, ex);
                     }
-
-                subject.OnCompleted();
-            });
-
-            return subject;
+                    return Unit.Default;
+                });
         }
 
         public static Tuple<string, Stream> CreateTempFile()
