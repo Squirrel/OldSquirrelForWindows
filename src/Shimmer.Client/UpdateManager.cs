@@ -614,8 +614,7 @@ namespace Shimmer.Client
             return di.GetDirectories().ToObservable()
                 .Where(x => x.Name.ToLowerInvariant().Contains("app-"))
                 .Where(x => currentVersion != null ? x.Name != getDirectoryForRelease(currentVersion).Name : true)
-                .SelectMany(x => Utility.DeleteDirectory(x.FullName))
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .SelectMany(x => Utility.DeleteDirectory(x.FullName, RxApp.TaskpoolScheduler))
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default))
                 .Aggregate(Unit.Default, (acc, x) => acc);
         }

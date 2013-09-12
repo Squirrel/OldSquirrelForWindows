@@ -140,8 +140,10 @@ namespace Shimmer.Core
                 DeleteDirectory(tempDir.FullName));
         }
 
-        public static IObservable<Unit> DeleteDirectory(string directoryPath)
+        public static IObservable<Unit> DeleteDirectory(string directoryPath, IScheduler scheduler = null)
         {
+            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+
             Contract.Requires(!String.IsNullOrEmpty(directoryPath));
 
             if (!Directory.Exists(directoryPath)) {
@@ -171,16 +173,16 @@ namespace Shimmer.Core
                     Log().Debug("Now deleting file: {0}", file);
                     File.SetAttributes(file, FileAttributes.Normal);
                     File.Delete(Path.Combine(directoryPath, file));
-                }, RxApp.TaskpoolScheduler))
+                }, scheduler))
             .Select(_ => Unit.Default);
 
             var directoryOperations =
-                dirs.MapReduce(dir => DeleteDirectory(Path.Combine(directoryPath, dir))
+                dirs.MapReduce(dir => DeleteDirectory(Path.Combine(directoryPath, dir), scheduler)
                     .Retry(3))
                     .Select(_ => Unit.Default);
 
             return fileOperations
-                .Merge(directoryOperations, RxApp.TaskpoolScheduler)
+                .Merge(directoryOperations, scheduler)
                 .ToList() // still feeling a bit icky
                 .Select(_ => {
                     Log().Debug("Now deleting folder: {0}", directoryPath);
