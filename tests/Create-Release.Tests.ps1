@@ -69,7 +69,7 @@ Describe "Create-Release" {
          -Destination "$toolsDir\wix"
 
     . "$toolsDir\Create-Release.ps1" -SolutionDir $solutionDir `
-                                     -BuildDirectory $buildOutputDir
+                                     -BuildDir $buildOutputDir
 
     It "completes without error" {
        $LASTEXITCODE | Should Be 0
