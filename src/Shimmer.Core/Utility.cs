@@ -214,7 +214,10 @@ namespace Shimmer.Core
         {
             if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
 
-            Log().Error("safeDeleteFileAtNextReboot: failed - {0}", name);
+            // thank you, http://www.pinvoke.net/default.aspx/coredll.getlasterror
+            var lastError = Marshal.GetLastWin32Error();
+
+            Log().Error("safeDeleteFileAtNextReboot: failed - {0} - {1}", name, lastError);
         }
 
         static IRxUIFullLogger Log()
