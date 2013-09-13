@@ -60,6 +60,11 @@
             </xs:appinfo>
         </xs:annotation>
         <xs:complexType>
+            <xs:attribute name="LaunchTarget" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>If set, the success page will show a Launch button the user can use to launch the application being installed. The string value can be formatted using Burn variables enclosed in brackets, to refer to installation directories and so forth.</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
             <xs:attribute name="LicenseFile" type="xs:string">
                 <xs:annotation>
                     <xs:documentation>Source file of the RTF license file. Cannot be used simultaneously with LicenseUrl.</xs:documentation>
@@ -94,6 +99,11 @@
                 <xs:annotation>
                     <xs:documentation>If set to "yes", attempting to installer a downgraded version of a bundle will be treated as a successful do-nothing operation.
                     The default behavior (or when explicitly set to "no") is to treat downgrade attempts as failures. </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="SuppressRepair" type="YesNoType">
+                <xs:annotation>
+                    <xs:documentation>If set to "yes", the Repair button will not be shown in the maintenance-mode UI.</xs:documentation>
                 </xs:annotation>
             </xs:attribute>
         </xs:complexType>

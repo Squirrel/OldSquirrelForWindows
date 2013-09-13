@@ -376,6 +376,16 @@ DAPI_(BOOL) ThemeControlEnabled(
     );
 
 /********************************************************************
+ ThemeControlElevates - sets/removes the shield icon on a control.
+
+ *******************************************************************/
+DAPI_(void) ThemeControlElevates(
+    __in THEME* pTheme,
+    __in DWORD dwControl,
+    __in BOOL fElevates
+    );
+
+/********************************************************************
  ThemeShowControl - shows/hides a control.
 
  *******************************************************************/

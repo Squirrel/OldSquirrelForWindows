@@ -42,6 +42,17 @@ HRESULT DAPI DictCreateStringList(
     __in DWORD dwNumExpectedItems,
     __in DICT_FLAG dfFlags
     );
+HRESULT DAPI DictCreateStringListFromArray(
+    __out_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE* psdHandle,
+    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
+    __in const DWORD cStringArray,
+    __in DICT_FLAG dfFlags
+    );
+HRESULT DAPI DictCompareStringListToArray(
+    __in_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE sdStringList,
+    __in_ecount(cStringArray) const LPCWSTR* rgwzStringArray,
+    __in const DWORD cStringArray
+    );
 HRESULT DAPI DictAddKey(
     __in_bcount(STRINGDICT_HANDLE_BYTES) STRINGDICT_HANDLE sdHandle,
     __in_z LPCWSTR szString

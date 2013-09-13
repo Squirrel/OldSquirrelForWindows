@@ -91,10 +91,38 @@ public: // IBurnUserExperience
     }
 
     virtual STDMETHODIMP_(int) OnDetectBegin(
+        __in BOOL /*fInstalled*/,
         __in DWORD /*cPackages*/
         )
     {
         return CheckCanceled() ? IDCANCEL : IDNOACTION;
+    }
+
+    virtual STDMETHODIMP_(int) OnDetectForwardCompatibleBundle(
+        __in_z LPCWSTR /*wzBundleId*/,
+        __in BOOTSTRAPPER_RELATION_TYPE /*relationType*/,
+        __in_z LPCWSTR /*wzBundleTag*/,
+        __in BOOL /*fPerMachine*/,
+        __in DWORD64 /*dw64Version*/,
+        __in int nRecommendation
+        )
+    {
+        return CheckCanceled() ? IDCANCEL : nRecommendation;
+    }
+
+    virtual STDMETHODIMP_(int) OnDetectUpdateBegin(
+        __in_z LPCWSTR /*wzUpdateLocation*/,
+        __in int nRecommendation
+        )
+    {
+        return CheckCanceled() ? IDCANCEL : nRecommendation;
+    }
+
+    virtual STDMETHODIMP_(void) OnDetectUpdateComplete(
+        __in HRESULT /*hrStatus*/,
+        __in_z_opt LPCWSTR /*wzUpdateLocation*/
+        )
+    {
     }
 
     virtual STDMETHODIMP_(int) OnDetectPriorBundle(
@@ -113,6 +141,7 @@ public: // IBurnUserExperience
 
     virtual STDMETHODIMP_(int) OnDetectRelatedBundle(
         __in_z LPCWSTR /*wzBundleId*/,
+        __in BOOTSTRAPPER_RELATION_TYPE /*relationType*/,
         __in_z LPCWSTR /*wzBundleTag*/,
         __in BOOL /*fPerMachine*/,
         __in DWORD64 /*dw64Version*/,
@@ -226,6 +255,10 @@ public: // IBurnUserExperience
     virtual STDMETHODIMP_(int) OnApplyBegin()
     {
         m_fApplying = TRUE;
+
+        m_dwProgressPercentage = 0;
+        m_dwOverallProgressPercentage = 0;
+
         return CheckCanceled() ? IDCANCEL : IDNOACTION;
     }
 
@@ -300,7 +333,19 @@ public: // IBurnUserExperience
         __in DWORD /*dwOverallPercentage*/
         )
     {
-        return CheckCanceled() ? IDCANCEL : IDNOACTION;
+        HRESULT hr = S_OK;
+        int nResult = IDNOACTION;
+
+        // Send progress even though we don't update the numbers to at least give the caller an opportunity
+        // to cancel.
+        if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_display)
+        {
+            hr = m_pEngine->SendEmbeddedProgress(m_dwProgressPercentage, m_dwOverallProgressPercentage, &nResult);
+            BalExitOnFailure(hr, "Failed to send embedded cache progress.");
+        }
+
+    LExit:
+        return FAILED(hr) ? IDERROR : CheckCanceled() ? IDCANCEL : nResult;
     }
 
     virtual STDMETHODIMP_(int) OnCacheAcquireComplete(
@@ -402,11 +447,24 @@ public: // IBurnUserExperience
     }
 
     virtual STDMETHODIMP_(int) OnProgress(
-        __in DWORD /*dwProgressPercentage*/,
-        __in DWORD /*dwOverallProgressPercentage*/
+        __in DWORD dwProgressPercentage,
+        __in DWORD dwOverallProgressPercentage
         )
     {
-        return CheckCanceled() ? IDCANCEL : IDNOACTION;
+        HRESULT hr = S_OK;
+        int nResult = IDNOACTION;
+
+        m_dwProgressPercentage = dwProgressPercentage;
+        m_dwOverallProgressPercentage = dwOverallProgressPercentage;
+
+        if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_display)
+        {
+            hr = m_pEngine->SendEmbeddedProgress(m_dwProgressPercentage, m_dwOverallProgressPercentage, &nResult);
+            BalExitOnFailure(hr, "Failed to send embedded overall progress.");
+        }
+
+    LExit:
+        return FAILED(hr) ? IDERROR : CheckCanceled() ? IDCANCEL : nResult;
     }
 
     virtual STDMETHODIMP_(int) OnDownloadPayloadBegin(
@@ -426,13 +484,25 @@ public: // IBurnUserExperience
         return CheckCanceled() ? IDCANCEL : IDNOACTION;
     }
 
-    virtual STDMETHODIMP_(int)  OnExecuteProgress(
+    virtual STDMETHODIMP_(int) OnExecuteProgress(
         __in_z LPCWSTR /*wzPackageId*/,
         __in DWORD /*dwProgressPercentage*/,
         __in DWORD /*dwOverallProgressPercentage*/
         )
     {
-        return CheckCanceled() ? IDCANCEL : IDNOACTION;
+        HRESULT hr = S_OK;
+        int nResult = IDNOACTION;
+
+        // Send progress even though we don't update the numbers to at least give the caller an opportunity
+        // to cancel.
+        if (BOOTSTRAPPER_DISPLAY_EMBEDDED == m_display)
+        {
+            hr = m_pEngine->SendEmbeddedProgress(m_dwProgressPercentage, m_dwOverallProgressPercentage, &nResult);
+            BalExitOnFailure(hr, "Failed to send embedded execute progress.");
+        }
+
+    LExit:
+        return FAILED(hr) ? IDERROR : CheckCanceled() ? IDCANCEL : nResult;
     }
 
     virtual STDMETHODIMP_(int) OnExecuteMsiMessage(
@@ -536,7 +606,7 @@ protected:
     }
 
     CBalBaseBootstrapperApplication(
-        __in IBootstrapperEngine* /*pEngine*/,
+        __in IBootstrapperEngine* pEngine,
         __in const BOOTSTRAPPER_COMMAND* pCommand,
         __in DWORD dwRetryCount = 0,
         __in DWORD dwRetryTimeout = 1000
@@ -545,6 +615,9 @@ protected:
         m_cReferences = 1;
         m_display = pCommand->display;
         m_restart = pCommand->restart;
+
+        pEngine->AddRef();
+        m_pEngine = pEngine;
 
         ::InitializeCriticalSection(&m_csCanceled);
         m_fCanceled = FALSE;
@@ -558,15 +631,21 @@ protected:
     {
         BalRetryUninitialize();
         ::DeleteCriticalSection(&m_csCanceled);
+
+        ReleaseNullObject(m_pEngine);
     }
 
 private:
     long m_cReferences;
     BOOTSTRAPPER_DISPLAY m_display;
     BOOTSTRAPPER_RESTART m_restart;
+    IBootstrapperEngine* m_pEngine;
 
     CRITICAL_SECTION m_csCanceled;
     BOOL m_fCanceled;
     BOOL m_fApplying;
     BOOL m_fRollingBack;
+
+    DWORD m_dwProgressPercentage;
+    DWORD m_dwOverallProgressPercentage;
 };

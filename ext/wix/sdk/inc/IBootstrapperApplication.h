@@ -53,6 +53,7 @@ enum BOOTSTRAPPER_ERROR_TYPE
     BOOTSTRAPPER_ERROR_TYPE_EXE_PACKAGE,        // error came from an exe package.
     BOOTSTRAPPER_ERROR_TYPE_HTTP_AUTH_SERVER,   // error occurred trying to authenticate with HTTP server.
     BOOTSTRAPPER_ERROR_TYPE_HTTP_AUTH_PROXY,    // error occurred trying to authenticate with HTTP proxy.
+    BOOTSTRAPPER_ERROR_TYPE_APPLY,              // error occurred during apply.
 };
 
 
@@ -92,6 +93,7 @@ enum BOOTSTRAPPER_RELATION_TYPE
     BOOTSTRAPPER_RELATION_ADDON,
     BOOTSTRAPPER_RELATION_PATCH,
     BOOTSTRAPPER_RELATION_DEPENDENT,
+    BOOTSTRAPPER_RELATION_UPDATE,
 };
 
 
@@ -109,6 +111,7 @@ struct BOOTSTRAPPER_COMMAND
 
     // If this was run from a related bundle, specifies the relation type
     BOOTSTRAPPER_RELATION_TYPE relationType;
+    BOOL fPassthrough;
 
     LPWSTR wzLayoutDirectory;
 };
@@ -141,7 +144,7 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //  All other return codes allow the shutdown to commence.
     STDMETHOD_(int, OnSystemShutdown)(
         __in DWORD dwEndSession,
-        __in int nRecommdendation
+        __in int nRecommendation
         ) = 0;
 
     // OnDetectBegin - called when the engine begins detection.
@@ -151,7 +154,47 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //
     //  IDNOACTION instructs the engine to continue.
     STDMETHOD_(int, OnDetectBegin)(
+        __in BOOL fInstalled,
         __in DWORD cPackages
+        ) = 0;
+
+    // OnDetectForwardCompatibleBundle - called when the engine detects a forward compatible bundle.
+    //
+    // Return:
+    //  IDOK instructs the engine to use the forward compatible bundle.
+    //
+    //  IDCANCEL instructs the engine to stop detection.
+    //
+    //  IDNOACTION instructs the engine to not use the forward compatible bundle.
+    STDMETHOD_(int, OnDetectForwardCompatibleBundle)(
+        __in_z LPCWSTR wzBundleId,
+        __in BOOTSTRAPPER_RELATION_TYPE relationType,
+        __in_z LPCWSTR wzBundleTag,
+        __in BOOL fPerMachine,
+        __in DWORD64 dw64Version,
+        __in int nRecommendation
+        ) = 0;
+
+    // OnDetectUpdateBegin - called when the engine begins detection for bundle update.
+    //
+    // Return:
+    //  IDOK instructs the engine to attempt update detection.
+    //
+    //  IDCANCEL instructs the engine to stop detection.
+    //
+    //  IDNOACTION instructs the engine to skip update detection.
+    STDMETHOD_(int, OnDetectUpdateBegin)(
+        __in_z LPCWSTR wzUpdateLocation,
+        __in int nRecommendation
+        ) = 0;
+
+    // OnDetectUpdateComplete - called when the engine completes detection for bundle update.
+    //
+    // Remarks:
+    //  wzUpdateLocation is null if no update was available.
+    STDMETHOD_(void, OnDetectUpdateComplete)(
+        __in HRESULT hrStatus,
+        __in_z_opt LPCWSTR wzUpdateLocation
         ) = 0;
 
     // OnDetectRelatedBundle - called when the engine detects a related bundle.
@@ -162,6 +205,7 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //  IDNOACTION instructs the engine to continue.
     STDMETHOD_(int, OnDetectRelatedBundle)(
         __in_z LPCWSTR wzBundleId,
+        __in BOOTSTRAPPER_RELATION_TYPE relationType,
         __in_z LPCWSTR wzBundleTag,
         __in BOOL fPerMachine,
         __in DWORD64 dw64Version,

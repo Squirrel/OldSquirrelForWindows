@@ -30,6 +30,8 @@ enum BOOTSTRAPPER_ACTION
     BOOTSTRAPPER_ACTION_INSTALL,
     BOOTSTRAPPER_ACTION_MODIFY,
     BOOTSTRAPPER_ACTION_REPAIR,
+    BOOTSTRAPPER_ACTION_UPDATE_REPLACE,
+    BOOTSTRAPPER_ACTION_UPDATE_REPLACE_EMBEDDED,
 };
 
 enum BOOTSTRAPPER_ACTION_STATE
@@ -94,6 +96,12 @@ enum BOOTSTRAPPER_LOG_LEVEL
     BOOTSTRAPPER_LOG_LEVEL_ERROR,     // always gets reported, but can never be specified
 };
 
+enum BOOTSTRAPPER_UPDATE_HASH_TYPE
+{
+    BOOTSTRAPPER_UPDATE_HASH_TYPE_NONE,
+    BOOTSTRAPPER_UPDATE_HASH_TYPE_SHA1,
+};
+
 
 DECLARE_INTERFACE_IID_(IBootstrapperEngine, IUnknown, "6480D616-27A0-44D7-905B-81512C29C2FB")
 {
@@ -150,6 +158,15 @@ DECLARE_INTERFACE_IID_(IBootstrapperEngine, IUnknown, "6480D616-27A0-44D7-905B-8
         __in DWORD dwProgressPercentage,
         __in DWORD dwOverallProgressPercentage,
         __out int* pnResult
+        ) = 0;
+
+    STDMETHOD(SetUpdate)(
+        __in_z_opt LPCWSTR wzLocalSource,
+        __in_z_opt LPCWSTR wzDownloadSource,
+        __in DWORD64 qwSize,
+        __in BOOTSTRAPPER_UPDATE_HASH_TYPE hashType,
+        __in_bcount_opt(cbHash) BYTE* rgbHash,
+        __in DWORD cbHash
         ) = 0;
 
     STDMETHOD(SetLocalSource)(

@@ -23,9 +23,22 @@ typedef struct _DEPENDENCY
 {
     LPWSTR sczKey;
     LPWSTR sczName;
-
 } DEPENDENCY;
 
+
+/***************************************************************************
+ DepGetProviderInformation - gets the various pieces of data registered
+  with a dependency.
+
+ Note: Returns E_NOTFOUND if the dependency was not found.
+***************************************************************************/
+DAPI_(HRESULT) DepGetProviderInformation(
+    __in HKEY hkHive,
+    __in_z LPCWSTR wzProviderKey,
+    __deref_out_z_opt LPWSTR* psczId,
+    __deref_out_z_opt LPWSTR* psczName,
+    __out_opt DWORD64* pqwVersion
+    );
 
 /***************************************************************************
  DepCheckDependency - Checks that the dependency is registered and within
@@ -67,7 +80,20 @@ DAPI_(HRESULT) DepRegisterDependency(
     __in_z LPCWSTR wzProviderKey,
     __in_z LPCWSTR wzVersion,
     __in_z LPCWSTR wzDisplayName,
+    __in_z_opt LPCWSTR wzId,
     __in int iAttributes
+    );
+
+/***************************************************************************
+ DepDependentExists - Determines if a dependent is registered.
+
+ Note: Returns S_OK if dependent is registered.
+       Returns E_FILENOTFOUND if dependent is not registered
+***************************************************************************/
+DAPI_(HRESULT) DepDependentExists(
+    __in HKEY hkHive,
+    __in_z LPCWSTR wzDependencyProviderKey,
+    __in_z LPCWSTR wzProviderKey
     );
 
 /***************************************************************************

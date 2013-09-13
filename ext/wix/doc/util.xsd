@@ -810,7 +810,7 @@
             </xs:enumeration>
             <xs:enumeration value="state">
               <xs:annotation>
-                <xs:documentation>Saves the state of the product: advertised (1), absent (2), or locally installed (3).</xs:documentation>
+                <xs:documentation>Saves the state of the product: advertised (1), absent (2), or locally installed (5).</xs:documentation>
               </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="assignment">
