@@ -149,7 +149,8 @@ namespace ReactiveUIMicro
 
         public FileLogger(string appName)
         {
-            var fileName = String.Format("{0}.txt", appName);
+            var id = Process.GetCurrentProcess().Id;
+            var fileName = String.Format("{0}-{1}.txt", appName, id);
             directoryPath = Path.Combine(
                                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                                 "Shimmer");

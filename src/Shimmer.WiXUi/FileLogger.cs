@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using ReactiveUI;
 
@@ -13,7 +14,8 @@ namespace Shimmer.WiXUi
 
         public FileLogger(string appName)
         {
-            var fileName = String.Format("{0}.txt", appName);
+            var id = Process.GetCurrentProcess().Id;
+            var fileName = String.Format("{0}-{1}.txt", appName, id);
             filePath = Path.Combine(LogDirectory, fileName);
             messageFormat = "{0} | {1} | {2}";
         }
