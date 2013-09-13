@@ -522,7 +522,7 @@ namespace Shimmer.Client
         {
             var directory = fileSystem.GetDirectoryInfo(rootAppDirectory);
             if (!directory.Exists) {
-                log.Warn("The directory '{0}' does not exist", rootAppDirectory);
+                log.Warn("cleanUpOldVersions: the directory '{0}' does not exist", rootAppDirectory);
                 return Enumerable.Empty<ShortcutCreationRequest>();
             }
             
