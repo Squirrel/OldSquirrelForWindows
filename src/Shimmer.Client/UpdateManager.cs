@@ -410,6 +410,8 @@ namespace Shimmer.Client
             // NB: We sort this list in order to guarantee that if a Net20
             // and a Net40 version of a DLL get shipped, we always end up
             // with the 4.0 version.
+            log.Info("Writing files to app directory: {0}", target.FullName);
+
             pkg.GetLibFiles().Where(x => pathIsInFrameworkProfile(x, appFrameworkVersion))
                              .OrderBy(x => x.Path)
                              .ForEach(x => CopyFileToLocation(target, x));
@@ -436,7 +438,6 @@ namespace Shimmer.Client
 
             using (var inf = x.GetStream())
             using (var of = fi.Open(FileMode.CreateNew, FileAccess.Write)) {
-                log.Debug("Writing {0} to app directory", targetPath);
                 inf.CopyTo(of);
             }
         }
