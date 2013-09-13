@@ -216,8 +216,14 @@ namespace Shimmer.Client
 
         IObservable<Unit> fullUninstall(Version maxVersion)
         {
-            return Observable.Start(() => cleanUpOldVersions(maxVersion),
-                        RxApp.TaskpoolScheduler)
+            var previous =
+                Observable.Start(() => cleanUpOldVersions(maxVersion),
+                                 RxApp.TaskpoolScheduler);
+            var current =
+                Observable.Start(() => cleanupVersion(getDirectoryForRelease(maxVersion)),
+                                 RxApp.TaskpoolScheduler);
+
+            return previous.Merge(current)
                 .Aggregate(Unit.Default, (acc , x) => acc);
         }
 
@@ -527,21 +533,25 @@ namespace Shimmer.Client
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
                 .Where(x => getVersionFromFolderName(x.Name) <= newCurrentVersion)
                 .OrderBy(x => x.Name)
-                .SelectMany(oldAppRoot => {
-                    var path = oldAppRoot.FullName;
-                    var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
+                .SelectMany(cleanupVersion);
+        }
 
-                    var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
+        IEnumerable<ShortcutCreationRequest> cleanupVersion(DirectoryInfoBase oldAppRoot)
+        {
+            var path = oldAppRoot.FullName;
+            var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
 
-                    try {
-                        Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
-                    } catch (Exception ex) {
-                        var message = String.Format("Couldn't delete old app directory on next reboot {0}",
-                            oldAppRoot.FullName);
-                        log.WarnException(message, ex);
-                    }
-                    return ret;
-                });
+            var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
+
+            try {
+                Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
+            }
+            catch (Exception ex) {
+                var message = String.Format("Couldn't delete old app directory on next reboot {0}",
+                    oldAppRoot.FullName);
+                log.WarnException(message, ex);
+            }
+            return ret;
         }
 
         void fixPinnedExecutables(Version newCurrentVersion) 
