@@ -125,7 +125,7 @@ namespace Shimmer.Core
             Contract.Requires(!String.IsNullOrEmpty(directoryPath));
 
             if (!Directory.Exists(directoryPath)) {
-                Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                Log().Warn("DeleteDirectory: does not exist - {0}", directoryPath);
                 return Observable.Return(Unit.Default);
             }
 
