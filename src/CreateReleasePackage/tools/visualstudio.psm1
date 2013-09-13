@@ -14,14 +14,19 @@ function New-Release {
         $ProjectName = (Get-Project).Name
     }
 
+    $project = Get-Project $ProjectName
+    $activeConfiguration = $project.ConfigurationManager.ActiveConfiguration
+
+    Write-Message "Building project $ProjectName"
+
+    $dte.Solution.SolutionBuild.BuildProject($activeConfiguration.ConfigurationName, $project.FullName, $true)
+
     Write-Message "Publishing release for project $ProjectName"
 
     $solutionDir = (gci $dte.Solution.FullName).Directory
 
-    $project = Get-Project $ProjectName
-
     $projectDir = (gci $project.FullName).Directory
-    $outputDir =  $project.ConfigurationManager.ActiveConfiguration.Properties.Item("OutputPath").Value
+    $outputDir =  $activeConfiguration.Properties.Item("OutputPath").Value
     
     New-ReleaseForPackage -SolutionDir $solutionDir `
                              -BuildDir (Join-Path $projectDir $outputDir)
