@@ -207,14 +207,15 @@ namespace Shimmer.Client
                 ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler));
         }
 
-        public IObservable<Unit> FullUninstall()
+        public IObservable<Unit> FullUninstall(Version version = null)
         {
-            return acquireUpdateLock().SelectMany(_ => fullUninstall());
+            version = version ?? new Version(255, 255, 255, 255);
+
+            return acquireUpdateLock().SelectMany(_ => fullUninstall(version));
         }
 
-        IObservable<Unit> fullUninstall()
+        IObservable<Unit> fullUninstall(Version maxVersion)
         {
-            var maxVersion = new Version(255, 255, 255, 255);
             return
                 Observable.Start(() => cleanUpOldVersions(maxVersion), RxApp.TaskpoolScheduler)
                 .SelectMany(_ => Utility.DeleteDirectory(rootAppDirectory))
