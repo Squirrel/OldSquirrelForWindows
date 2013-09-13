@@ -216,16 +216,9 @@ namespace Shimmer.Client
 
         IObservable<Unit> fullUninstall(Version maxVersion)
         {
-            return
-                Observable.Start(() => cleanUpOldVersions(maxVersion), RxApp.TaskpoolScheduler)
-                .SelectMany(_ => Utility.DeleteDirectory(rootAppDirectory))
-                .Catch<Unit, Exception>(ex => {
-                    log.WarnException(
-                        "Full Uninstall failed to delete root dir, punting to next reboot", ex);
-                    return Observable.Start(
-                        () => Utility.DeleteDirectoryAtNextReboot(rootAppDirectory));
-                })
-                .Aggregate(Unit.Default, (acc, x) => acc); ;
+            return Observable.Start(() => cleanUpOldVersions(maxVersion),
+                        RxApp.TaskpoolScheduler)
+                .Aggregate(Unit.Default, (acc , x) => acc);
         }
 
         public void Dispose()
