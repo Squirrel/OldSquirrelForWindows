@@ -538,7 +538,13 @@ namespace Shimmer.Client
 
         IEnumerable<ShortcutCreationRequest> cleanupVersion(DirectoryInfoBase oldAppRoot)
         {
+            if (!oldAppRoot.Exists) {
+                log.Warn("cleanUpOldVersions: the directory '{0}' does not exist", oldAppRoot.FullName);
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
+
             var path = oldAppRoot.FullName;
+
             var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
 
             var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
