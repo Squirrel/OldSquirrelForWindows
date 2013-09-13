@@ -35,4 +35,3 @@ Write-Message "Now to setup the project - so you don't have to..."
 Write-Host
 Initialize-Shimmer
 Write-Host
-Write-Message "HEY! Don't forget to build the project before publishing!"
