@@ -120,9 +120,11 @@ namespace Shimmer.Core
 
         public static IObservable<Unit> DeleteDirectory(string directoryPath, IScheduler scheduler = null)
         {
+            Contract.Requires(!String.IsNullOrEmpty(directoryPath));
+
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
 
-            Contract.Requires(!String.IsNullOrEmpty(directoryPath));
+            Log().Info("Starting to delete folder: {0}", directoryPath);
 
             if (!Directory.Exists(directoryPath)) {
                 Log().Warn("DeleteDirectory: does not exist - {0}", directoryPath);
