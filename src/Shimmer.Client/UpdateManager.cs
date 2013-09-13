@@ -613,13 +613,21 @@ namespace Shimmer.Client
         {
             var di = fileSystem.GetDirectoryInfo(rootAppDirectory);
 
+            log.Info("cleanDeadVersions: for version {0}", currentVersion);
+
+            string currentVersionFolder = null;
+            if (currentVersion != null) {
+                currentVersionFolder = getDirectoryForRelease(currentVersion).Name;
+                log.Info("cleanDeadVersions: exclude folder {0}", currentVersionFolder);
+            }
+
             // NB: If we try to access a directory that has already been 
             // scheduled for deletion by MoveFileEx it throws what seems like
             // NT's only error code, ERROR_ACCESS_DENIED. Squelch errors that
             // come from here.
             return di.GetDirectories().ToObservable()
                 .Where(x => x.Name.ToLowerInvariant().Contains("app-"))
-                .Where(x => currentVersion != null ? x.Name != getDirectoryForRelease(currentVersion).Name : true)
+                .Where(x => x.Name != currentVersionFolder)
                 .SelectMany(x => Utility.DeleteDirectory(x.FullName, RxApp.TaskpoolScheduler))
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default))
                 .Aggregate(Unit.Default, (acc, x) => acc);
