@@ -334,7 +334,7 @@ namespace ReactiveUIMicro
             }
 
             if (!_hasValue)
-                throw new InvalidOperationException("Sequence has no elements");
+                throw new InvalidOperationException("AwaitableAsyncSubject<T>.GetResult() completed without having a result. That's bad.");
 
             return _value;
         }
