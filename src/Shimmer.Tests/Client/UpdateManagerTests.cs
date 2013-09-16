@@ -78,7 +78,8 @@ namespace Shimmer.Tests.Client
                         updateInfo = fixture.CheckForUpdate().Wait();
                     }
 
-                    Assert.Null(updateInfo);
+                    Assert.NotNull(updateInfo);
+                    Assert.Empty(updateInfo.ReleasesToApply);
                 }
             }
 

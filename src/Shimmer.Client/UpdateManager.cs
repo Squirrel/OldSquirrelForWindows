@@ -303,7 +303,12 @@ namespace Shimmer.Client
 
             if (localReleases.Count() == remoteReleases.Count()) {
                 log.Info("No updates, remote and local are the same");
-                return Observable.Return<UpdateInfo>(null);
+
+                var latestFullRelease = findCurrentVersion(remoteReleases);
+                var currentRelease = findCurrentVersion(localReleases);
+
+                var info = UpdateInfo.Create(currentRelease, new[] {latestFullRelease}, PackageDirectory,appFrameworkVersion);
+                return Observable.Return(info);
             }
 
             if (ignoreDeltaUpdates) {
