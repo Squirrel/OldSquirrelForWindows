@@ -8,7 +8,6 @@ namespace Shimmer.WiXUi
     {
         readonly string filePath;
         readonly string messageFormat;
-        readonly string directoryPath;
 
         static readonly object _lock = 42;
 
@@ -33,7 +32,7 @@ namespace Shimmer.WiXUi
 
             lock (_lock) {
                 try {
-                    Directory.CreateDirectory(directoryPath); // if it exists, does nothing
+                    Directory.CreateDirectory(LogDirectory); // if it exists, does nothing
                     using (var writer = new StreamWriter(filePath, true)) {
                         var now = DateTime.Now;
                         writer.WriteLine(
