@@ -180,7 +180,11 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.DisplayMode == Display.Full && wixEvents.Action == LaunchAction.Install) {
-                    foreach (var path in executablesToStart) { Process.Start(path); }
+                    var processFactory = Kernel.Resolve<IProcessFactory>();
+                    
+                    foreach (var path in executablesToStart) {
+                        processFactory.Start(path);
+                    }
                 }
 
                 wixEvents.ShouldQuit();
@@ -196,7 +200,8 @@ namespace Shimmer.WiXUi.ViewModels
         }
 
         static void openLogsFolder() {
-            Process.Start(FileLogger.LogDirectory);
+            var processFactory = Kernel.Resolve<IProcessFactory>();
+            processFactory.Start(FileLogger.LogDirectory);
         }
 
         UserError convertHResultToError(int status)
@@ -301,6 +306,7 @@ namespace Shimmer.WiXUi.ViewModels
         static void registerDefaultTypes(TinyIoCContainer kernel)
         {
             var toRegister = new[] {
+                new { Interface = typeof(IProcessFactory), Impl = typeof(DefaultProcessFactory) },
                 new { Interface = typeof(IErrorViewModel), Impl = typeof(ErrorViewModel) },
                 new { Interface = typeof(IWelcomeViewModel), Impl = typeof(WelcomeViewModel) },
                 new { Interface = typeof(IInstallingViewModel), Impl = typeof(InstallingViewModel) },
