@@ -46,14 +46,14 @@ namespace Shimmer.WiXUi.ViewModels
 
             RxApp.ConfigureServiceLocator(
                 (type, contract) => {
-                    this.Log().Info("Resolving type '{0}' with contract '{1}'", type, contract);
+                    this.Log().Debug("Resolving type '{0}' with contract '{1}'", type, contract);
                     return String.IsNullOrEmpty(contract)
                         ? Kernel.Resolve(type)
                         : Kernel.Resolve(type, contract);
                 },
                 (type, contract) => Kernel.ResolveAll(type, true),
                     (c, t, s) => {
-                       this.Log().Info("Registering type '{0}' for interface '{1}' and contract '{2}'", c, t, s);
+                       this.Log().Debug("Registering type '{0}' for interface '{1}' and contract '{2}'", c, t, s);
                         if (String.IsNullOrEmpty(s)) {
                             Kernel.Register(t, c, Guid.NewGuid().ToString());
                         } else {
