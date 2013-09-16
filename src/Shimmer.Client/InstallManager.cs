@@ -104,6 +104,10 @@ namespace Shimmer.Client
 
                 log.Info("The checking of releases completed - and there was much rejoicing");
 
+                if (!updateInfo.ReleasesToApply.Any()) {
+                    return new List<string>(); // XXX: we should do something useful here
+                }
+
                 foreach (var u in updateInfo.ReleasesToApply) {
                     log.Info("HEY! We should be applying update {0}", u.Filename);
                 }
