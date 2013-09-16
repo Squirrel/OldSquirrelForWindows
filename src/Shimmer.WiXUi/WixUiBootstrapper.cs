@@ -94,6 +94,8 @@ namespace Shimmer.WiXUi.ViewModels
             bundledPackageMetadata = new Lazy<IPackage>(openBundledPackage);
 
             wixEvents.DetectPackageCompleteObs.Subscribe(eventArgs => {
+                this.Log().Info("DetectPackageCompleteObs: got id: '{0}', state: '{1}', status: '{2}'", eventArgs.PackageId, eventArgs.State, eventArgs.Status);
+
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -135,6 +137,8 @@ namespace Shimmer.WiXUi.ViewModels
             var executablesToStart = Enumerable.Empty<string>();
 
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
+                this.Log().Info("PlanCompleteObs: got status: '{0}'", eventArgs.Status);
+
                 var installManager = new InstallManager(BundledRelease);
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
@@ -167,6 +171,8 @@ namespace Shimmer.WiXUi.ViewModels
             });
 
             wixEvents.ApplyCompleteObs.Subscribe(eventArgs => {
+                this.Log().Info("ApplyCompleteObs: got restart: '{0}', result: '{1}', status: '{2}'", eventArgs.Restart, eventArgs.Result, eventArgs.Status);
+
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -180,7 +186,11 @@ namespace Shimmer.WiXUi.ViewModels
                 wixEvents.ShouldQuit();
             });
 
-            wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
+            wixEvents.ErrorObs.Subscribe(
+                eventArgs => {
+                    this.Log().Info("ErrorObs: got id: '{0}', result: '{1}', code: '{2}'", eventArgs.PackageId, eventArgs.Result, eventArgs.ErrorCode);
+                    UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage);
+                });
 
             wixEvents.Engine.Detect();
         }
