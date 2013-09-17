@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -12,7 +11,6 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using Ionic.Zip;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
@@ -266,22 +264,6 @@ namespace Shimmer.Tests.WiXUi
         static int packHResultIntoIntEvenThoughItShouldntBeThere(uint hr)
         {
             return BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
-        }
-    }
-
-    public static class MockExtensions
-    {
-        public static void WaitUntil<T>(this Mock<T> mock, Expression<Action<T>> action)
-            where T : class
-        {
-            var autoResetEvent = new AutoResetEvent(false);
-
-            mock.Setup(action)
-                .Callback(() => {
-                    autoResetEvent.Set();
-                });
-
-            autoResetEvent.WaitOne();
         }
     }
 }
