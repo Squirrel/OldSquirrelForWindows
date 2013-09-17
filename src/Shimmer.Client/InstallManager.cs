@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -105,7 +106,17 @@ namespace Shimmer.Client
                 log.Info("The checking of releases completed - and there was much rejoicing");
 
                 if (!updateInfo.ReleasesToApply.Any()) {
-                    return new List<string>(); // XXX: we should do something useful here
+
+                    var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+                    var version = updateInfo.CurrentlyInstalledVersion;
+                    var releaseFolder = String.Format("app-{0}", version.Version);
+                    var absoluteFolder = Path.Combine(localAppData, version.PackageName, releaseFolder);
+
+                    var executables = Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly);
+
+                    return executables.Where(fullName => !fullName.EndsWith(".vshost.exe", StringComparison.OrdinalIgnoreCase))
+                                      .ToList(); // XXX: we should do something useful here
                 }
 
                 foreach (var u in updateInfo.ReleasesToApply) {
