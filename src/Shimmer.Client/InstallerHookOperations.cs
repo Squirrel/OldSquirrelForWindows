@@ -170,6 +170,7 @@ namespace Shimmer.Client
             }
 
             var locatedAppSetups = allExeFiles
+                .Where(f => f.Exists)
                 .Select(x => loadAssemblyOrWhine(x.FullName)).Where(x => x != null)
                 .SelectMany(x => x.GetModules())
                 .SelectMany(x => {
