@@ -211,46 +211,49 @@ namespace Shimmer.Client
         public IObservable<Unit> FullUninstall(Version version = null)
         {
             version = version ?? new Version(255, 255, 255, 255);
+            log.Info("Uninstalling version '{0}'", version);
             return acquireUpdateLock().SelectMany(_ => fullUninstall(version));
+        }
+
+        IEnumerable<DirectoryInfoBase> getReleases()
+        {
+            var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
+            return rootDirectory.GetDirectories()
+                        .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase));
         }
 
         DirectoryInfoBase[] getOldReleases(Version version)
         {
-            var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
-
-            return rootDirectory.GetDirectories()
-                    .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                    .Where(x => x.Name.IsLessThanOrEqualTo(version))
-                    .ToArray();
-        }
-
-        DirectoryInfoBase[] getNewerReleases(Version version)
-        {
-            var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
-
-            return rootDirectory.GetDirectories()
-                    .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                    .Where(x => x.Name.IsGreaterThan(version))
+            return getReleases()
+                    .Where(x => x.Name.ToVersion() < version)
                     .ToArray();
         }
 
         IObservable<Unit> fullUninstall(Version version)
         {
-            return
-                Observable.Start(() => cleanUpOldVersions(version), RxApp.TaskpoolScheduler)
-                .SelectMany(_ =>
-                    getNewerReleases(version).Any()
-                        ? getOldReleases(version).Select(d => d.FullName)
-                        : new[] { rootAppDirectory })
-                .SelectMany(dir =>
-                    Utility.DeleteDirectory(dir)
-                        .Catch<Unit, Exception>(ex => {
-                            var message = String.Format("Uninstall failed to delete dir '{0}', punting to next reboot", dir);
-                            log.WarnException(message, ex);
-                            return Observable.Start(
-                                () => Utility.DeleteDirectoryAtNextReboot(rootAppDirectory));
-                 }))
-                .Aggregate(Unit.Default, (acc, x) => acc);
+           return getOldReleases(version)
+                    .Concat(new [] { getDirectoryForRelease(version) })
+                    .Where(d => d.Exists)
+                    .OrderBy(d => d.Name)
+                    .Select(d => d.FullName)
+                    .ToObservable()
+                    .SelectMany(dir => {
+                        runAppCleanup(dir);
+                        return Utility.DeleteDirectory(dir)
+                                .Catch<Unit, Exception>(ex => {
+                                    var message = String.Format("Uninstall failed to delete dir '{0}', punting to next reboot", dir);
+                                    log.WarnException(message, ex);
+                                    return Observable.Start(
+                                        () => Utility.DeleteDirectoryAtNextReboot(rootAppDirectory));
+                                });
+                    })
+                    .Aggregate(Unit.Default, (acc, x) => acc)
+                    .SelectMany(_ => {
+                        if (!getReleases().Any()) {
+                            return Utility.DeleteDirectory(rootAppDirectory);
+                        }
+                        return Observable.Return(Unit.Default);
+                    });
         }
 
         public void Dispose()
@@ -553,22 +556,25 @@ namespace Shimmer.Client
             }
             
             return getOldReleases(newCurrentVersion)
-                .OrderBy(x => x.Name)
-                .SelectMany(oldAppRoot => {
-                    var path = oldAppRoot.FullName;
-                    var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
+                     .OrderBy(x => x.Name)
+                     .Select(d => d.FullName)
+                     .SelectMany(runAppCleanup);
+        }
 
-                    var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
+        IEnumerable<ShortcutCreationRequest> runAppCleanup(string path)
+        {
+            var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
 
-                    try {
-                        Utility.DeleteDirectoryAtNextReboot(oldAppRoot.FullName);
-                    } catch (Exception ex) {
-                        var message = String.Format("Couldn't delete old app directory on next reboot {0}",
-                            oldAppRoot.FullName);
-                        log.WarnException(message, ex);
-                    }
-                    return ret;
-                });
+            var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppSetupCleanups);
+
+            try {
+                Utility.DeleteDirectoryAtNextReboot(path);
+            }
+            catch (Exception ex) {
+                var message = String.Format("Couldn't delete old app directory on next reboot {0}", path);
+                log.WarnException(message, ex);
+            }
+            return ret;
         }
 
         void fixPinnedExecutables(Version newCurrentVersion) 
