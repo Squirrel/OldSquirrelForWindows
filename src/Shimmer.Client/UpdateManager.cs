@@ -218,6 +218,10 @@ namespace Shimmer.Client
         IEnumerable<DirectoryInfoBase> getReleases()
         {
             var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
+
+            if (!rootDirectory.Exists)
+                return Enumerable.Empty<DirectoryInfoBase>();
+
             return rootDirectory.GetDirectories()
                         .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase));
         }
