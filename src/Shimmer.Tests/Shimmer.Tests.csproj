@@ -179,6 +179,7 @@
     <Compile Include="Client\CheckForUpdateTests.cs" />
     <Compile Include="Client\DownloadReleasesTests.cs" />
     <Compile Include="Client\InstallManagerTests.cs" />
+    <Compile Include="Client\PackageExtensionsTests.cs" />
     <Compile Include="Client\UpdateManagerTests.cs" />
     <Compile Include="Core\AppDomainHelperTests.cs" />
     <Compile Include="Core\ContentTypeTests.cs" />

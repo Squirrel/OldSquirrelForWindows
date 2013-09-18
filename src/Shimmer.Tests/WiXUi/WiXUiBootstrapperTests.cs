@@ -638,12 +638,6 @@ namespace Shimmer.Tests.WiXUi
         //
 
         [Fact(Skip = "TODO")]
-        public void DetermineFxVersionFromPackageTest()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact(Skip = "TODO")]
         public void RegisterExtensionDllsFindsExtensions()
         {
             throw new NotImplementedException();
