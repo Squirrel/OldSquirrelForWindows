@@ -38,7 +38,13 @@ namespace Shimmer.WiXUi.ViewModels
         readonly IFileSystemFactory fileSystem;
         readonly string currentAssemblyDir;
 
-        public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null, IFileSystemFactory fileSystem = null, string currentAssemblyDir = null)
+        public WixUiBootstrapper(
+            IWiXEvents wixEvents,
+            TinyIoCContainer testKernel = null,
+            IRoutingState router = null,
+            IFileSystemFactory fileSystem = null,
+            string currentAssemblyDir = null,
+            string targetRootDirectory = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
@@ -139,7 +145,7 @@ namespace Shimmer.WiXUi.ViewModels
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
                 this.Log().Info("PlanCompleteObs: got status: '{0}'", eventArgs.Status);
 
-                var installManager = new InstallManager(BundledRelease);
+                var installManager = new InstallManager(BundledRelease, targetRootDirectory);
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);

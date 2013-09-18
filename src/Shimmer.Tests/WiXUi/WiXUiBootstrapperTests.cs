@@ -127,6 +127,60 @@ namespace Shimmer.Tests.WiXUi
             }
         }
 
+
+        [Fact]
+        public void CanInstallToACustomFolder()
+        {
+            string dir, targetRootDirectory;
+            using (Utility.WithTempDirectory(out targetRootDirectory))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(out dir))
+            {
+                // install version 1
+                var firstKernel = new TinyIoCContainer();
+                var firstFactory = new Mock<IProcessFactory>();
+                firstKernel.Register(firstFactory.Object);
+
+                var firstRouter = new RoutingState();
+                var firstDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                var firstPlanComplete = new Subject<PlanCompleteEventArgs>();
+                var firstApplyComplete = new Subject<ApplyCompleteEventArgs>();
+                var firstError = new Subject<ErrorEventArgs>();
+                var firstEngine = new Mock<IEngine>();
+
+                var firstEvents = new Mock<IWiXEvents>();
+                firstEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(firstDetectPackage);
+                firstEvents.SetupGet(x => x.ErrorObs).Returns(firstError);
+                firstEvents.SetupGet(x => x.PlanCompleteObs).Returns(firstPlanComplete);
+                firstEvents.SetupGet(x => x.ApplyCompleteObs).Returns(firstApplyComplete);
+                firstEvents.SetupGet(x => x.Engine).Returns(firstEngine.Object);
+
+                firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+
+                var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir, targetRootDirectory);
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                // initialize the install process
+                firstDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+
+                // navigate to the next VM
+                var viewModel = firstRouter.GetCurrentViewModel() as WelcomeViewModel;
+                viewModel.ShouldProceed.Execute(null);
+
+                // signal to start the install
+                firstPlanComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                // wait until install is complete
+                firstEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                // now signal it's completed
+                firstApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+
+                Assert.True(Directory.Exists(Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0")));
+            }
+        }
+
+
         [Fact]
         public void IfAppIsAlreadyInstalledRunTheApp()
         {
