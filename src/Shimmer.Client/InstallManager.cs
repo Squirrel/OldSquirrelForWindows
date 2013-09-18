@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -103,6 +104,19 @@ namespace Shimmer.Client
                 var updateInfo = await eigenUpdater.CheckForUpdate(ignoreDeltaUpdates, eigenCheckProgress);
 
                 log.Info("The checking of releases completed - and there was much rejoicing");
+
+                if (!updateInfo.ReleasesToApply.Any()) {
+
+                    var rootDirectory = TargetRootDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+                    var version = updateInfo.CurrentlyInstalledVersion;
+                    var releaseFolder = String.Format("app-{0}", version.Version);
+                    var absoluteFolder = Path.Combine(rootDirectory, version.PackageName, releaseFolder);
+
+                    var executables = Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly);
+
+                    return executables.ToList();
+                }
 
                 foreach (var u in updateInfo.ReleasesToApply) {
                     log.Info("HEY! We should be applying update {0}", u.Filename);

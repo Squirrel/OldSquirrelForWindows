@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using ReactiveUI;
 
@@ -8,13 +9,13 @@ namespace Shimmer.WiXUi
     {
         readonly string filePath;
         readonly string messageFormat;
-        readonly string directoryPath;
 
         static readonly object _lock = 42;
 
         public FileLogger(string appName)
         {
-            var fileName = String.Format("{0}.txt", appName);
+            var id = Process.GetCurrentProcess().Id;
+            var fileName = String.Format("{0}-{1}.txt", appName, id);
             filePath = Path.Combine(LogDirectory, fileName);
             messageFormat = "{0} | {1} | {2}";
         }
@@ -33,7 +34,7 @@ namespace Shimmer.WiXUi
 
             lock (_lock) {
                 try {
-                    Directory.CreateDirectory(directoryPath); // if it exists, does nothing
+                    Directory.CreateDirectory(LogDirectory); // if it exists, does nothing
                     using (var writer = new StreamWriter(filePath, true)) {
                         var now = DateTime.Now;
                         writer.WriteLine(

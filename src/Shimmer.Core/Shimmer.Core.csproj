@@ -139,6 +139,7 @@
     <Compile Include="Extensions\ReleaseExtensions.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="IFileSystemFactory.cs" />
+    <Compile Include="ProcessFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Interfaces.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Logging.cs" />

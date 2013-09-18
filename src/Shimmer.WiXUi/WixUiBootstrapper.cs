@@ -38,7 +38,13 @@ namespace Shimmer.WiXUi.ViewModels
         readonly IFileSystemFactory fileSystem;
         readonly string currentAssemblyDir;
 
-        public WixUiBootstrapper(IWiXEvents wixEvents, TinyIoCContainer testKernel = null, IRoutingState router = null, IFileSystemFactory fileSystem = null, string currentAssemblyDir = null)
+        public WixUiBootstrapper(
+            IWiXEvents wixEvents,
+            TinyIoCContainer testKernel = null,
+            IRoutingState router = null,
+            IFileSystemFactory fileSystem = null,
+            string currentAssemblyDir = null,
+            string targetRootDirectory = null)
         {
             Kernel = testKernel ?? createDefaultKernel();
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
@@ -46,14 +52,14 @@ namespace Shimmer.WiXUi.ViewModels
 
             RxApp.ConfigureServiceLocator(
                 (type, contract) => {
-                    this.Log().Info("Resolving type '{0}' with contract '{1}'", type, contract);
+                    this.Log().Debug("Resolving type '{0}' with contract '{1}'", type, contract);
                     return String.IsNullOrEmpty(contract)
                         ? Kernel.Resolve(type)
                         : Kernel.Resolve(type, contract);
                 },
                 (type, contract) => Kernel.ResolveAll(type, true),
                     (c, t, s) => {
-                       this.Log().Info("Registering type '{0}' for interface '{1}' and contract '{2}'", c, t, s);
+                       this.Log().Debug("Registering type '{0}' for interface '{1}' and contract '{2}'", c, t, s);
                         if (String.IsNullOrEmpty(s)) {
                             Kernel.Register(t, c, Guid.NewGuid().ToString());
                         } else {
@@ -94,6 +100,8 @@ namespace Shimmer.WiXUi.ViewModels
             bundledPackageMetadata = new Lazy<IPackage>(openBundledPackage);
 
             wixEvents.DetectPackageCompleteObs.Subscribe(eventArgs => {
+                this.Log().Info("DetectPackageCompleteObs: got id: '{0}', state: '{1}', status: '{2}'", eventArgs.PackageId, eventArgs.State, eventArgs.Status);
+
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -135,7 +143,9 @@ namespace Shimmer.WiXUi.ViewModels
             var executablesToStart = Enumerable.Empty<string>();
 
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
-                var installManager = new InstallManager(BundledRelease);
+                this.Log().Info("PlanCompleteObs: got status: '{0}'", eventArgs.Status);
+
+                var installManager = new InstallManager(BundledRelease, targetRootDirectory);
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -167,6 +177,8 @@ namespace Shimmer.WiXUi.ViewModels
             });
 
             wixEvents.ApplyCompleteObs.Subscribe(eventArgs => {
+                this.Log().Info("ApplyCompleteObs: got restart: '{0}', result: '{1}', status: '{2}'", eventArgs.Restart, eventArgs.Result, eventArgs.Status);
+
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -174,19 +186,28 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.DisplayMode == Display.Full && wixEvents.Action == LaunchAction.Install) {
-                    foreach (var path in executablesToStart) { Process.Start(path); }
+                    var processFactory = Kernel.Resolve<IProcessFactory>();
+                    
+                    foreach (var path in executablesToStart) {
+                        processFactory.Start(path);
+                    }
                 }
 
                 wixEvents.ShouldQuit();
             });
 
-            wixEvents.ErrorObs.Subscribe(eventArgs => UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage));
+            wixEvents.ErrorObs.Subscribe(
+                eventArgs => {
+                    this.Log().Info("ErrorObs: got id: '{0}', result: '{1}', code: '{2}'", eventArgs.PackageId, eventArgs.Result, eventArgs.ErrorCode);
+                    UserError.Throw("An installation error has occurred: " + eventArgs.ErrorMessage);
+                });
 
             wixEvents.Engine.Detect();
         }
 
         static void openLogsFolder() {
-            Process.Start(FileLogger.LogDirectory);
+            var processFactory = Kernel.Resolve<IProcessFactory>();
+            processFactory.Start(FileLogger.LogDirectory);
         }
 
         UserError convertHResultToError(int status)
@@ -291,6 +312,7 @@ namespace Shimmer.WiXUi.ViewModels
         static void registerDefaultTypes(TinyIoCContainer kernel)
         {
             var toRegister = new[] {
+                new { Interface = typeof(IProcessFactory), Impl = typeof(DefaultProcessFactory) },
                 new { Interface = typeof(IErrorViewModel), Impl = typeof(ErrorViewModel) },
                 new { Interface = typeof(IWelcomeViewModel), Impl = typeof(WelcomeViewModel) },
                 new { Interface = typeof(IInstallingViewModel), Impl = typeof(InstallingViewModel) },
