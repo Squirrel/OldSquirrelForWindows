@@ -21,14 +21,16 @@ function Initialize-Shimmer {
 
     Write-Message "Initializing project $ProjectName for installer and packaging"
 
-    Add-InstallerTemplate -Destination $nuspecFile -ProjectName $ProjectName
+    if (!(Test-Path $nuspecFile)) {
+        Add-InstallerTemplate -Destination $nuspecFile -ProjectName $ProjectName
 
-    Set-BuildPackage -Value $true -ProjectName $ProjectName
+        Set-BuildPackage -Value $true -ProjectName $ProjectName
 
-    Add-FileWithNoOutput -FilePath $nuspecFile -Project $Project
+        Add-FileWithNoOutput -FilePath $nuspecFile -Project $Project
 
-    # open the nuspec file in the editor
-    $dte.ItemOperations.OpenFile($nuspecFile) | Out-Null
+        # open the nuspec file in the editor
+        $dte.ItemOperations.OpenFile($nuspecFile) | Out-Null
+    }
 }
 
 Write-Message "Now to setup the project - so you don't have to..."
