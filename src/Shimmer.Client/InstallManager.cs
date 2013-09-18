@@ -164,7 +164,7 @@ namespace Shimmer.Client
         {
             var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40, TargetRootDirectory);
 
-            return updateManager.FullUninstall()
+            return updateManager.FullUninstall(BundledRelease.Version)
                 .ObserveOn(RxApp.DeferredScheduler)
                 .Log(this, "Full uninstall")
                 .Finally(updateManager.Dispose);

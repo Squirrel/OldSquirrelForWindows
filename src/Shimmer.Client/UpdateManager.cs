@@ -21,6 +21,7 @@ using Shimmer.Core;
 
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
+using Shimmer.Core.Extensions;
 using FileAccess = System.IO.FileAccess;
 using FileMode = System.IO.FileMode;
 using MemoryStream = System.IO.MemoryStream;
@@ -207,17 +208,30 @@ namespace Shimmer.Client
                 ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler));
         }
 
-        public IObservable<Unit> FullUninstall()
+        public IObservable<Unit> FullUninstall(Version version)
         {
-            return acquireUpdateLock().SelectMany(_ => fullUninstall());
+            return acquireUpdateLock().SelectMany(_ => fullUninstall(version));
         }
 
-        IObservable<Unit> fullUninstall()
+        IObservable<Unit> fullUninstall(Version version)
         {
-            var maxVersion = new Version(255, 255, 255, 255);
             return
-                Observable.Start(() => cleanUpOldVersions(maxVersion), RxApp.TaskpoolScheduler)
-                .SelectMany(_ => Utility.DeleteDirectory(rootAppDirectory))
+                Observable.Start(() => cleanUpOldVersions(version), RxApp.TaskpoolScheduler)
+                .SelectMany(_ => {
+                    var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
+
+                    // this should be pulled out to some sort of helper function
+                    var newerVersions = rootDirectory.GetDirectories()
+                        .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
+                        .Where(x => x.Name.IsGreaterThan(version));
+
+                    var releaseName = String.Format("app-{0}", version.ToString());
+                    var currentAppDir = Path.Combine(rootAppDirectory, releaseName);
+
+                    return newerVersions.Any()
+                            ? Utility.DeleteDirectory(currentAppDir)
+                            : Utility.DeleteDirectory(rootAppDirectory);
+                })
                 .Catch<Unit, Exception>(ex => {
                     log.WarnException(
                         "Full Uninstall failed to delete root dir, punting to next reboot", ex);
@@ -528,7 +542,7 @@ namespace Shimmer.Client
             
             return directory.GetDirectories()
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                .Where(x => x.Name != "app-" + newCurrentVersion)
+                .Where(x => x.Name.IsLessThanOrEqualTo(newCurrentVersion))
                 .OrderBy(x => x.Name)
                 .SelectMany(oldAppRoot => {
                     var path = oldAppRoot.FullName;

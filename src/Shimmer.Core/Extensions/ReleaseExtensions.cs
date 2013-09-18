@@ -45,5 +45,17 @@ namespace Shimmer.Core.Extensions
 
             return null;
         }
+
+        public static bool IsLessThanOrEqualTo(this string name, Version version)
+        {
+            var specificVersion = name.ToVersion();
+            return specificVersion <= version;
+        }
+
+        public static bool IsGreaterThan(this string name, Version version)
+        {
+            var specificVersion = name.ToVersion();
+            return specificVersion > version;
+        }
     }
 }
