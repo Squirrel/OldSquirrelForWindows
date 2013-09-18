@@ -23,7 +23,7 @@ namespace Shimmer.Tests.TestHelpers
             mock.Setup(action)
                 .Callback(() => autoResetEvent.Set());
 
-            autoResetEvent.WaitOne(TimeSpan.FromSeconds(30));
+            autoResetEvent.WaitOne(TimeSpan.FromSeconds(10));
         }
     }
 }
