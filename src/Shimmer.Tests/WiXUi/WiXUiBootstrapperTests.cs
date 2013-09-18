@@ -51,13 +51,15 @@ namespace Shimmer.Tests.WiXUi
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
-                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", packHResultIntoIntEvenThoughItShouldntBeThere(0x80004005), PackageState.Unknown));
+                Func<uint, int> convertHResult = hr => BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
+
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", convertHResult(0x80004005), PackageState.Unknown));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
 
                 router.NavigateAndReset.Execute(RxApp.GetService<IWelcomeViewModel>());
                 error.OnNext(new ErrorEventArgs(ErrorType.ExePackage, "Foo",
-                    packHResultIntoIntEvenThoughItShouldntBeThere(0x80004005), "Noope", 0, new string[0], 0));
+                    convertHResult(0x80004005), "Noope", 0, new string[0], 0));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
             }
@@ -406,13 +408,6 @@ namespace Shimmer.Tests.WiXUi
         public void DefaultTypesShouldntStepOnExtensionRegisteredTypes()
         {
             throw new NotImplementedException();
-        }
-
-        static object gate = 42;
-
-        static int packHResultIntoIntEvenThoughItShouldntBeThere(uint hr)
-        {
-            return BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
         }
     }
 }
