@@ -485,6 +485,150 @@ namespace Shimmer.Tests.WiXUi
             }
         }
 
+        [Fact]
+        public void ANewSetupInstallerWillTriggerTheOldInstallerToUninstall()
+        {
+            string dir, targetRootDirectory;
+            using (Utility.WithTempDirectory(out targetRootDirectory)) {
+
+                var firstVersionDirectory = Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.0.0.0");
+                var secondVersionDirectory = Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0");
+
+                using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
+
+                    // install version 1
+                    var kernel = new TinyIoCContainer();
+                    kernel.Register(Mock.Of<IProcessFactory>());
+
+                    var router = new RoutingState();
+                    var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                    var planComplete = new Subject<PlanCompleteEventArgs>();
+                    var applyComplete = new Subject<ApplyCompleteEventArgs>();
+                    var error = new Subject<ErrorEventArgs>();
+                    var engine = new Mock<IEngine>();
+
+                    var events = new Mock<IWiXEvents>();
+                    events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
+                    events.SetupGet(x => x.ErrorObs).Returns(error);
+                    events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
+                    events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
+                    events.SetupGet(x => x.Engine).Returns(engine.Object);
+
+                    events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                    events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+
+                    var firstInstaller = new WixUiBootstrapper(events.Object, kernel, router, null, dir,
+                        targetRootDirectory);
+
+                    // initialize the install process
+                    detectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+
+                    // navigate to the next VM
+                    var viewModel = router.GetCurrentViewModel() as WelcomeViewModel;
+                    viewModel.ShouldProceed.Execute(null);
+
+                    // signal to start the install
+                    planComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                    // wait until install is complete
+                    engine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                    // now signal it's completed
+                    applyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+
+                    Assert.True(Directory.Exists(firstVersionDirectory));
+                }
+
+                using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out dir)) {
+                    //  install version 1.1
+                    var kernel = new TinyIoCContainer();
+                    kernel.Register(Mock.Of<IProcessFactory>());
+
+                    var router = new RoutingState();
+                    var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                    var planComplete = new Subject<PlanCompleteEventArgs>();
+                    var applyComplete = new Subject<ApplyCompleteEventArgs>();
+                    var error = new Subject<ErrorEventArgs>();
+                    var engine = new Mock<IEngine>();
+
+                    var events = new Mock<IWiXEvents>();
+                    events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
+                    events.SetupGet(x => x.ErrorObs).Returns(error);
+                    events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
+                    events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
+                    events.SetupGet(x => x.Engine).Returns(engine.Object);
+
+                    events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                    events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+
+                    var secondInstaller = new WixUiBootstrapper(events.Object, kernel, router, null, dir,
+                        targetRootDirectory);
+                    RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                    // initialize the install process
+                    detectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Present));
+
+                    // navigate to the next VM
+                    var viewModel = router.GetCurrentViewModel() as WelcomeViewModel;
+                    viewModel.ShouldProceed.Execute(null);
+
+                    // signal to start the install
+                    planComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                    // wait until install is complete
+                    engine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                    // now signal it's completed
+                    applyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+
+                    Assert.True(Directory.Exists(firstVersionDirectory));
+                    Assert.True(Directory.Exists(secondVersionDirectory));
+                }
+
+                using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
+                    //  uninstall version 1.0
+                    var kernel = new TinyIoCContainer();
+                    kernel.Register(Mock.Of<IProcessFactory>());
+
+                    var router = new RoutingState();
+                    var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                    var planComplete = new Subject<PlanCompleteEventArgs>();
+                    var applyComplete = new Subject<ApplyCompleteEventArgs>();
+                    var error = new Subject<ErrorEventArgs>();
+                    var engine = new Mock<IEngine>();
+
+                    var events = new Mock<IWiXEvents>();
+                    events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
+                    events.SetupGet(x => x.ErrorObs).Returns(error);
+                    events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
+                    events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
+                    events.SetupGet(x => x.Engine).Returns(engine.Object);
+
+                    events.SetupGet(x => x.DisplayMode).Returns(Display.Embedded);
+                    events.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
+
+                    var firstUninstallFixture = new WixUiBootstrapper(events.Object, kernel, router, null, dir,
+                        targetRootDirectory);
+                    RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                    // initialize the uninstall process
+                    detectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Present));
+
+                    // signal to start the uninstall
+                    planComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                    // wait until install is complete
+                    engine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                    // now signal it's completed
+                    applyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+
+                    Assert.False(Directory.Exists(firstVersionDirectory), "The old version is not cleaned up as expected");
+                    Assert.True(Directory.Exists(secondVersionDirectory), "The new version should persist after uninstalling the old version");
+                }
+            }
+        }
+
         //
         // PlanComplete
         //
