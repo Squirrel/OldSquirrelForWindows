@@ -208,12 +208,13 @@ namespace Shimmer.Client
                 ReleaseEntry.BuildReleasesFile(PackageDirectory, fileSystem), RxApp.TaskpoolScheduler));
         }
 
-        public IObservable<Unit> FullUninstall(Version version)
+        public IObservable<Unit> FullUninstall(Version version = null)
         {
+            version = version ?? new Version(255, 255, 255, 255);
             return acquireUpdateLock().SelectMany(_ => fullUninstall(version));
         }
 
-        IEnumerable<DirectoryInfoBase> getOldReleases(Version version)
+        DirectoryInfoBase[] getOldReleases(Version version)
         {
             var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
 
@@ -223,7 +224,7 @@ namespace Shimmer.Client
                     .ToArray();
         }
 
-        IEnumerable<DirectoryInfoBase> getNewerReleases(Version version)
+        DirectoryInfoBase[] getNewerReleases(Version version)
         {
             var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
 
@@ -237,21 +238,19 @@ namespace Shimmer.Client
         {
             return
                 Observable.Start(() => cleanUpOldVersions(version), RxApp.TaskpoolScheduler)
-                .SelectMany(_ => {
-                    var releaseName = String.Format("app-{0}", version.ToString());
-                    var currentAppDir = Path.Combine(rootAppDirectory, releaseName);
-
-                    return getNewerReleases(version).Any()
-                            ? Utility.DeleteDirectory(currentAppDir)
-                            : Utility.DeleteDirectory(rootAppDirectory);
-                })
-                .Catch<Unit, Exception>(ex => {
-                    log.WarnException(
-                        "Full Uninstall failed to delete root dir, punting to next reboot", ex);
-                    return Observable.Start(
-                        () => Utility.DeleteDirectoryAtNextReboot(rootAppDirectory));
-                })
-                .Aggregate(Unit.Default, (acc, x) => acc); ;
+                .SelectMany(_ =>
+                    getNewerReleases(version).Any()
+                        ? getOldReleases(version).Select(d => d.FullName)
+                        : new[] { rootAppDirectory })
+                .SelectMany(dir =>
+                    Utility.DeleteDirectory(dir)
+                        .Catch<Unit, Exception>(ex => {
+                            var message = String.Format("Uninstall failed to delete dir '{0}', punting to next reboot", dir);
+                            log.WarnException(message, ex);
+                            return Observable.Start(
+                                () => Utility.DeleteDirectoryAtNextReboot(rootAppDirectory));
+                 }))
+                .Aggregate(Unit.Default, (acc, x) => acc);
         }
 
         public void Dispose()
