@@ -274,9 +274,14 @@ namespace Shimmer.Tests.WiXUi
                 // now signal it's completed
                 secondApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
 
+                var folder = Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0");
+                Assert.True(Directory.Exists(folder));
+
+                var exe = Path.Combine(folder, "SampleUpdatingApp.exe");
+
                 // we expect that it opens the main exe again
                 secondFactory.Verify(
-                    p => p.Start(It.IsAny<string>()),
+                    p => p.Start(exe),
                     Times.Once(),
                     "We expect a process to be executed here, but it ain't...");
             }
@@ -373,13 +378,16 @@ namespace Shimmer.Tests.WiXUi
                     // now signal it's completed
                     secondApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
 
+                    var folder = Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0");
+                    Assert.True(Directory.Exists(folder));
+
+                    var exe = Path.Combine(folder, "SampleUpdatingApp.exe");
+
                     // we expect that it opens the main exe again
                     secondFactory.Verify(
-                        p => p.Start(It.IsAny<string>()),
+                        p => p.Start(exe),
                         Times.Once(),
                         "We expect a process to be executed here, but it ain't...");
-
-                    Assert.True(Directory.Exists(Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0")));
                 }
             }
         }

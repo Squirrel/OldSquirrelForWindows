@@ -107,11 +107,11 @@ namespace Shimmer.Client
 
                 if (!updateInfo.ReleasesToApply.Any()) {
 
-                    var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    var rootDirectory = TargetRootDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
                     var version = updateInfo.CurrentlyInstalledVersion;
                     var releaseFolder = String.Format("app-{0}", version.Version);
-                    var absoluteFolder = Path.Combine(localAppData, version.PackageName, releaseFolder);
+                    var absoluteFolder = Path.Combine(rootDirectory, version.PackageName, releaseFolder);
 
                     var executables = Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly);
 
