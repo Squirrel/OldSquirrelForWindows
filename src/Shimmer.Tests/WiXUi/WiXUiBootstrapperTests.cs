@@ -181,7 +181,6 @@ namespace Shimmer.Tests.WiXUi
             }
         }
 
-
         [Fact]
         public void IfAppIsAlreadyInstalledRunTheApp()
         {
@@ -389,6 +388,100 @@ namespace Shimmer.Tests.WiXUi
                         Times.Once(),
                         "We expect a process to be executed here, but it ain't...");
                 }
+            }
+        }
+
+        [Fact]
+        public void OnUninstallTheFilesAreRemoved()
+        {
+            string dir, targetRootDirectory;
+            using (Utility.WithTempDirectory(out targetRootDirectory))
+            using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out dir)) {
+
+                var currentVersionFolder = Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0");
+
+                // install version 1
+                var firstKernel = new TinyIoCContainer();
+                var firstFactory = new Mock<IProcessFactory>();
+                firstKernel.Register(firstFactory.Object);
+
+                var firstRouter = new RoutingState();
+                var firstDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                var firstPlanComplete = new Subject<PlanCompleteEventArgs>();
+                var firstApplyComplete = new Subject<ApplyCompleteEventArgs>();
+                var firstError = new Subject<ErrorEventArgs>();
+                var firstEngine = new Mock<IEngine>();
+
+                var firstEvents = new Mock<IWiXEvents>();
+                firstEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(firstDetectPackage);
+                firstEvents.SetupGet(x => x.ErrorObs).Returns(firstError);
+                firstEvents.SetupGet(x => x.PlanCompleteObs).Returns(firstPlanComplete);
+                firstEvents.SetupGet(x => x.ApplyCompleteObs).Returns(firstApplyComplete);
+                firstEvents.SetupGet(x => x.Engine).Returns(firstEngine.Object);
+
+                firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+
+                var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir,
+                    targetRootDirectory);
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                // initialize the install process
+                firstDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+
+                // navigate to the next VM
+                var viewModel = firstRouter.GetCurrentViewModel() as WelcomeViewModel;
+                viewModel.ShouldProceed.Execute(null);
+
+                // signal to start the install
+                firstPlanComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                // wait until install is complete
+                firstEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                // now signal it's completed
+                firstApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+
+                Assert.True(Directory.Exists(currentVersionFolder));
+
+                //  uninstall version 1.1
+                var secondKernel = new TinyIoCContainer();
+                var secondFactory = new Mock<IProcessFactory>();
+                secondKernel.Register(secondFactory.Object);
+
+                var secondRouter = new RoutingState();
+                var secondDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                var secondPlanComplete = new Subject<PlanCompleteEventArgs>();
+                var secondApplyComplete = new Subject<ApplyCompleteEventArgs>();
+                var secondError = new Subject<ErrorEventArgs>();
+                var secondEngine = new Mock<IEngine>();
+
+                var secondEvents = new Mock<IWiXEvents>();
+                secondEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(secondDetectPackage);
+                secondEvents.SetupGet(x => x.ErrorObs).Returns(secondError);
+                secondEvents.SetupGet(x => x.PlanCompleteObs).Returns(secondPlanComplete);
+                secondEvents.SetupGet(x => x.ApplyCompleteObs).Returns(secondApplyComplete);
+                secondEvents.SetupGet(x => x.Engine).Returns(secondEngine.Object);
+
+                secondEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                secondEvents.SetupGet(x => x.Action).Returns(LaunchAction.Uninstall);
+
+                var secondFixture = new WixUiBootstrapper(secondEvents.Object, secondKernel, secondRouter, null, dir, targetRootDirectory);
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                // initialize the uninstall process
+                secondDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Present));
+
+                // signal to start the uninstall
+                secondPlanComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                // wait until install is complete
+                secondEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                // now signal it's completed
+                secondApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+
+                Assert.False(Directory.Exists(currentVersionFolder));
             }
         }
 
