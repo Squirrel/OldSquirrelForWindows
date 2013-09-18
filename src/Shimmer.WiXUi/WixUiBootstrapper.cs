@@ -161,14 +161,7 @@ namespace Shimmer.WiXUi.ViewModels
 
                 // background uninstall - only remove this version
                 if (wixEvents.Action == LaunchAction.Uninstall) {
-
-                    var version = wixEvents.DisplayMode == Display.Embedded
-                        // Display.Embedded - only remove this version
-                        ? BundledRelease.Version
-                        // Display.Full - remove everything
-                        : null;
-
-                    installManager.ExecuteUninstall(version).Subscribe(
+                    installManager.ExecuteUninstall(BundledRelease.Version).Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
                     return;
