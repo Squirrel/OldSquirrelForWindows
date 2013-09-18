@@ -126,30 +126,7 @@ namespace Shimmer.Tests.WiXUi
             using (IntegrationTestHelper.WithFakeInstallDirectory(out dir))
             {
                 // install version 1
-                var kernel = new TinyIoCContainer();
-                kernel.Register(Mock.Of<IProcessFactory>());
-
-                var router = new RoutingState();
-                var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                var planComplete = new Subject<PlanCompleteEventArgs>();
-                var applyComplete = new Subject<ApplyCompleteEventArgs>();
-                var error = new Subject<ErrorEventArgs>();
-                var engine = new Mock<IEngine>();
-
-                var events = new Mock<IWiXEvents>();
-                events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
-                events.SetupGet(x => x.ErrorObs).Returns(error);
-                events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
-                events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
-                events.SetupGet(x => x.Engine).Returns(engine.Object);
-
-                events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
-
-                var fixture = new WixUiBootstrapper(events.Object, kernel, router, null, dir, targetRootDirectory);
-                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
-
-                mockPerformInstall(router, detectPackage, planComplete, applyComplete, engine);
+                mockPerformInstall(dir, targetRootDirectory);
 
                 Assert.True(Directory.Exists(Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0")));
             }
@@ -237,32 +214,9 @@ namespace Shimmer.Tests.WiXUi
             string dir, targetRootDirectory;
             using (Utility.WithTempDirectory(out targetRootDirectory)) {
                 using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
+
                     // install version 1
-                    var firstKernel = new TinyIoCContainer();
-                    var firstFactory = new Mock<IProcessFactory>();
-                    firstKernel.Register(firstFactory.Object);
-
-                    var firstRouter = new RoutingState();
-                    var firstDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                    var firstPlanComplete = new Subject<PlanCompleteEventArgs>();
-                    var firstApplyComplete = new Subject<ApplyCompleteEventArgs>();
-                    var firstError = new Subject<ErrorEventArgs>();
-                    var firstEngine = new Mock<IEngine>();
-
-                    var firstEvents = new Mock<IWiXEvents>();
-                    firstEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(firstDetectPackage);
-                    firstEvents.SetupGet(x => x.ErrorObs).Returns(firstError);
-                    firstEvents.SetupGet(x => x.PlanCompleteObs).Returns(firstPlanComplete);
-                    firstEvents.SetupGet(x => x.ApplyCompleteObs).Returns(firstApplyComplete);
-                    firstEvents.SetupGet(x => x.Engine).Returns(firstEngine.Object);
-
-                    firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                    firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
-
-                    var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir,
-                        targetRootDirectory);
-
-                    mockPerformInstall(firstRouter, firstDetectPackage, firstPlanComplete, firstApplyComplete, firstEngine);
+                    mockPerformInstall(dir, targetRootDirectory);
                 }
 
                 using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out dir)) {
@@ -316,31 +270,7 @@ namespace Shimmer.Tests.WiXUi
                 var currentVersionFolder = Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0");
 
                 // install version 1.1
-                var firstKernel = new TinyIoCContainer();
-                var firstFactory = new Mock<IProcessFactory>();
-                firstKernel.Register(firstFactory.Object);
-
-                var firstRouter = new RoutingState();
-                var firstDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                var firstPlanComplete = new Subject<PlanCompleteEventArgs>();
-                var firstApplyComplete = new Subject<ApplyCompleteEventArgs>();
-                var firstError = new Subject<ErrorEventArgs>();
-                var firstEngine = new Mock<IEngine>();
-
-                var firstEvents = new Mock<IWiXEvents>();
-                firstEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(firstDetectPackage);
-                firstEvents.SetupGet(x => x.ErrorObs).Returns(firstError);
-                firstEvents.SetupGet(x => x.PlanCompleteObs).Returns(firstPlanComplete);
-                firstEvents.SetupGet(x => x.ApplyCompleteObs).Returns(firstApplyComplete);
-                firstEvents.SetupGet(x => x.Engine).Returns(firstEngine.Object);
-
-                firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
-
-                var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir,
-                    targetRootDirectory);
-
-                mockPerformInstall(firstRouter, firstDetectPackage, firstPlanComplete, firstApplyComplete, firstEngine);
+                mockPerformInstall(dir, targetRootDirectory);
 
                 Assert.True(Directory.Exists(currentVersionFolder));
 
@@ -387,67 +317,22 @@ namespace Shimmer.Tests.WiXUi
                 using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
 
                     // install version 1
-                    var kernel = new TinyIoCContainer();
-                    kernel.Register(Mock.Of<IProcessFactory>());
-
-                    var router = new RoutingState();
-                    var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                    var planComplete = new Subject<PlanCompleteEventArgs>();
-                    var applyComplete = new Subject<ApplyCompleteEventArgs>();
-                    var error = new Subject<ErrorEventArgs>();
-                    var engine = new Mock<IEngine>();
-
-                    var events = new Mock<IWiXEvents>();
-                    events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
-                    events.SetupGet(x => x.ErrorObs).Returns(error);
-                    events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
-                    events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
-                    events.SetupGet(x => x.Engine).Returns(engine.Object);
-
-                    events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                    events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
-
-                    var firstInstaller = new WixUiBootstrapper(events.Object, kernel, router, null, dir,
-                        targetRootDirectory);
-
-                    mockPerformInstall(router, detectPackage, planComplete, applyComplete, engine);
+                    mockPerformInstall(dir, targetRootDirectory);
 
                     Assert.True(Directory.Exists(firstVersionDirectory));
                 }
 
                 using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out dir)) {
+
                     //  install version 1.1
-                    var kernel = new TinyIoCContainer();
-                    kernel.Register(Mock.Of<IProcessFactory>());
-
-                    var router = new RoutingState();
-                    var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                    var planComplete = new Subject<PlanCompleteEventArgs>();
-                    var applyComplete = new Subject<ApplyCompleteEventArgs>();
-                    var error = new Subject<ErrorEventArgs>();
-                    var engine = new Mock<IEngine>();
-
-                    var events = new Mock<IWiXEvents>();
-                    events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
-                    events.SetupGet(x => x.ErrorObs).Returns(error);
-                    events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
-                    events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
-                    events.SetupGet(x => x.Engine).Returns(engine.Object);
-
-                    events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                    events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
-
-                    var secondInstaller = new WixUiBootstrapper(events.Object, kernel, router, null, dir,
-                        targetRootDirectory);
-                    RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
-
-                    mockPerformInstall(router, detectPackage, planComplete, applyComplete, engine);
+                    mockPerformInstall(dir, targetRootDirectory);
 
                     Assert.True(Directory.Exists(firstVersionDirectory));
                     Assert.True(Directory.Exists(secondVersionDirectory));
                 }
 
                 using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
+
                     //  uninstall version 1.0
                     var kernel = new TinyIoCContainer();
                     kernel.Register(Mock.Of<IProcessFactory>());
@@ -494,6 +379,37 @@ namespace Shimmer.Tests.WiXUi
         public void DefaultTypesShouldntStepOnExtensionRegisteredTypes()
         {
             throw new NotImplementedException();
+        }
+
+        static void mockPerformInstall(
+            string installDirectory,
+            string targetRootDirectory)
+        {
+            var kernel = new TinyIoCContainer();
+            kernel.Register(Mock.Of<IProcessFactory>());
+
+            var router = new RoutingState();
+            var detectPackage = new Subject<DetectPackageCompleteEventArgs>();
+            var planComplete = new Subject<PlanCompleteEventArgs>();
+            var applyComplete = new Subject<ApplyCompleteEventArgs>();
+            var error = new Subject<ErrorEventArgs>();
+            var engine = new Mock<IEngine>();
+
+            var events = new Mock<IWiXEvents>();
+            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectPackage);
+            events.SetupGet(x => x.ErrorObs).Returns(error);
+            events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
+            events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
+            events.SetupGet(x => x.Engine).Returns(engine.Object);
+
+            events.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+            events.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+
+            var installer = new WixUiBootstrapper(events.Object, kernel, router, null, installDirectory,
+                       targetRootDirectory);
+
+            mockPerformInstall(router, detectPackage, planComplete, applyComplete, engine);
+
         }
 
         static void mockPerformInstall(
