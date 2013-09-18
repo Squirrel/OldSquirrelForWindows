@@ -131,11 +131,8 @@ namespace Shimmer.Tests.WiXUi
         public void IfAppIsAlreadyInstalledRunTheApp()
         {
             var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-            // TODO: move this out to a helper function?
             var appFolder = Path.Combine(folder, "SampleUpdatingApp");
-            if (Directory.Exists(appFolder))
-                Directory.Delete(appFolder, true);
+            Utility.DeleteDirectory(appFolder).Wait();
 
             string dir;
             using (IntegrationTestHelper.WithFakeInstallDirectory(out dir))
