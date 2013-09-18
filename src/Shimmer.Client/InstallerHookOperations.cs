@@ -153,8 +153,15 @@ namespace Shimmer.Client
         {
             var allExeFiles = default(FileInfoBase[]);
 
+            var directory = fileSystem.GetDirectoryInfo(appDirectory);
+
+            if (!directory.Exists) {
+                log.Warn("findAppSetupsToRun: the folder {0} does not exist", appDirectory);
+                return Enumerable.Empty<IAppSetup>();
+            }
+
             try {
-                allExeFiles = fileSystem.GetDirectoryInfo(appDirectory).GetFiles("*.exe");
+                allExeFiles = directory.GetFiles("*.exe");
             } catch (UnauthorizedAccessException ex) {
                 // NB: This can happen if we run into a MoveFileEx'd directory,
                 // where we can't even get the list of files in it.
