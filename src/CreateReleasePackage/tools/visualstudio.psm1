@@ -32,8 +32,20 @@ function New-Release {
                              -BuildDir (Join-Path $projectDir $outputDir)
 }
 
-Register-TabExpansion 'New-Release' @{
-        ProjectName = { Get-Project -All | Select -ExpandProperty Name }
+function Enable-BuildPackage {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, ValueFromPipeLine=$true)]
+        [string] $ProjectName
+    )
+
+        Set-BuildPackage -Value $true -ProjectName $ProjectName
 }
 
-Export-ModuleMember New-Release
+'New-Release', 'Enable-BuildPackage' | %{
+    Register-TabExpansion $_ @{
+        ProjectName = { Get-Project -All | Select -ExpandProperty Name }
+    }
+}
+
+Export-ModuleMember New-Release, Enable-BuildPackage
