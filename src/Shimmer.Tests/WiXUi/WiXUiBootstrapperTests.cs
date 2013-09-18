@@ -127,7 +127,6 @@ namespace Shimmer.Tests.WiXUi
             }
         }
 
-
         [Fact]
         public void CanInstallToACustomFolder()
         {
@@ -184,11 +183,8 @@ namespace Shimmer.Tests.WiXUi
         [Fact]
         public void IfAppIsAlreadyInstalledRunTheApp()
         {
-            var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var appFolder = Path.Combine(folder, "SampleUpdatingApp");
-            Utility.DeleteDirectory(appFolder).Wait();
-
-            string dir;
+            string dir, targetRootDirectory;
+            using (Utility.WithTempDirectory(out targetRootDirectory))
             using (IntegrationTestHelper.WithFakeInstallDirectory(out dir))
             {
                 // install version 1
@@ -213,7 +209,7 @@ namespace Shimmer.Tests.WiXUi
                 firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
                 firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
 
-                var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir);
+                var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir, targetRootDirectory);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
                 // initialize the install process
@@ -257,7 +253,7 @@ namespace Shimmer.Tests.WiXUi
                 secondEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
                 secondEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
 
-                var secondFixture = new WixUiBootstrapper(secondEvents.Object, secondKernel, secondRouter, null, dir);
+                var secondFixture = new WixUiBootstrapper(secondEvents.Object, secondKernel, secondRouter, null, dir, targetRootDirectory);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
                 // initialize the install process
@@ -287,103 +283,102 @@ namespace Shimmer.Tests.WiXUi
         [Fact]
         public void OnUpgradeTheNewExecutableRuns()
         {
-            var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var appFolder = Path.Combine(folder, "SampleUpdatingApp");
-            Utility.DeleteDirectory(appFolder).Wait();
+            string dir, targetRootDirectory;
+            using (Utility.WithTempDirectory(out targetRootDirectory)) {
+                using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
+                    // install version 1
+                    var firstKernel = new TinyIoCContainer();
+                    var firstFactory = new Mock<IProcessFactory>();
+                    firstKernel.Register(firstFactory.Object);
 
-            string dir;
-            using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.0.0.0.nupkg", out dir)) {
-                // install version 1
-                var firstKernel = new TinyIoCContainer();
-                var firstFactory = new Mock<IProcessFactory>();
-                firstKernel.Register(firstFactory.Object);
+                    var firstRouter = new RoutingState();
+                    var firstDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                    var firstPlanComplete = new Subject<PlanCompleteEventArgs>();
+                    var firstApplyComplete = new Subject<ApplyCompleteEventArgs>();
+                    var firstError = new Subject<ErrorEventArgs>();
+                    var firstEngine = new Mock<IEngine>();
 
-                var firstRouter = new RoutingState();
-                var firstDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                var firstPlanComplete = new Subject<PlanCompleteEventArgs>();
-                var firstApplyComplete = new Subject<ApplyCompleteEventArgs>();
-                var firstError = new Subject<ErrorEventArgs>();
-                var firstEngine = new Mock<IEngine>();
+                    var firstEvents = new Mock<IWiXEvents>();
+                    firstEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(firstDetectPackage);
+                    firstEvents.SetupGet(x => x.ErrorObs).Returns(firstError);
+                    firstEvents.SetupGet(x => x.PlanCompleteObs).Returns(firstPlanComplete);
+                    firstEvents.SetupGet(x => x.ApplyCompleteObs).Returns(firstApplyComplete);
+                    firstEvents.SetupGet(x => x.Engine).Returns(firstEngine.Object);
 
-                var firstEvents = new Mock<IWiXEvents>();
-                firstEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(firstDetectPackage);
-                firstEvents.SetupGet(x => x.ErrorObs).Returns(firstError);
-                firstEvents.SetupGet(x => x.PlanCompleteObs).Returns(firstPlanComplete);
-                firstEvents.SetupGet(x => x.ApplyCompleteObs).Returns(firstApplyComplete);
-                firstEvents.SetupGet(x => x.Engine).Returns(firstEngine.Object);
+                    firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                    firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
 
-                firstEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                firstEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+                    var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir,
+                        targetRootDirectory);
+                    RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
-                var firstFixture = new WixUiBootstrapper(firstEvents.Object, firstKernel, firstRouter, null, dir);
-                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+                    // initialize the install process
+                    firstDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
 
-                // initialize the install process
-                firstDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+                    // navigate to the next VM
+                    var viewModel = firstRouter.GetCurrentViewModel() as WelcomeViewModel;
+                    viewModel.ShouldProceed.Execute(null);
 
-                // navigate to the next VM
-                var viewModel = firstRouter.GetCurrentViewModel() as WelcomeViewModel;
-                viewModel.ShouldProceed.Execute(null);
+                    // signal to start the install
+                    firstPlanComplete.OnNext(new PlanCompleteEventArgs(0));
 
-                // signal to start the install
-                firstPlanComplete.OnNext(new PlanCompleteEventArgs(0));
+                    // wait until install is complete
+                    firstEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
 
-                // wait until install is complete
-                firstEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+                    // now signal it's completed
+                    firstApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+                }
 
-                // now signal it's completed
-                firstApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
-            }
+                using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out dir)) {
+                    // install version 1.1 again
+                    var secondKernel = new TinyIoCContainer();
+                    var secondFactory = new Mock<IProcessFactory>();
+                    secondKernel.Register(secondFactory.Object);
 
-            using (IntegrationTestHelper.WithFakeInstallDirectory("SampleUpdatingApp.1.1.0.0.nupkg", out dir)) {
-                // install version 1.1 again
-                var secondKernel = new TinyIoCContainer();
-                var secondFactory = new Mock<IProcessFactory>();
-                secondKernel.Register(secondFactory.Object);
+                    var secondRouter = new RoutingState();
+                    var secondDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
+                    var secondPlanComplete = new Subject<PlanCompleteEventArgs>();
+                    var secondApplyComplete = new Subject<ApplyCompleteEventArgs>();
+                    var secondError = new Subject<ErrorEventArgs>();
+                    var secondEngine = new Mock<IEngine>();
 
-                var secondRouter = new RoutingState();
-                var secondDetectPackage = new Subject<DetectPackageCompleteEventArgs>();
-                var secondPlanComplete = new Subject<PlanCompleteEventArgs>();
-                var secondApplyComplete = new Subject<ApplyCompleteEventArgs>();
-                var secondError = new Subject<ErrorEventArgs>();
-                var secondEngine = new Mock<IEngine>();
+                    var secondEvents = new Mock<IWiXEvents>();
+                    secondEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(secondDetectPackage);
+                    secondEvents.SetupGet(x => x.ErrorObs).Returns(secondError);
+                    secondEvents.SetupGet(x => x.PlanCompleteObs).Returns(secondPlanComplete);
+                    secondEvents.SetupGet(x => x.ApplyCompleteObs).Returns(secondApplyComplete);
+                    secondEvents.SetupGet(x => x.Engine).Returns(secondEngine.Object);
 
-                var secondEvents = new Mock<IWiXEvents>();
-                secondEvents.SetupGet(x => x.DetectPackageCompleteObs).Returns(secondDetectPackage);
-                secondEvents.SetupGet(x => x.ErrorObs).Returns(secondError);
-                secondEvents.SetupGet(x => x.PlanCompleteObs).Returns(secondPlanComplete);
-                secondEvents.SetupGet(x => x.ApplyCompleteObs).Returns(secondApplyComplete);
-                secondEvents.SetupGet(x => x.Engine).Returns(secondEngine.Object);
+                    secondEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
+                    secondEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
 
-                secondEvents.SetupGet(x => x.DisplayMode).Returns(Display.Full);
-                secondEvents.SetupGet(x => x.Action).Returns(LaunchAction.Install);
+                    var secondFixture = new WixUiBootstrapper(secondEvents.Object, secondKernel, secondRouter, null, dir, targetRootDirectory);
+                    RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
-                var secondFixture = new WixUiBootstrapper(secondEvents.Object, secondKernel, secondRouter, null, dir);
-                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+                    // initialize the install process
+                    secondDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
 
-                // initialize the install process
-                secondDetectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+                    // navigate to the next VM
+                    var viewModel = secondRouter.GetCurrentViewModel() as WelcomeViewModel;
+                    viewModel.ShouldProceed.Execute(null);
 
-                // navigate to the next VM
-                var viewModel = secondRouter.GetCurrentViewModel() as WelcomeViewModel;
-                viewModel.ShouldProceed.Execute(null);
+                    // signal to start the install
+                    secondPlanComplete.OnNext(new PlanCompleteEventArgs(0));
 
-                // signal to start the install
-                secondPlanComplete.OnNext(new PlanCompleteEventArgs(0));
+                    // wait until install is complete
+                    secondEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
 
-                // wait until install is complete
-                secondEngine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+                    // now signal it's completed
+                    secondApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
 
-                // now signal it's completed
-                secondApplyComplete.OnNext(new ApplyCompleteEventArgs(0, ApplyRestart.None));
+                    // we expect that it opens the main exe again
+                    secondFactory.Verify(
+                        p => p.Start(It.IsAny<string>()),
+                        Times.Once(),
+                        "We expect a process to be executed here, but it ain't...");
 
-                // we expect that it opens the main exe again
-                secondFactory.Verify(
-                    p => p.Start(It.IsAny<string>()),
-                    Times.Once(),
-                    "We expect a process to be executed here, but it ain't...");
-
-                Assert.True(Directory.Exists(Path.Combine(appFolder, "app-1.1.0.0")));
+                    Assert.True(Directory.Exists(Path.Combine(targetRootDirectory, "SampleUpdatingApp", "app-1.1.0.0")));
+                }
             }
         }
 
