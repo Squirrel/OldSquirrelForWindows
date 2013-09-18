@@ -115,8 +115,7 @@ namespace Shimmer.Client
 
                     var executables = Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly);
 
-                    return executables.Where(fullName => !fullName.EndsWith(".vshost.exe", StringComparison.OrdinalIgnoreCase))
-                                      .ToList(); // XXX: we should do something useful here
+                    return executables.ToList();
                 }
 
                 foreach (var u in updateInfo.ReleasesToApply) {
