@@ -213,22 +213,35 @@ namespace Shimmer.Client
             return acquireUpdateLock().SelectMany(_ => fullUninstall(version));
         }
 
+        IEnumerable<DirectoryInfoBase> getOldReleases(Version version)
+        {
+            var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
+
+            return rootDirectory.GetDirectories()
+                    .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
+                    .Where(x => x.Name.IsLessThanOrEqualTo(version))
+                    .ToArray();
+        }
+
+        IEnumerable<DirectoryInfoBase> getNewerReleases(Version version)
+        {
+            var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
+
+            return rootDirectory.GetDirectories()
+                    .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
+                    .Where(x => x.Name.IsGreaterThan(version))
+                    .ToArray();
+        }
+
         IObservable<Unit> fullUninstall(Version version)
         {
             return
                 Observable.Start(() => cleanUpOldVersions(version), RxApp.TaskpoolScheduler)
                 .SelectMany(_ => {
-                    var rootDirectory = fileSystem.GetDirectoryInfo(rootAppDirectory);
-
-                    // this should be pulled out to some sort of helper function
-                    var newerVersions = rootDirectory.GetDirectories()
-                        .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                        .Where(x => x.Name.IsGreaterThan(version));
-
                     var releaseName = String.Format("app-{0}", version.ToString());
                     var currentAppDir = Path.Combine(rootAppDirectory, releaseName);
 
-                    return newerVersions.Any()
+                    return getNewerReleases(version).Any()
                             ? Utility.DeleteDirectory(currentAppDir)
                             : Utility.DeleteDirectory(rootAppDirectory);
                 })
@@ -540,9 +553,7 @@ namespace Shimmer.Client
                 return Enumerable.Empty<ShortcutCreationRequest>();
             }
             
-            return directory.GetDirectories()
-                .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                .Where(x => x.Name.IsLessThanOrEqualTo(newCurrentVersion))
+            return getOldReleases(newCurrentVersion)
                 .OrderBy(x => x.Name)
                 .SelectMany(oldAppRoot => {
                     var path = oldAppRoot.FullName;
