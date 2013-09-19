@@ -74,12 +74,6 @@ namespace Shimmer.Tests.Client
             throw new NotImplementedException();
         }
 
-        [Fact(Skip = "TODO")]
-        public void UninstallRunsHooks()
-        {
-            throw new NotImplementedException();
-        }
-
         [Fact]
         public void InstallRunsHooks()
         {
@@ -98,7 +92,33 @@ namespace Shimmer.Tests.Client
 
                 fixture.ExecuteInstall(dir, pkg).Wait();
 
-                var generatedFile = Path.Combine(outDir, "SampleUpdatingApp", "app-1.2.0.0", "testfile");
+                var generatedFile = Path.Combine(outDir, "SampleUpdatingApp", "app-1.2.0.0", "install");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
+        public void UninstallRunsHooks()
+        {
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.2.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+                fixture.ExecuteUninstall(new Version("1.2.0.0")).Wait();
+
+                var generatedFile = Path.Combine(outDir, "uninstall");
 
                 Assert.True(File.Exists(generatedFile));
             }

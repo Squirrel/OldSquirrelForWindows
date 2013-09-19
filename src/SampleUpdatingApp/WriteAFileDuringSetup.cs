@@ -16,29 +16,32 @@ namespace SampleUpdatingApp
         {
             base.OnAppInstall();
 
-            var file = GetFileToTouch();
+            var file = Path.Combine(GetCurrentDirectory(), "install");
 
             File.WriteAllText(file, Guid.NewGuid().ToString());
         }
 
         public override void OnAppUninstall()
         {
-            var file = GetFileToTouch();
+            var currentDirectory = GetCurrentDirectory();
 
-            if (File.Exists(file))
-                File.Delete(file);
+            var directoryInfo = new DirectoryInfo(currentDirectory);
+
+            var appRoot = directoryInfo.Parent.Parent;
+
+            var file = Path.Combine(appRoot.FullName, "uninstall");
+
+            File.WriteAllText(file, Guid.NewGuid().ToString());
 
             base.OnAppUninstall();
         }
 
-        static string GetFileToTouch()
+        static string GetCurrentDirectory()
         {
             var codeBase = Assembly.GetExecutingAssembly().CodeBase;
             var uri = new UriBuilder(codeBase);
             var path = Uri.UnescapeDataString(uri.Path);
-            var folder = Path.GetDirectoryName(path);
-
-            return Path.Combine(folder, "testfile");
+            return Path.GetDirectoryName(path);
         }
     }
 }

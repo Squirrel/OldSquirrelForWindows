@@ -195,6 +195,56 @@ namespace Shimmer.Client
             return locatedAppSetups;
         }
 
+        public IEnumerable<ShortcutCreationRequest> RunAppUninstall(string fullDirectoryPath)
+        {
+            var apps = default(IEnumerable<IAppSetup>);
+            try {
+                apps = findAppSetupsToRun(fullDirectoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                log.ErrorException("Couldn't run cleanups", ex);
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
+
+            var ret = apps.SelectMany(uninstallApp).ToArray();
+
+            return ret;
+        }
+
+        IEnumerable<ShortcutCreationRequest> uninstallApp(IAppSetup app)
+        {
+            try {
+                app.OnAppUninstall();
+            } catch (Exception ex) {
+                log.ErrorException("App threw exception on uninstall:  " + app.GetType().FullName, ex);
+            }
+
+            var shortcuts = Enumerable.Empty<ShortcutCreationRequest>();
+            try {
+                shortcuts = app.GetAppShortcutList();
+            } catch (Exception ex) {
+                log.ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+            }
+
+            // Get the list of shortcuts that *should've* been there, but aren't;
+            // this means that the user deleted them by hand and that they should 
+            // stay dead
+            return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
+                var path = x.GetLinkTarget(applicationName);
+                var fi = fileSystem.GetFileInfo(path);
+
+                if (fi.Exists) {
+                    fi.Delete();
+                    log.Info("Deleting shortcut: {0}", fi.FullName);
+                } else {
+                    acc.Add(x);
+                    log.Info("Shortcut not found: {0}, capturing for future reference", fi.FullName);
+                }
+
+                return acc;
+            });
+        }
+
+
         IAppSetup createInstanceOrWhine(Type typeToCreate)
         {
             try {
