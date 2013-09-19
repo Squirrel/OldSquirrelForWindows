@@ -159,13 +159,20 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
-                // background uninstall - only remove this version
                 if (wixEvents.Action == LaunchAction.Uninstall) {
                     var task = installManager.ExecuteUninstall(BundledRelease.Version);
                     task.Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
-                    task.Wait();
+                    // the installer can close before the uninstall is done
+                    // which means the UpdateManager is not disposed correctly
+                    // which means an error is thrown in the destructor
+                    //
+                    // let's wait for it to finish
+                    //
+                    // oh, and .Wait() is unnecesary here
+                    // because the subscriber handles an exception
+                    var result = task.FirstOrDefault();
                     return;
                 }
 

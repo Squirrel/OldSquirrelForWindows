@@ -235,6 +235,7 @@ namespace Shimmer.Client
 
         IObservable<Unit> fullUninstall(Version version)
         {
+           // find all the old releases (and this one)
            return getOldReleases(version)
                     .Concat(new [] { getDirectoryForRelease(version) })
                     .Where(d => d.Exists)
@@ -242,7 +243,9 @@ namespace Shimmer.Client
                     .Select(d => d.FullName)
                     .ToObservable()
                     .SelectMany(dir => {
+                        // cleanup each version
                         runAppCleanup(dir);
+                        // and then force a delete on each folder
                         return Utility.DeleteDirectory(dir)
                                 .Catch<Unit, Exception>(ex => {
                                     var message = String.Format("Uninstall failed to delete dir '{0}', punting to next reboot", dir);
@@ -253,6 +256,8 @@ namespace Shimmer.Client
                     })
                     .Aggregate(Unit.Default, (acc, x) => acc)
                     .SelectMany(_ => {
+                        // if there are no other relases found
+                        // delete the root directory too
                         if (!getReleases().Any()) {
                             return Utility.DeleteDirectory(rootAppDirectory);
                         }
