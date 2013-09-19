@@ -109,6 +109,13 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
+
+                    if (wixEvents.DisplayMode != Display.Full) {
+                        this.Log().Info("Shimmer is doing a silent uninstall! Sneaky!");
+                        wixEvents.Engine.Plan(LaunchAction.Uninstall);
+                        return;
+                    }
+
                     this.Log().Info("Shimmer is doing an uninstall! Sadface!");
                     var uninstallVm = RxApp.GetService<IUninstallingViewModel>();
                     Router.Navigate.Execute(uninstallVm);
@@ -153,9 +160,19 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
-                    installManager.ExecuteUninstall().Subscribe(
+                    var task = installManager.ExecuteUninstall(BundledRelease.Version);
+                    task.Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
+                    // the installer can close before the uninstall is done
+                    // which means the UpdateManager is not disposed correctly
+                    // which means an error is thrown in the destructor
+                    //
+                    // let's wait for it to finish
+                    //
+                    // oh, and .Wait() is unnecesary here
+                    // because the subscriber handles an exception
+                    var result = task.FirstOrDefault();
                     return;
                 }
 

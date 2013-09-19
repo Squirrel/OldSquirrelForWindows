@@ -120,12 +120,14 @@ namespace Shimmer.Core
 
         public static IObservable<Unit> DeleteDirectory(string directoryPath, IScheduler scheduler = null)
         {
-            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
-
             Contract.Requires(!String.IsNullOrEmpty(directoryPath));
 
+            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+
+            Log().Info("Starting to delete folder: {0}", directoryPath);
+
             if (!Directory.Exists(directoryPath)) {
-                Log().Warn("DeleteDirectoryAtNextReboot: does not exist - {0}", directoryPath);
+                Log().Warn("DeleteDirectory: does not exist - {0}", directoryPath);
                 return Observable.Return(Unit.Default);
             }
 
@@ -214,7 +216,10 @@ namespace Shimmer.Core
         {
             if (MoveFileEx(name, null, MoveFileFlags.MOVEFILE_DELAY_UNTIL_REBOOT)) return;
 
-            Log().Error("safeDeleteFileAtNextReboot: failed - {0}", name);
+            // thank you, http://www.pinvoke.net/default.aspx/coredll.getlasterror
+            var lastError = Marshal.GetLastWin32Error();
+
+            Log().Error("safeDeleteFileAtNextReboot: failed - {0} - {1}", name, lastError);
         }
 
         static IRxUIFullLogger Log()

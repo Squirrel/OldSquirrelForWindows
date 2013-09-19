@@ -28,8 +28,6 @@ namespace Shimmer.WiXUi
             RxApp.LoggerFactory = _ => new FileLogger("Shimmer") { Level = ReactiveUI.LogLevel.Info };
             ReactiveUIMicro.RxApp.ConfigureFileLogging(); // HACK: we can do better than this later
 
-            this.Log().Info("Bootstrapper started");
-
             theApp = new Application();
 
             // NB: These are mirrored instead of just exposing Command because
@@ -71,16 +69,17 @@ namespace Shimmer.WiXUi
 
         public void ShouldQuit()
         {
-            this.Log().Info("Bootstrapper finishing");
-
-            // NB: For some reason, we can't get DispatcherScheduler.Current
-            // here, WiX is doing something very strange post-apply
-            uiDispatcher.Invoke(new Action(() =>
-            {
-                theApp.MainWindow.Close();
-                theApp.Shutdown();
+            if (Command.Display == Display.Full) {
+                // if we're in Full mode, we have a UI to close
+                uiDispatcher.Invoke(new Action(() => {
+                    theApp.MainWindow.Close();
+                    theApp.Shutdown();
+                    Engine.Quit(0);
+                }));
+            } else {
+                // otherwise just quit in the background
                 Engine.Quit(0);
-            }));
+            }
         }
 
         #region Extremely dull code to set up IWiXEvents

@@ -10,6 +10,7 @@ using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
+using Shimmer.Client.Extensions;
 using Shimmer.Core;
 
 namespace Shimmer.Client
@@ -17,7 +18,7 @@ namespace Shimmer.Client
     public interface IInstallManager
     {
         IObservable<List<string>> ExecuteInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null);
-        IObservable<Unit> ExecuteUninstall();
+        IObservable<Unit> ExecuteUninstall(Version version);
     }
 
     public class InstallManager : IInstallManager
@@ -72,7 +73,7 @@ namespace Shimmer.Client
             bool ignoreDeltaUpdates = false,
             IObserver<int> progress = null)
         {
-            var fxVersion = determineFxVersionFromPackage(bundledPackageMetadata);
+            var fxVersion = bundledPackageMetadata.DetectFrameworkVersion();
 
             var eigenCheckProgress = new Subject<int>();
             var eigenCopyFileProgress = new Subject<int>();
@@ -159,23 +160,14 @@ namespace Shimmer.Client
             return ret;
         }
 
-        public IObservable<Unit> ExecuteUninstall()
+        public IObservable<Unit> ExecuteUninstall(Version version = null)
         {
             var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40, TargetRootDirectory);
 
-            return updateManager.FullUninstall()
+            return updateManager.FullUninstall(version)
                 .ObserveOn(RxApp.DeferredScheduler)
                 .Log(this, "Full uninstall")
                 .Finally(updateManager.Dispose);
-        }
-
-        static FrameworkVersion determineFxVersionFromPackage(IPackage package)
-        {
-            Contract.Requires(package != null);
-
-            return package.GetFiles().Any(x => x.Path.Contains("lib") && x.Path.Contains("45"))
-                ? FrameworkVersion.Net45
-                : FrameworkVersion.Net40;
         }
     }
 }
