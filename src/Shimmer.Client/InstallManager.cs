@@ -114,9 +114,12 @@ namespace Shimmer.Client
                     var releaseFolder = String.Format("app-{0}", version.Version);
                     var absoluteFolder = Path.Combine(rootDirectory, version.PackageName, releaseFolder);
 
-                    var executables = Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly);
-
-                    return executables.ToList();
+                    if (!Directory.Exists(absoluteFolder)) {
+                        log.Warn("executeInstall: the directory {0} doesn't exist - cannot find the current app?!!?");
+                    } else {
+                        return Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly)
+                                        .ToList();
+                    }
                 }
 
                 foreach (var u in updateInfo.ReleasesToApply) {
