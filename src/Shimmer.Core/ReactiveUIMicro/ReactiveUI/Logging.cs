@@ -155,8 +155,7 @@ namespace ReactiveUIMicro
                                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                                 "Shimmer");
             filePath = Path.Combine(directoryPath, fileName);
-
-            messageFormat = "{0} | {1} | {2}";
+            messageFormat = "[{0}][{1}] {2}";
         }
 
         public void Write(string message, LogLevel logLevel)
@@ -174,7 +173,7 @@ namespace ReactiveUIMicro
                         writer.WriteLine(
                             messageFormat,
                             logLevel.ToString().ToUpper(),
-                            now.ToString("yyyy-MM-dd hh:mm:ss tt zz"),
+                            now.ToString("yyyy-MM-ddThh:mm:ss"),
                             message);
                     }
                 }

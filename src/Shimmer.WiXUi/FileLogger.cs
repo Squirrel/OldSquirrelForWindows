@@ -17,7 +17,7 @@ namespace Shimmer.WiXUi
             var id = Process.GetCurrentProcess().Id;
             var fileName = String.Format("{0}-{1}.txt", appName, id);
             filePath = Path.Combine(LogDirectory, fileName);
-            messageFormat = "{0} | {1} | {2}";
+            messageFormat = "[{0}][{1}] {2}";
         }
 
         public static string LogDirectory {
@@ -38,9 +38,9 @@ namespace Shimmer.WiXUi
                     using (var writer = new StreamWriter(filePath, true)) {
                         var now = DateTime.Now;
                         writer.WriteLine(
-                            messageFormat, 
+                            messageFormat,
                             logLevel.ToString().ToUpper(),
-                            now.ToString("yyyy-MM-dd hh:mm:ss tt zz"),
+                            now.ToString("yyyy-MM-ddThh:mm:ss"),
                             message);
                     }
                 }
