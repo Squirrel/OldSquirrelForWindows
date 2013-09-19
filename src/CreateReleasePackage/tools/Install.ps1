@@ -19,16 +19,22 @@ function Initialize-Shimmer {
     $projectDir = (gci $project.FullName).Directory
     $nuspecFile = (Join-Path $projectDir "$ProjectName.nuspec")
 
-    Write-Message "Initializing project $ProjectName for installer and packaging"
+    if (!(Test-Path $nuspecFile)) {
+        Write-Message "Initializing project $ProjectName for installer and packaging"
 
-    Add-InstallerTemplate -Destination $nuspecFile -ProjectName $ProjectName
+        Add-InstallerTemplate -Destination $nuspecFile -ProjectName $ProjectName
 
-    Set-BuildPackage -Value $true -ProjectName $ProjectName
+        Set-BuildPackage -Value $true -ProjectName $ProjectName
 
-    Add-FileWithNoOutput -FilePath $nuspecFile -Project $Project
+        Add-FileWithNoOutput -FilePath $nuspecFile -Project $Project
 
-    # open the nuspec file in the editor
-    $dte.ItemOperations.OpenFile($nuspecFile) | Out-Null
+        # open the nuspec file in the editor
+        $dte.ItemOperations.OpenFile($nuspecFile) | Out-Null
+    } else {
+        Write-Message "You already have a nuspec file defined, no changes applied"
+
+        Write-Message "Run 'Enable-BuildPackage' to enable package creation for a project"
+    }
 }
 
 Write-Message "Now to setup the project - so you don't have to..."
