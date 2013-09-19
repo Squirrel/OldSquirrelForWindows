@@ -81,6 +81,30 @@ namespace Shimmer.Tests.Client
         }
 
         [Fact]
+        public void InstallRunsHooks()
+        {
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.2.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package,out dir)) {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+
+                var generatedFile = Path.Combine(outDir, "SampleUpdatingApp", "app-1.2.0.0", "testfile");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
         public void UninstallRemovesEverything()
         {
             string dir;
