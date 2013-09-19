@@ -56,6 +56,6 @@ Write-Diagnostic "Running all the tests"
 . $scriptsFolder\Run-UnitTests.ps1
 . $scriptsFolder\Run-PowershellTests.ps1
 
-rm ${env:APPDATA}\Shimmer\ProjectWithContent*
-rm ${env:APPDATA}\Shimmer\SampleUpdatingApp*
-rm ${env:APPDATA}\Shimmer\theApp*
+rm ${env:LOCALAPPDATA}\Shimmer\ProjectWithContent*
+rm ${env:LOCALAPPDATA}\Shimmer\SampleUpdatingApp*
+rm ${env:LOCALAPPDATA}\Shimmer\theApp*
