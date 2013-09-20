@@ -40,7 +40,7 @@ function New-ReleaseForPackage {
         | ?{ $_.Name.EndsWith(".symbols.nupkg") -eq $false } `
         | sort @{expression={$_.LastWriteTime};Descending=$false}
 
-    if ($nugetPackages.length -eq 0) {
+    if ($nugetPackages -eq $null) {
         Write-Error "No .nupkg files were found in the build directory"
         Write-Error "Have you built the solution lately?"
 
