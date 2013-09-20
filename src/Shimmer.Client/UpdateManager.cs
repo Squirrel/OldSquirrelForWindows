@@ -486,6 +486,8 @@ namespace Shimmer.Client
 
             fixPinnedExecutables(newCurrentVersion);
 
+            log.Info("runPostInstallAndCleanup: finished fixPinnedExecutables");
+
             var shortcutsToIgnore = cleanUpOldVersions(newCurrentVersion);
             var targetPath = getDirectoryForRelease(newCurrentVersion);
 
@@ -599,45 +601,61 @@ namespace Shimmer.Client
                 .Select(x => x.FullName)
                 .ToArray();
 
+            if (!oldAppDirectories.Any()) {
+                log.Info("fixPinnedExecutables: oldAppDirectories is empty, this is pointless");
+            }
+
             var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
 
             var taskbarPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
-            var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
-                                       .GetFiles("*.lnk")
-                                       .Select(x => new ShellLink(x.FullName));
+            try {
+                var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
+                                           .GetFiles("*.lnk")
+                                           .Select(x => new ShellLink(x.FullName))
+                                           .ToArray();
 
-            foreach (var shortcut in shellLinks) {
-                log.Info("Processing shortcut '{0}'", shortcut.Target);
-                foreach (var oldAppDirectory in oldAppDirectories) {
-                    if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
-                        log.Info("Does not match '{0}', continuing to next directory", oldAppDirectory);
-                        continue;
-                    }
-
-                    // replace old app path with new app path and check, if executable still exists
-                    var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
-
-                    if (fileSystem.GetFileInfo(newTarget).Exists) {
-                        shortcut.Target = newTarget;
-
-                        // replace working directory too if appropriate
-                        if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
-                            log.Info("Changing new directory to '{0}'", newAppPath);
-                            shortcut.WorkingDirectory = Path.Combine(newAppPath,
-                                shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
-                        }
-
-                        shortcut.Save();
-                    } else {
-                        log.Info("Unpinning {0} from taskbar", shortcut.Target);
-                        TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
-                    }
-
-                    break;
+                foreach (var shortcut in shellLinks) {
+                    UpdateLink(shortcut, oldAppDirectories, newAppPath);
                 }
+            }
+            catch (Exception ex) {
+                log.ErrorException("unable to update links", ex);
+            }
+        }
+
+        void UpdateLink(ShellLink shortcut, string[] oldAppDirectories, string newAppPath)
+        {
+            log.Info("Processing shortcut '{0}'", shortcut.Target);
+            foreach (var oldAppDirectory in oldAppDirectories) {
+                if (!shortcut.Target.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                    log.Info("Does not match '{0}', continuing to next directory", oldAppDirectory);
+                    continue;
+                }
+
+                // replace old app path with new app path and check, if executable still exists
+                var newTarget = Path.Combine(newAppPath, shortcut.Target.Substring(oldAppDirectory.Length + 1));
+
+                if (fileSystem.GetFileInfo(newTarget).Exists) {
+                    shortcut.Target = newTarget;
+
+                    // replace working directory too if appropriate
+                    if (shortcut.WorkingDirectory.StartsWith(oldAppDirectory, StringComparison.OrdinalIgnoreCase)) {
+                        log.Info("Changing new directory to '{0}'", newAppPath);
+                        shortcut.WorkingDirectory = Path.Combine(newAppPath,
+                            shortcut.WorkingDirectory.Substring(oldAppDirectory.Length + 1));
+                    }
+
+                    shortcut.Save();
+                }
+                else {
+                    log.Info("Unpinning {0} from taskbar", shortcut.Target);
+                    TaskbarHelper.UnpinFromTaskbar(shortcut.Target);
+                }
+
+                break;
             }
         }
 
