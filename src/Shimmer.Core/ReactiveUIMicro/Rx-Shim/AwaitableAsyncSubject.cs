@@ -330,7 +330,7 @@ namespace ReactiveUIMicro
             }
 
             if (_exception != null) {
-                throw _exception;
+                throw new InvalidOperationException("AwaitableAsyncSubject<T>.GetResult() is rethrowing an inner exception", _exception);
             }
 
             if (!_hasValue)
