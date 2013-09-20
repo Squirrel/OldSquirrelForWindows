@@ -603,6 +603,7 @@ namespace Shimmer.Client
 
             if (!oldAppDirectories.Any()) {
                 log.Info("fixPinnedExecutables: oldAppDirectories is empty, this is pointless");
+                // TODO: return here?
             }
 
             var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
@@ -611,18 +612,24 @@ namespace Shimmer.Client
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
+            IEnumerable<ShellLink> shellLinks;
             try {
-                var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
-                                           .GetFiles("*.lnk")
-                                           .Select(x => new ShellLink(x.FullName))
-                                           .ToArray();
-
-                foreach (var shortcut in shellLinks) {
-                    UpdateLink(shortcut, oldAppDirectories, newAppPath);
-                }
+                shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
+                    .GetFiles("*.lnk")
+                    .Select(x => new ShellLink(x.FullName))
+                    .ToArray();
+            } catch (Exception ex) {
+                log.ErrorException("fixPinnedExecutables: unable to update link", ex);
+                shellLinks = Enumerable.Empty<ShellLink>();
             }
-            catch (Exception ex) {
-                log.ErrorException("unable to update links", ex);
+
+            foreach (var shortcut in shellLinks) {
+                try {
+                    UpdateLink(shortcut, oldAppDirectories, newAppPath);
+                } catch (Exception ex) {
+                    var message = String.Format("fixPinnedExecutables: shortcut failed: {0}", shortcut.Target);
+                    log.ErrorException(message, ex);
+                }
             }
         }
 
