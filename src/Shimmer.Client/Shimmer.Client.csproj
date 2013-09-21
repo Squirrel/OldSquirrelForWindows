@@ -134,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitsManager.cs" />
+    <Compile Include="DidntFollowInstructionsAppSetup.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="IAppSetup.cs" />
     <Compile Include="InstallerHookOperations.cs" />

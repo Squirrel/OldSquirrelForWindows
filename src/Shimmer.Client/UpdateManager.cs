@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Globalization;
-using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -80,7 +77,7 @@ namespace Shimmer.Client
 
         IObservable<UpdateInfo> checkForUpdate(bool ignoreDeltaUpdates = false, IObserver<int> progress = null)
         {
-            IEnumerable<ReleaseEntry> localReleases = Enumerable.Empty<ReleaseEntry>();
+            var localReleases = Enumerable.Empty<ReleaseEntry>();
             progress = progress ?? new Subject<int>();
 
             try {
@@ -226,7 +223,7 @@ namespace Shimmer.Client
                         .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase));
         }
 
-        DirectoryInfoBase[] getOldReleases(Version version)
+        IEnumerable<DirectoryInfoBase> getOldReleases(Version version)
         {
             return getReleases()
                     .Where(x => x.Name.ToVersion() < version)
@@ -370,7 +367,7 @@ namespace Shimmer.Client
             return Observable.Return(UpdateInfo.Create(findCurrentVersion(localReleases), remoteReleases, PackageDirectory, appFrameworkVersion));
         }
 
-        ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
+        static ReleaseEntry findCurrentVersion(IEnumerable<ReleaseEntry> localReleases)
         {
             if (!localReleases.Any()) {
                 return null;
@@ -425,7 +422,6 @@ namespace Shimmer.Client
                 }
             }
         }
-
 
         //
         // ApplyReleases methods
@@ -595,37 +591,43 @@ namespace Shimmer.Client
                 return;
             }
 
+            var newCurrentFolder = "app-" + newCurrentVersion;
             var oldAppDirectories = fileSystem.GetDirectoryInfo(rootAppDirectory).GetDirectories()
                 .Where(x => x.Name.StartsWith("app-", StringComparison.InvariantCultureIgnoreCase))
-                .Where(x => x.Name != "app-" + newCurrentVersion)
+                .Where(x => x.Name != newCurrentFolder)
                 .Select(x => x.FullName)
                 .ToArray();
 
             if (!oldAppDirectories.Any()) {
                 log.Info("fixPinnedExecutables: oldAppDirectories is empty, this is pointless");
-                // TODO: return here?
+                return;
             }
 
-            var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
+            var newAppPath = Path.Combine(rootAppDirectory, newCurrentFolder);
 
             var taskbarPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
-            IEnumerable<ShellLink> shellLinks;
-            try {
-                shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
-                    .GetFiles("*.lnk")
-                    .Select(x => new ShellLink(x.FullName))
-                    .ToArray();
-            } catch (Exception ex) {
-                log.ErrorException("fixPinnedExecutables: unable to update link", ex);
-                shellLinks = Enumerable.Empty<ShellLink>();
-            }
+            Func<FileInfoBase, ShellLink> resolveLink = file => {
+                try {
+                    return new ShellLink(file.FullName);
+                } catch (Exception ex) {
+                    var message = String.Format("File '{0}' could not be converted into a valid ShellLink", file.FullName);
+                    log.WarnException(message, ex);
+                    return null;
+                }
+            };
+
+            var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
+                                       .GetFiles("*.lnk")
+                                       .Select(resolveLink)
+                                       .Where(x => x != null)
+                                       .ToArray();
 
             foreach (var shortcut in shellLinks) {
                 try {
-                    UpdateLink(shortcut, oldAppDirectories, newAppPath);
+                    updateLink(shortcut, oldAppDirectories, newAppPath);
                 } catch (Exception ex) {
                     var message = String.Format("fixPinnedExecutables: shortcut failed: {0}", shortcut.Target);
                     log.ErrorException(message, ex);
@@ -633,7 +635,7 @@ namespace Shimmer.Client
             }
         }
 
-        void UpdateLink(ShellLink shortcut, string[] oldAppDirectories, string newAppPath)
+        void updateLink(ShellLink shortcut, string[] oldAppDirectories, string newAppPath)
         {
             log.Info("Processing shortcut '{0}'", shortcut.Target);
             foreach (var oldAppDirectory in oldAppDirectories) {
@@ -695,24 +697,6 @@ namespace Shimmer.Client
                 .SelectMany(x => Utility.DeleteDirectory(x.FullName, RxApp.TaskpoolScheduler))
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default))
                 .Aggregate(Unit.Default, (acc, x) => acc);
-        }
-    }
-
-    public class DidntFollowInstructionsAppSetup : AppSetup
-    {
-        readonly string shortCutName;
-        public override string ShortcutName {
-            get { return shortCutName; }
-        }
-
-        readonly string target;
-        public override string Target { get { return target; } }
-
-        public DidntFollowInstructionsAppSetup(string exeFile)
-        {
-            var fvi = FileVersionInfo.GetVersionInfo(exeFile);
-            shortCutName = fvi.ProductName ?? fvi.FileDescription ?? fvi.FileName.Replace(".exe", "");
-            target = exeFile;
         }
     }
 }
