@@ -612,16 +612,21 @@ namespace Shimmer.Client
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar");
 
-            IEnumerable<ShellLink> shellLinks;
-            try {
-                shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
-                    .GetFiles("*.lnk")
-                    .Select(x => new ShellLink(x.FullName))
-                    .ToArray();
-            } catch (Exception ex) {
-                log.ErrorException("fixPinnedExecutables: unable to update link", ex);
-                shellLinks = Enumerable.Empty<ShellLink>();
-            }
+            Func<FileInfoBase, ShellLink> resolveLink = file => {
+                try {
+                    return new ShellLink(file.FullName);
+                } catch (Exception ex) {
+                    var message = String.Format("File '{0}' could not be converted into a valid ShellLink", file.FullName);
+                    log.WarnException(message, ex);
+                    return null;
+                }
+            };
+
+            var shellLinks = fileSystem.GetDirectoryInfo(taskbarPath)
+                                       .GetFiles("*.lnk")
+                                       .Select(resolveLink)
+                                       .Where(x => x != null)
+                                       .ToArray();
 
             foreach (var shortcut in shellLinks) {
                 try {
