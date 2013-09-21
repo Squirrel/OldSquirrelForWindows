@@ -603,7 +603,7 @@ namespace Shimmer.Client
 
             if (!oldAppDirectories.Any()) {
                 log.Info("fixPinnedExecutables: oldAppDirectories is empty, this is pointless");
-                // TODO: return here?
+                return;
             }
 
             var newAppPath = Path.Combine(rootAppDirectory, "app-" + newCurrentVersion);
