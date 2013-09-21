@@ -23,7 +23,7 @@ namespace Shimmer.WiXUi
         public static string LogDirectory {
             get {
                 return Path.Combine(
-                               Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                               Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                                "Shimmer");
             }
         }
