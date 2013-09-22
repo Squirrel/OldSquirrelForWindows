@@ -23,9 +23,9 @@
 
   <PropertyGroup>
     <WixCATargetsPath Condition=" '$(WixCATargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\wix.ca.targets</WixCATargetsPath>
-    <WixTasksPath Condition=" '$(WixTasksPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\..\WiX Toolset v3.6\bin\WixTasks.dll</WixTasksPath>
+    <WixTasksPath Condition=" '$(WixTasksPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\..\WiX Toolset v3.7\bin\WixTasks.dll</WixTasksPath>
     <WixCATargetsPath Condition=" '$(WixCATargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\wix.ca.targets</WixCATargetsPath>
-    <WixTasksPath Condition=" '$(WixTasksPath)' == '' ">$(MSBuildExtensionsPath)\..\WiX Toolset v3.6\bin\WixTasks.dll</WixTasksPath>
+    <WixTasksPath Condition=" '$(WixTasksPath)' == '' ">$(MSBuildExtensionsPath)\..\WiX Toolset v3.7\bin\WixTasks.dll</WixTasksPath>
     <TargetCAFileName Condition=" '$(TargetCAFileName)' == '' ">$(TargetName).CA$(TargetExt)</TargetCAFileName>
   </PropertyGroup>
 
@@ -43,8 +43,8 @@
   ==================================================================================================
   -->
   <PropertyGroup>
-    <WixInstallRegKey>SOFTWARE\Microsoft\Windows Installer XML\3.6</WixInstallRegKey>
-    <WixInstallRegKeyWow64>SOFTWARE\Wow6432Node\Microsoft\Windows Installer XML\3.6</WixInstallRegKeyWow64>
+    <WixInstallRegKey>SOFTWARE\Microsoft\Windows Installer XML\3.7</WixInstallRegKey>
+    <WixInstallRegKeyWow64>SOFTWARE\Wow6432Node\Microsoft\Windows Installer XML\3.7</WixInstallRegKeyWow64>
   </PropertyGroup>
   <Target
     Name="_SetDefaultPathValues">
@@ -120,11 +120,11 @@
     </CreateItem>
 
     <!--
-	Items to include in the CA package:
-	   - Reference assemblies marked CopyLocal
-	   - Project items of type Content
-	   - Additional items in the CustomActionContents property
-	-->
+  Items to include in the CA package:
+     - Reference assemblies marked CopyLocal
+     - Project items of type Content
+     - Additional items in the CustomActionContents property
+  -->
     <CreateProperty Value="@(CustomActionReferenceContents);@(Content->'%(FullPath)');$(CustomActionContents)">
       <Output TaskParameter="Value" PropertyName="CustomActionContents" />
     </CreateProperty>
@@ -133,7 +133,7 @@
       <Output TaskParameter="Include" ItemName="IntermediateCAAssembly" />
     </CreateItem>
 
-	<CreateItem Include="@(IntermediateAssembly->'%(RootDir)%(Directory)$(TargetCAFileName)')">
+  <CreateItem Include="@(IntermediateAssembly->'%(RootDir)%(Directory)$(TargetCAFileName)')">
       <Output TaskParameter="Include" ItemName="IntermediateCAPackage" />
     </CreateItem>
 
@@ -143,7 +143,7 @@
   
     <!-- Add modules to be copied to output dir. -->
     <CreateItem Include="@(AddModules);@(IntermediateCAPackage)">
-		<Output TaskParameter="Include" ItemName="AddModules" />
+    <Output TaskParameter="Include" ItemName="AddModules" />
     </CreateItem>
 
   </Target>

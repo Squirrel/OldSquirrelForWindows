@@ -16,6 +16,12 @@
 #include <fcntl.h>
 #include <msi.h>
 
+// Callback from PFNFCIGETNEXTCABINET CabCGetNextCabinet method
+// First argument is the name of splitting cabinet without extension e.g. "cab1"
+// Second argument is name of the new cabinet that would be formed by splitting e.g. "cab1b.cab"
+// Third argument is the file token of the first file present in the splitting cabinet
+typedef void (__stdcall * FileSplitCabNamesCallback)(LPWSTR, LPWSTR, LPWSTR);
+
 #define CAB_MAX_SIZE 0x7FFFFFFF   // (see KB: Q174866)
 
 #ifdef __cplusplus
@@ -54,7 +60,8 @@ HRESULT DAPI CabCAddFile(
     __in_bcount(CABC_HANDLE_BYTES) HANDLE hContext
     );
 HRESULT DAPI CabCFinish(
-    __in_bcount(CABC_HANDLE_BYTES) HANDLE hContext
+    __in_bcount(CABC_HANDLE_BYTES) HANDLE hContext,
+    __in_opt FileSplitCabNamesCallback fileSplitCabNamesCallback
     );
 void DAPI CabCCancel(
     __in_bcount(CABC_HANDLE_BYTES) HANDLE hContext

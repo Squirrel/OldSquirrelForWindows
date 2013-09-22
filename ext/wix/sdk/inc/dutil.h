@@ -23,6 +23,7 @@
 enum REPORT_LEVEL
 {
     REPORT_NONE,      // turns off report (only valid for XXXSetLevel())
+    REPORT_WARNING,   // written if want only warnings or reporting is on in general
     REPORT_STANDARD,  // written if reporting is on
     REPORT_VERBOSE,   // written only if verbose reporting is on
     REPORT_DEBUG,     // reporting useful when debugging code

@@ -47,6 +47,7 @@ typedef struct _BAL_INFO_PACKAGES
 
 typedef struct _BAL_INFO_BUNDLE
 {
+    BOOL fPerMachine;
     LPWSTR sczName;
     LPWSTR sczLogVariable;
     BAL_INFO_PACKAGES packages;

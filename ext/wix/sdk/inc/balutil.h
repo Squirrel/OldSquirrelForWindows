@@ -68,6 +68,16 @@ DAPI_(HRESULT) BalFormatString(
     );
 
 /*******************************************************************
+BalGetNumericVariable - gets a number from a variable in the engine.
+
+ Note: Returns E_NOTFOUND if variable does not exist.
+********************************************************************/
+DAPI_(HRESULT) BalGetNumericVariable(
+    __in_z LPCWSTR wzVariable,
+    __out LONGLONG* pllValue
+    );
+
+/*******************************************************************
 BalStringVariableExists - checks if a string variable exists in the engine.
 
 ********************************************************************/
