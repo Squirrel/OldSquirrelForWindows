@@ -182,6 +182,35 @@ namespace Shimmer.Tests.Client
                 }
 
             }
+
+            [Fact]
+            public void WhenFolderDoesNotExistThrowHelpfulError()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    var directory = Path.Combine(tempDir, "missing-folder");
+                    var fixture = new UpdateManager(directory, "MyAppName", FrameworkVersion.Net40);
+
+                    using (fixture) {
+                        Assert.Throws<ShimmerConfigurationException>(
+                            () => fixture.CheckForUpdate().Wait());
+                    }
+                }
+            }
+
+            [Fact]
+            public void WhenReleasesFileDoesntExistThrowACustomError()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    var fixture = new UpdateManager(tempDir, "MyAppName", FrameworkVersion.Net40);
+
+                    using (fixture) {
+                        Assert.Throws<ShimmerConfigurationException>(
+                            () => fixture.CheckForUpdate().Wait());
+                    }
+                }
+            }
         }
     }
 }

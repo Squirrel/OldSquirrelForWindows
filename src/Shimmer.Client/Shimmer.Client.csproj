@@ -143,6 +143,7 @@
     <Compile Include="PostInstallInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShellFile.cs" />
+    <Compile Include="ShimmerConfigurationException.cs" />
     <Compile Include="TaskbarHelper.cs" />
     <Compile Include="UpdateInfo.cs" />
     <Compile Include="UpdateManager.cs" />

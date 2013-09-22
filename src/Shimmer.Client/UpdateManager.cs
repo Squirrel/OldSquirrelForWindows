@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reactive;
@@ -103,7 +104,24 @@ namespace Shimmer.Client
                     releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
                 } else {
                     log.Info("Reading RELEASES file from {0}", updateUrlOrPath);
+
+                    if (!fileSystem.GetDirectoryInfo(updateUrlOrPath).Exists) {
+                        var message =
+                            String.Format(
+                                "The directory {0} does not exist, something is probably broken with your application", updateUrlOrPath);
+                        var ex = new ShimmerConfigurationException(message);
+                        return Observable.Throw<UpdateInfo>(ex);
+                    }
+
                     var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
+                    if (!fi.Exists)
+                    {
+                        var message =
+                            String.Format(
+                                "The file {0} does not exist, something is probably broken with your application", fi.FullName);
+                        var ex = new ShimmerConfigurationException(message);
+                        return Observable.Throw<UpdateInfo>(ex);
+                    }
 
                     using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
                         var text = sr.ReadToEnd();
