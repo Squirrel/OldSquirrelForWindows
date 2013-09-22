@@ -34,7 +34,12 @@ namespace Shimmer.Client
             progress = progress ?? new Subject<int>();
 
             var ret = Http.DownloadUrl(url)
-                .Select(x => Encoding.UTF8.GetString(x))
+                .Select(x => {
+                    using (var reader = new StreamReader
+                        (new MemoryStream(x), Encoding.UTF8)) {
+                        return reader.ReadToEnd();
+                    }
+                })
                 .PublishLast();
 
             // NB: We don't actually have progress, fake it out
