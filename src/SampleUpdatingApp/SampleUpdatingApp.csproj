@@ -51,21 +51,21 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Bcl.Async.1.0.16\lib\net40\Microsoft.Threading.Tasks.Extensions.Desktop.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ReactiveUI, Version=4.6.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-core.4.6.4\lib\Net40\ReactiveUI.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.4.6.5\lib\Net40\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Blend, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ReactiveUI.Blend, Version=4.6.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.6.4\lib\Net40\ReactiveUI.Blend.dll</HintPath>
+      <HintPath>..\packages\reactiveui-xaml.4.6.5\lib\Net40\ReactiveUI.Blend.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ReactiveUI.Routing, Version=4.6.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.6.4\lib\Net40\ReactiveUI.Routing.dll</HintPath>
+      <HintPath>..\packages\reactiveui-xaml.4.6.5\lib\Net40\ReactiveUI.Routing.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ReactiveUI.Xaml, Version=4.6.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.6.4\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
+      <HintPath>..\packages\reactiveui-xaml.4.6.5\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
