@@ -83,9 +83,14 @@ namespace Shimmer.Tests.TestHelpers
 
         public static IDisposable WithFakeAlreadyInstalledApp(out string path)
         {
+            return WithFakeAlreadyInstalledApp("InstalledSampleUpdatingApp-1.1.0.0.zip", out path);
+        }
+
+        public static IDisposable WithFakeAlreadyInstalledApp(string zipFile, out string path)
+        {
             var ret = Utility.WithTempDirectory(out path);
 
-            var zf = new ZipFile(GetPath("fixtures", "InstalledSampleUpdatingApp-1.1.0.0.zip"));
+            var zf = new ZipFile(GetPath("fixtures", zipFile));
             zf.ExtractAll(path);
 
             Monitor.Enter(gate);
