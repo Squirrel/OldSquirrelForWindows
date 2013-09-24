@@ -415,20 +415,20 @@ namespace Shimmer.Client
                 .Select(_ => Unit.Default);
         }
 
-        void checksumPackage(ReleaseEntry downloadedRelease)
+        internal void checksumPackage(ReleaseEntry downloadedRelease)
         {
             var targetPackage = fileSystem.GetFileInfo(
                 Path.Combine(rootAppDirectory, "packages", downloadedRelease.Filename));
 
             if (!targetPackage.Exists) {
                 log.Error("File {0} should exist but doesn't", targetPackage.FullName);
-                throw new Exception("Checksummed file doesn't exist: " + targetPackage.FullName);
+                throw new ShimmerDownloadException("Checksummed file doesn't exist: " + targetPackage.FullName);
             }
 
             if (targetPackage.Length != downloadedRelease.Filesize) {
                 log.Error("File Length should be {0}, is {1}", downloadedRelease.Filesize, targetPackage.Length);
                 targetPackage.Delete();
-                throw new Exception("Checksummed file size doesn't match: " + targetPackage.FullName);
+                throw new ShimmerDownloadException("Checksummed file size doesn't match: " + targetPackage.FullName);
             }
 
             using (var file = targetPackage.OpenRead()) {
@@ -436,7 +436,7 @@ namespace Shimmer.Client
                 if (!hash.Equals(downloadedRelease.SHA1,StringComparison.OrdinalIgnoreCase)) {
                     log.Error("File SHA1 should be {0}, is {1}", downloadedRelease.SHA1, hash);
                     targetPackage.Delete();
-                    throw new Exception("Checksum doesn't match: " + targetPackage.FullName);
+                    throw new ShimmerDownloadException("Checksum doesn't match: " + targetPackage.FullName);
                 }
             }
         }

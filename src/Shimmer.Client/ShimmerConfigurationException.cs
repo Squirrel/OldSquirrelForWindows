@@ -6,4 +6,9 @@ namespace Shimmer.Client
     {
         public ShimmerConfigurationException(string message) : base(message) { }
     }
+
+    public class ShimmerDownloadException : Exception
+    {
+        public ShimmerDownloadException(string message) : base(message) { }
+    }
 }

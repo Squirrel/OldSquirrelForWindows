@@ -62,19 +62,11 @@ namespace Shimmer.Tests.Client
 
             fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
 
-            var fixture = ExposedObject.From(
-                new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object));
+            var fixture = 
+                new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
 
-            bool shouldDie = true;
-            try {
-                // NB: We can't use Assert.Throws here because the binder
-                // will try to pick the wrong method
-                fixture.checksumPackage(entry);
-            } catch (Exception) {
-                shouldDie = false;
-            }
-
-            shouldDie.ShouldBeFalse();
+            Assert.Throws<ShimmerDownloadException>(
+                () => fixture.checksumPackage(entry));
         }
 
         [Fact]
@@ -98,18 +90,40 @@ namespace Shimmer.Tests.Client
 
             fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
 
-            var fixture = ExposedObject.From(
-                new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object));
+            var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
 
-            bool shouldDie = true;
-            try {
-                fixture.checksumPackage(entry);
-            } catch (Exception ex) {
-                this.Log().InfoException("Checksum failure", ex);
-                shouldDie = false;
+            Assert.Throws<ShimmerDownloadException>(
+                () => fixture.checksumPackage(entry));
+
+            fileInfo.Verify(x => x.Delete(), Times.Once());
+        }
+
+        [Fact]
+        public void ChecksumShouldFailIfFilesAreDifferentSize()
+        {
+            var filename = "Shimmer.Core.1.0.0.0.nupkg";
+            var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
+            var fs = new Mock<IFileSystemFactory>();
+            var urlDownloader = new Mock<IUrlDownloader>();
+
+            ReleaseEntry entry;
+            using (var f = File.OpenRead(nuGetPkg))
+            {
+                entry = ReleaseEntry.GenerateFromFile(f, filename);
             }
 
-            shouldDie.ShouldBeFalse();
+            var fileInfo = new Mock<FileInfoBase>();
+            fileInfo.Setup(x => x.Exists).Returns(true);
+            fileInfo.Setup(x => x.Length).Returns(14142424224424242);
+            fileInfo.Setup(x => x.Delete()).Verifiable();
+
+            fs.Setup(x => x.GetFileInfo(Path.Combine(".", "theApp", "packages", filename))).Returns(fileInfo.Object);
+
+            var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, ".", fs.Object, urlDownloader.Object);
+
+            Assert.Throws<ShimmerDownloadException>(
+                () => fixture.checksumPackage(entry));
+
             fileInfo.Verify(x => x.Delete(), Times.Once());
         }
 
