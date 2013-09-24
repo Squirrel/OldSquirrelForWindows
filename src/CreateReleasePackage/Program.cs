@@ -43,6 +43,10 @@ namespace CreateReleasePackage
                     var deltaFile = Path.Combine(targetDir, package.SuggestedReleaseFileName.Replace("full", "delta"));
                     Console.WriteLine("{0}; {1}", previousFullRelease.InputPackageFile, deltaFile);
 
+                    if (File.Exists(deltaFile)) {
+                        File.Delete(deltaFile);
+                    }
+
                     var deltaBuilder = new DeltaPackageBuilder();
                     deltaBuilder.CreateDeltaPackage(previousFullRelease, package, deltaFile);
                 }
