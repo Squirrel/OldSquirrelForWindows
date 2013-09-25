@@ -565,7 +565,7 @@ namespace Shimmer.Client
 
             return ret.SelectMany(x => {
                 var fi = fileSystem.GetFileInfo(x.InputPackageFile);
-                var entry = ReleaseEntry.GenerateFromFile(fi.OpenRead(), x.InputPackageFile);
+                var entry = ReleaseEntry.GenerateFromFile(fi.OpenRead(), fi.Name);
 
                 // Recursively combine the rest of them
                 return createFullPackagesFromDeltas(releasesToApply.Skip(1), entry);

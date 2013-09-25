@@ -110,7 +110,10 @@ namespace Shimmer.Core
             Contract.Requires(stream != null);
 
             using (var sw = new StreamWriter(stream, Encoding.UTF8)) {
-                sw.Write(String.Join("\n", releaseEntries.Select(x => x.EntryAsString)));
+                sw.Write(String.Join("\n", releaseEntries
+                    .OrderBy(x => x.Version)
+                    .ThenByDescending(x => x.IsDelta)
+                    .Select(x => x.EntryAsString)));
             }
         }
 

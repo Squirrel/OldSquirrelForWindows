@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using NuGet;
 using ReactiveUI;
+using Shimmer.Client;
 using Shimmer.Core;
 using Shimmer.Tests.TestHelpers;
 using Xunit;
@@ -43,6 +45,74 @@ namespace Shimmer.Tests.Core
             } finally {
                 if (File.Exists(outFile)) {
                     File.Delete(outFile);
+                }
+            }
+        }
+
+        [Fact]
+        public void ApplyMultipleDeltaPackagesGeneratesCorrectHash()
+        {
+            var firstRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "ShimmerDesktopDemo-1.0.0-full.nupkg"), true);
+            var secondRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "ShimmerDesktopDemo-1.1.0-full.nupkg"), true);
+            var thirdRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "ShimmerDesktopDemo-1.2.0-full.nupkg"), true);
+
+            string installDir, releasesDir;
+            using(Utility.WithTempDirectory(out releasesDir))
+            using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledShimmerDesktopDemo-1.0.0.zip", out installDir)) {
+
+                var firstDelta = Path.Combine(releasesDir, "ShimmerDesktopDemo-1.1.0-delta.nupkg");
+                var secondDelta = Path.Combine(releasesDir, "ShimmerDesktopDemo-1.2.0-delta.nupkg");
+
+            
+                new[] { firstRelease, secondRelease, thirdRelease }
+                .ForEach(file =>
+                {
+                    var packageFile = file.ReleasePackageFile;
+                    var fileName = Path.GetFileName(packageFile);
+                    File.Copy(packageFile, Path.Combine(releasesDir, fileName));
+                });
+
+                var deltaBuilder = new DeltaPackageBuilder();
+                deltaBuilder.CreateDeltaPackage(firstRelease, secondRelease, firstDelta);
+                deltaBuilder.CreateDeltaPackage(secondRelease, thirdRelease, secondDelta);
+
+                ReleaseEntry.BuildReleasesFile(releasesDir);
+
+                var updateManager = new UpdateManager(
+                    releasesDir, "ShimmerDesktopDemo", FrameworkVersion.Net40, installDir);
+
+                using (updateManager) {
+                    var updateInfo = updateManager.CheckForUpdate().First();
+
+                    Assert.Equal(2, updateInfo.ReleasesToApply.Count());
+
+                    updateManager.DownloadReleases(updateInfo.ReleasesToApply).Wait();
+                    updateManager.ApplyReleases(updateInfo).Wait();
+                }
+
+                string referenceDir;
+                using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledShimmerDesktopDemo-1.2.0.zip", out referenceDir)) {
+
+                    var referenceVersion = Path.Combine(referenceDir, "ShimmerDesktopDemo", "app-1.2.0");
+                    var installVersion = Path.Combine(installDir, "ShimmerDesktopDemo", "app-1.2.0");
+
+                    var referenceFiles = Directory.GetFiles(referenceVersion);
+                    var actualFiles = Directory.GetFiles(installVersion);
+
+                    Assert.Equal(referenceFiles.Count(), actualFiles.Count());
+
+                    var invalidFiles =
+                        Enumerable.Zip(referenceFiles, actualFiles,
+                        (reference, actual) => {
+                            
+                            var refSha = Utility.CalculateStreamSHA1(File.OpenRead(reference));
+                            var actualSha = Utility.CalculateStreamSHA1(File.OpenRead(actual));
+
+                            return new { File = actual, Result = refSha == actualSha };
+                        })
+                        .Where(c => !c.Result).ToArray();
+
+                    Assert.Empty(invalidFiles);
                 }
             }
         }
