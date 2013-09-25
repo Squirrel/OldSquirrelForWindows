@@ -151,6 +151,37 @@ namespace Shimmer.Tests.Core
             Assert.Equal(expected, actual.Version);
         }
 
+        [Fact]
+        public void WhenReleasesAreOutOfOrderSortByVersion()
+        {
+            var path = Path.GetTempFileName();
+            var firstVersion = new Version("1.0.0");
+            var secondVersion = new Version("1.1.0");
+            var thirdVersion = new Version("1.2.0");
+
+            var releaseEntries = new[] {
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.2.0-delta.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.1.0-delta.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.1.0-full.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.2.0-full.nupkg")),
+                ReleaseEntry.ParseReleaseEntry(MockReleaseEntry("Espera-1.0.0-full.nupkg"))
+            };
+
+            ReleaseEntry.WriteReleaseFile(releaseEntries, path);
+
+            var releases = ReleaseEntry.ParseReleaseFile(File.ReadAllText(path)).ToArray();
+
+            Assert.Equal(firstVersion, releases[0].Version);
+            Assert.Equal(secondVersion, releases[1].Version);
+            Assert.Equal(true, releases[1].IsDelta);
+            Assert.Equal(secondVersion, releases[2].Version);
+            Assert.Equal(false, releases[2].IsDelta);
+            Assert.Equal(thirdVersion, releases[3].Version);
+            Assert.Equal(true, releases[3].IsDelta);
+            Assert.Equal(thirdVersion, releases[4].Version);
+            Assert.Equal(false, releases[4].IsDelta);
+        }
+
         static string MockReleaseEntry(string name)
         {
             return string.Format("94689fede03fed7ab59c24337673a27837f0c3ec  {0}  1004502", name);

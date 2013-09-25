@@ -62,7 +62,8 @@ namespace Shimmer.Client
                 return new UpdateInfo(currentVersion, Enumerable.Empty<ReleaseEntry>(), packageDirectory, appFrameworkVersion);
             }
 
-            var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version);
+            var newerThanUs = availableReleases.Where(x => x.Version > currentVersion.Version)
+                                               .OrderBy(v => v.Version);
             var deltasSize = newerThanUs.Where(x => x.IsDelta).Sum(x => x.Filesize);
 
             return (deltasSize < latestFull.Filesize && deltasSize > 0)
