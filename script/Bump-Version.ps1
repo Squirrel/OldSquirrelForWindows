@@ -85,8 +85,11 @@ if ($increment -eq "Patch") {
    $patch = $patch + 1
 } elseif ($increment -eq "Minor") {
    $minor = $minor + 1
+   $patch = 0
 } elseif ($increment -eq "Major") {
    $major = $major + 1
+   $minor = 0
+   $patch = 0
 }
 
 $newVersion = "$major.$minor.$patch"
