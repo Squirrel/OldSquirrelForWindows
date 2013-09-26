@@ -88,12 +88,21 @@ namespace Shimmer.Core
             }
 
             var package = new ZipPackage(InputPackageFile);
+
             // we can tell from here what platform(s) the package targets
             // but given this is a simple package we only
             // ever expect one entry here (crash hard otherwise)
-            var targetFramework = package.GetSupportedFrameworks()
-                                         .OrderBy(f => f.Version)
-                                         .Single();
+            var frameworks = package.GetSupportedFrameworks();
+            if (frameworks.Count() > 1) {
+
+                var platforms = frameworks
+                    .Aggregate(new StringBuilder(), (sb, f) => sb.Append(f.ToString() + "; "));
+
+                throw new InvalidOperationException(String.Format(
+                    "The input package file {0} targets multiple platforms - {1} - and cannot be transformed into a release package.", InputPackageFile, platforms));
+            }
+
+            var targetFramework = frameworks.Single();
 
             // Recursively walk the dependency tree and extract all of the
             // dependent packages into the a temporary directory

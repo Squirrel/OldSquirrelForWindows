@@ -250,6 +250,20 @@ namespace Shimmer.Tests.Core
                 File.Delete(outputPackage);
             }
         }
+
+        [Fact]
+        public void WhenInputPackageTargetsMultipleFrameworksCrashHard()
+        {
+            var packagesDir = IntegrationTestHelper.GetPath("..", "packages");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectTargetingMultiplePlatforms.1.0.0.0.nupkg");
+
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+            var package = new ReleasePackage(inputPackage);
+            Assert.Throws<InvalidOperationException>(() => {
+                package.CreateReleasePackage(outputPackage, packagesDir);
+            });
+        }
         
         [Fact(Skip="TODO")]
         public void DependentLocalPackageNotFoundAndThrowsError()
