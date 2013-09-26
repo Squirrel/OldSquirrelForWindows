@@ -115,7 +115,7 @@ namespace Shimmer.Client
                     var absoluteFolder = Path.Combine(rootDirectory, version.PackageName, releaseFolder);
 
                     if (!Directory.Exists(absoluteFolder)) {
-                        log.Warn("executeInstall: the directory {0} doesn't exist - cannot find the current app?!!?");
+                        log.Warn("executeInstall: the directory {0} doesn't exist - cannot find the current app?!!?", rootDirectory);
                     } else {
                         return Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly)
                                         .ToList();
