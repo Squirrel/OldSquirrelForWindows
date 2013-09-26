@@ -25,9 +25,20 @@ namespace CreateReleasePackage
             var package = new ReleasePackage(optParams["input"]);
             var targetFile = Path.Combine(targetDir, package.SuggestedReleaseFileName);
 
-            var fullRelease = package.CreateReleasePackage(targetFile, 
-                optParams["pkgdir"] != "" ? optParams["pkgdir"] : null,
-                input => (new Markdown()).Transform(input));
+            string fullRelease;
+            try {
+                fullRelease = package.CreateReleasePackage(targetFile,
+                    optParams["pkgdir"] != "" ? optParams["pkgdir"] : null,
+                    input => (new Markdown()).Transform(input));
+            }
+            catch (Exception ex) {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("Unexpected exception occurred creating package:");
+                Console.Error.WriteLine(ex);
+                Console.Error.WriteLine();
+                Console.Error.WriteLine();
+                return -4;
+            }
 
             Console.WriteLine("{0};", fullRelease);
 
