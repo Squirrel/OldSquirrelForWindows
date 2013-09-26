@@ -27,6 +27,7 @@ Describe "Create-Release" {
     
     $toolsDir = Join-Path $tempPath tools
     $solutionDir = Join-Path $tempPath code
+    $nugetExe = Join-Path $here "..\src\.nuget\nuget.exe"
     $packagesDir = Join-Path $solutionDir packages
     $buildOutputDir = Join-Path $solutionDir binaries
     
@@ -35,7 +36,11 @@ Describe "Create-Release" {
     New-DirectorySafe $packagesDir
     New-DirectorySafe $buildOutputDir 
 
-    copy $here\..\src\packages\* $packagesDir
+    copy $here\packages\TestApp.packages.config $packagesDir\packages.config
+
+    . $nugetExe install $packagesDir\packages.config `
+                -OutputDirectory $packagesDir
+
     copy $here\packages\TestApp.1.0.0-beta.nupkg $buildOutputDir
     copy $here\..\src\CreateReleasePackage\tools\* $toolsDir
 
