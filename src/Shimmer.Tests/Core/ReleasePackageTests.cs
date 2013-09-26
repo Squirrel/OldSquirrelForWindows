@@ -214,13 +214,24 @@ namespace Shimmer.Tests.Core
             }
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact]
         public void DependentPackageNotFoundAndThrowsError()
         {
+            string packagesDir;
             // use empty packages folder
-            // use package which depends on JSON.NET version 5.0.6
-            // try and create a new package from it
-            // assert throws exception
+            using (Utility.WithTempDirectory(out packagesDir)) {
+                var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectDependsOnJsonDotNet.1.0.nupkg");
+
+                var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+                try {
+                    var package = new ReleasePackage(inputPackage);
+                    Assert.Throws<Exception>(() =>
+                        package.CreateReleasePackage(outputPackage, packagesDir));
+                } finally {
+                    File.Delete(outputPackage);
+                }
+            }
         }
 
         [Fact(Skip = "TODO")]

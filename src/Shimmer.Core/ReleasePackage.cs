@@ -218,8 +218,9 @@ namespace Shimmer.Core
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
 
                 if (ret == null) {
-                    this.Log().Error("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
-                    return Enumerable.Empty<IPackage>();
+                    var message = String.Format("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
+                    this.Log().Error(message);
+                    throw new Exception(message);
                 }
 
                 if (packageCache.Contains(ret.GetFullName())) {
@@ -249,7 +250,7 @@ namespace Shimmer.Core
 
         static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IEnumerable<IPackage> packageList)
         {
-            return packageList.Where(x => x.Id == id).ToArray()
+            return packageList.Where(x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase)).ToArray()
                 .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));
         }
 
