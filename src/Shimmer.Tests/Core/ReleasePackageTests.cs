@@ -75,7 +75,7 @@ namespace Shimmer.Tests.Core
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
-            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir, null);
+            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir, null, null);
             results.Count().ShouldBeGreaterThan(0);
         }
 

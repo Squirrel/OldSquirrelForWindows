@@ -87,10 +87,20 @@ namespace Shimmer.Core
                 return ReleasePackageFile;
             }
 
-            // Recursively walk the dependency tree and extract all of the 
-            // dependent packages into the a temporary directory.
             var package = new ZipPackage(InputPackageFile);
-            var dependencies = findAllDependentPackages(package, packagesRootDir);
+            // we can tell from here what platform(s) the package targets
+            // but given this is a simple package we only
+            // ever expect one entry here (crash hard otherwise)
+            var targetFramework = package.GetSupportedFrameworks()
+                                         .OrderBy(f => f.Version)
+                                         .Single();
+
+            // Recursively walk the dependency tree and extract all of the
+            // dependent packages into the a temporary directory
+            var dependencies = findAllDependentPackages(
+                package,
+                packagesRootDir,
+                frameworkName: targetFramework);
 
             string tempPath = null;
 
@@ -207,12 +217,19 @@ namespace Shimmer.Core
             xdoc.Save(specPath);
         }
 
-        IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null, HashSet<string> packageCache = null)
+        IEnumerable<IPackage> findAllDependentPackages(
+            IPackage package = null,
+            string packagesRootDir = null,
+            HashSet<string> packageCache = null,
+            FrameworkName frameworkName = null)
         {
             package = package ?? new ZipPackage(InputPackageFile);
             packageCache = packageCache ?? new HashSet<string>();
 
-            var deps = package.DependencySets.SelectMany(x => x.Dependencies);
+            var deps = package.DependencySets
+                .Where(x => x.TargetFramework == null
+                            || x.TargetFramework == frameworkName)
+                .SelectMany(x => x.Dependencies);
 
             return deps.SelectMany(dependency => {
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
@@ -229,11 +246,15 @@ namespace Shimmer.Core
 
                 packageCache.Add(ret.GetFullName());
 
-                return findAllDependentPackages(ret, packagesRootDir, packageCache).StartWith(ret).Distinct(y => y.GetFullName());
+                return findAllDependentPackages(ret, packagesRootDir, packageCache, frameworkName).StartWith(ret).Distinct(y => y.GetFullName());
             }).ToArray();
         }
 
-        IPackage findPackageFromName(string id, IVersionSpec versionSpec, string packagesRootDir = null, IQueryable<IPackage> machineCache = null)
+        IPackage findPackageFromName(
+            string id,
+            IVersionSpec versionSpec,
+            string packagesRootDir = null,
+            IQueryable<IPackage> machineCache = null)
         {
             machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
 
