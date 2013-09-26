@@ -214,6 +214,41 @@ namespace Shimmer.Tests.Core
             }
         }
 
+        [Fact(Skip = "TODO")]
+        public void DependentPackageNotFoundAndThrowsError()
+        {
+            // use empty packages folder
+            // use package which depends on JSON.NET version 5.0.6
+            // try and create a new package from it
+            // assert throws exception
+        }
+
+        [Fact(Skip = "TODO")]
+        public void DependentPackageFoundAndIncludedInReleasePackage()
+        {
+            // copy 'packages' folder container Newtonsoft.Json
+            // use package which depends on JSON.NET version 5.0.6
+            // try and create a new package
+            // assert created package should contain Newtonsoft.Json dll
+        }
+
+        [Fact(Skip="TODO")]
+        public void DependentLocalPackageNotFoundAndThrowsError()
+        {
+            // copy ProjectDependsOnOtherProject to a temp folder
+            // create a release package using it
+            // should throw an exception indicating it can't find TheOtherProjectItDependsOn.1.0.nupkg
+        }
+
+        [Fact(Skip = "TODO")]
+        public void DependentLocalPackageFoundAndIncludedInReleasePackage()
+        {
+            // copy ProjectDependsOnOtherProject and TheOtherProjectItDependsOn to a temp folder
+            // create a release package using it
+            // should contain TheOtherProjectItDependsOn.dll
+            // XXX: what about scenario where it is in another folder?
+        }
+
         [Fact]
         public void ContentFilesAreIncludedInCreatedPackage()
         {
