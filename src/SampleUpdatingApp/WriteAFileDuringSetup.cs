@@ -21,6 +21,29 @@ namespace SampleUpdatingApp
             File.WriteAllText(file, Guid.NewGuid().ToString());
         }
 
+        public override void OnVersionInstalled(Version versionBeingInstalled)
+        {
+            base.OnVersionInstalled(versionBeingInstalled);
+
+            var file = Path.Combine(GetCurrentDirectory(), "install-" + versionBeingInstalled);
+
+            File.WriteAllText(file, Guid.NewGuid().ToString());
+        }
+
+        public override void OnVersionUninstalling(Version versionBeingUninstalled)
+        {
+            base.OnVersionUninstalling(versionBeingUninstalled);
+            var currentDirectory = GetCurrentDirectory();
+
+            var directoryInfo = new DirectoryInfo(currentDirectory);
+
+            var appRoot = directoryInfo.Parent.Parent;
+
+            var file = Path.Combine(appRoot.FullName, "uninstall-" + versionBeingUninstalled);
+
+            File.WriteAllText(file, Guid.NewGuid().ToString());
+        }
+
         public override void OnAppUninstall()
         {
             var currentDirectory = GetCurrentDirectory();
