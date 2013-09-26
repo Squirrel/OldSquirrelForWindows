@@ -234,15 +234,23 @@ namespace Shimmer.Tests.Core
             }
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact]
         public void DependentPackageFoundAndIncludedInReleasePackage()
         {
-            // copy 'packages' folder container Newtonsoft.Json
-            // use package which depends on JSON.NET version 5.0.6
-            // try and create a new package
-            // assert created package should contain Newtonsoft.Json dll
-        }
+            var packagesDir = IntegrationTestHelper.GetPath("..", "packages");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectDependsOnJsonDotNet.1.0.nupkg");
 
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+            try {
+                var package = new ReleasePackage(inputPackage);
+                package.CreateReleasePackage(outputPackage, packagesDir);
+                Assert.True(File.Exists(outputPackage));
+            } finally {
+                File.Delete(outputPackage);
+            }
+        }
+        
         [Fact(Skip="TODO")]
         public void DependentLocalPackageNotFoundAndThrowsError()
         {
