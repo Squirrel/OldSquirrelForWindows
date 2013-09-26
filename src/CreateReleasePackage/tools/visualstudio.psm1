@@ -15,7 +15,19 @@ function New-Release {
     }
 
     $project = Get-Project $ProjectName
+    $projectDir = (gci $project.FullName).Directory
+
     $activeConfiguration = $project.ConfigurationManager.ActiveConfiguration
+
+    $outputDir =  $activeConfiguration.Properties.Item("OutputPath").Value
+
+    $buildDir = Join-Path $projectDir $outputDir
+    if (Test-Path $buildDir) {
+        Write-Message "Clearing existing nupkg files from folder $outputDir"
+        Remove-Item "$buildDir\*.nupkg"
+    } else {
+        Write-Message "Build output folder $buildDir does not exist, skipping"
+    }
 
     Write-Message "Building project $ProjectName"
 
@@ -25,11 +37,8 @@ function New-Release {
 
     $solutionDir = (gci $dte.Solution.FullName).Directory
 
-    $projectDir = (gci $project.FullName).Directory
-    $outputDir =  $activeConfiguration.Properties.Item("OutputPath").Value
-    
     New-ReleaseForPackage -SolutionDir $solutionDir `
-                             -BuildDir (Join-Path $projectDir $outputDir)
+                             -BuildDir $buildDir
 }
 
 function Enable-BuildPackage {
