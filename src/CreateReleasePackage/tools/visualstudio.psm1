@@ -28,7 +28,7 @@ function New-Release {
     # we expect you to be a responsible adult
     # with your artifacts
 
-    if ($psversiontable.psversion.major -gt 2) {
+    if ($psversiontable.psversion.major -gt 3) {
 
         if (Test-Path $buildDir) {
             Write-Message "Clearing existing nupkg files from folder $outputDir"
