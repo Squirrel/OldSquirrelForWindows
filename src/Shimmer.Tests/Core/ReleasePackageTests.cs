@@ -75,7 +75,7 @@ namespace Shimmer.Tests.Core
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
-            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir, null);
+            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir, null, null);
             results.Count().ShouldBeGreaterThan(0);
         }
 
@@ -212,6 +212,74 @@ namespace Shimmer.Tests.Core
                 File.Delete(outputPackage);
                 File.Delete(outputFile);
             }
+        }
+
+        [Fact]
+        public void DependentPackageNotFoundAndThrowsError()
+        {
+            string packagesDir;
+            // use empty packages folder
+            using (Utility.WithTempDirectory(out packagesDir)) {
+                var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectDependsOnJsonDotNet.1.0.nupkg");
+
+                var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+                try {
+                    var package = new ReleasePackage(inputPackage);
+                    Assert.Throws<Exception>(() =>
+                        package.CreateReleasePackage(outputPackage, packagesDir));
+                } finally {
+                    File.Delete(outputPackage);
+                }
+            }
+        }
+
+        [Fact]
+        public void DependentPackageFoundAndIncludedInReleasePackage()
+        {
+            var packagesDir = IntegrationTestHelper.GetPath("..", "packages");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectDependsOnJsonDotNet.1.0.nupkg");
+
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+            try {
+                var package = new ReleasePackage(inputPackage);
+                package.CreateReleasePackage(outputPackage, packagesDir);
+                Assert.True(File.Exists(outputPackage));
+            } finally {
+                File.Delete(outputPackage);
+            }
+        }
+
+        [Fact]
+        public void WhenInputPackageTargetsMultipleFrameworksCrashHard()
+        {
+            var packagesDir = IntegrationTestHelper.GetPath("..", "packages");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ProjectTargetingMultiplePlatforms.1.0.0.0.nupkg");
+
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+            var package = new ReleasePackage(inputPackage);
+            Assert.Throws<InvalidOperationException>(() => {
+                package.CreateReleasePackage(outputPackage, packagesDir);
+            });
+        }
+        
+        [Fact(Skip="TODO")]
+        public void DependentLocalPackageNotFoundAndThrowsError()
+        {
+            // copy ProjectDependsOnOtherProject to a temp folder
+            // create a release package using it
+            // should throw an exception indicating it can't find TheOtherProjectItDependsOn.1.0.nupkg
+        }
+
+        [Fact(Skip = "TODO")]
+        public void DependentLocalPackageFoundAndIncludedInReleasePackage()
+        {
+            // copy ProjectDependsOnOtherProject and TheOtherProjectItDependsOn to a temp folder
+            // create a release package using it
+            // should contain TheOtherProjectItDependsOn.dll
+            // XXX: what about scenario where it is in another folder?
         }
 
         [Fact]

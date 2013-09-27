@@ -87,10 +87,29 @@ namespace Shimmer.Core
                 return ReleasePackageFile;
             }
 
-            // Recursively walk the dependency tree and extract all of the 
-            // dependent packages into the a temporary directory.
             var package = new ZipPackage(InputPackageFile);
-            var dependencies = findAllDependentPackages(package, packagesRootDir);
+
+            // we can tell from here what platform(s) the package targets
+            // but given this is a simple package we only
+            // ever expect one entry here (crash hard otherwise)
+            var frameworks = package.GetSupportedFrameworks();
+            if (frameworks.Count() > 1) {
+
+                var platforms = frameworks
+                    .Aggregate(new StringBuilder(), (sb, f) => sb.Append(f.ToString() + "; "));
+
+                throw new InvalidOperationException(String.Format(
+                    "The input package file {0} targets multiple platforms - {1} - and cannot be transformed into a release package.", InputPackageFile, platforms));
+            }
+
+            var targetFramework = frameworks.Single();
+
+            // Recursively walk the dependency tree and extract all of the
+            // dependent packages into the a temporary directory
+            var dependencies = findAllDependentPackages(
+                package,
+                packagesRootDir,
+                frameworkName: targetFramework);
 
             string tempPath = null;
 
@@ -207,19 +226,27 @@ namespace Shimmer.Core
             xdoc.Save(specPath);
         }
 
-        IEnumerable<IPackage> findAllDependentPackages(IPackage package = null, string packagesRootDir = null, HashSet<string> packageCache = null)
+        IEnumerable<IPackage> findAllDependentPackages(
+            IPackage package = null,
+            string packagesRootDir = null,
+            HashSet<string> packageCache = null,
+            FrameworkName frameworkName = null)
         {
             package = package ?? new ZipPackage(InputPackageFile);
             packageCache = packageCache ?? new HashSet<string>();
 
-            var deps = package.DependencySets.SelectMany(x => x.Dependencies);
+            var deps = package.DependencySets
+                .Where(x => x.TargetFramework == null
+                            || x.TargetFramework == frameworkName)
+                .SelectMany(x => x.Dependencies);
 
             return deps.SelectMany(dependency => {
                 var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
 
                 if (ret == null) {
-                    this.Log().Error("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
-                    return Enumerable.Empty<IPackage>();
+                    var message = String.Format("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
+                    this.Log().Error(message);
+                    throw new Exception(message);
                 }
 
                 if (packageCache.Contains(ret.GetFullName())) {
@@ -228,11 +255,15 @@ namespace Shimmer.Core
 
                 packageCache.Add(ret.GetFullName());
 
-                return findAllDependentPackages(ret, packagesRootDir, packageCache).StartWith(ret).Distinct(y => y.GetFullName());
+                return findAllDependentPackages(ret, packagesRootDir, packageCache, frameworkName).StartWith(ret).Distinct(y => y.GetFullName());
             }).ToArray();
         }
 
-        IPackage findPackageFromName(string id, IVersionSpec versionSpec, string packagesRootDir = null, IQueryable<IPackage> machineCache = null)
+        IPackage findPackageFromName(
+            string id,
+            IVersionSpec versionSpec,
+            string packagesRootDir = null,
+            IQueryable<IPackage> machineCache = null)
         {
             machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
 
@@ -249,7 +280,7 @@ namespace Shimmer.Core
 
         static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IEnumerable<IPackage> packageList)
         {
-            return packageList.Where(x => x.Id == id).ToArray()
+            return packageList.Where(x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase)).ToArray()
                 .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));
         }
 

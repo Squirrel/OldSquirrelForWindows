@@ -69,6 +69,11 @@ function New-ReleaseForPackage {
         $pkgFullName = $pkg.FullName
         $releaseOutput = & $createReleasePackageExe -o $ReleasesDir -p $packageDir $pkgFullName
 
+        if ($LastExitCode -ne 0) {
+            Write-Error "CreateReleasePackage returned an error code. Aborting..."
+            return
+        }
+
         $packages = $releaseOutput.Split(";")
         $fullRelease = $packages[0].Trim()
 
