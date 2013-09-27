@@ -38,6 +38,10 @@
 
     <Chain>
       <PackageGroupRef Id="Netfx4Full" />
+      <MsiPackage SourceFile="$(var.ToolsDir)\DummyInstaller.msi"
+                  Id="DummyInstallationPackageId"
+                  Cache="yes"
+                  Visible="no" />
     </Chain>
   </Bundle>
 
