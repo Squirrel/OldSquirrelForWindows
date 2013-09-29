@@ -20,6 +20,8 @@ namespace Shimmer.Tests.WiXUi
 {
     public class WiXUiBootstrapperTests
     {
+        readonly Func<uint, int> convertHResult = hr => BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
+
         [Fact]
         public void RouteToErrorViewWhenThingsGoPearShaped()
         {
@@ -40,8 +42,6 @@ namespace Shimmer.Tests.WiXUi
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
-                Func<uint, int> convertHResult = hr => BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
-
                 detectComplete.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", convertHResult(0x80004005), PackageState.Unknown));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
@@ -53,6 +53,53 @@ namespace Shimmer.Tests.WiXUi
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
             }
         }
+
+        [Fact]
+        public void OnErrorTheInstallDirectoryShouldBeDeleted()
+        {
+            var router = new RoutingState();
+            var detectComplete = new Subject<DetectPackageCompleteEventArgs>();
+            var planComplete = new Subject<PlanCompleteEventArgs>();
+            var applyComplete = new Subject<ApplyCompleteEventArgs>();
+            var error = new Subject<ErrorEventArgs>();
+
+            var events = new Mock<IWiXEvents>();
+            events.SetupGet(x => x.DetectPackageCompleteObs).Returns(detectComplete);
+            events.SetupGet(x => x.ErrorObs).Returns(error);
+            events.SetupGet(x => x.PlanCompleteObs).Returns(planComplete);
+            events.SetupGet(x => x.ApplyCompleteObs).Returns(applyComplete);
+
+            var engine = new Mock<IEngine>();
+            events.SetupGet(x => x.Engine).Returns(engine.Object);
+
+            string dir, rootDir;
+            using (Utility.WithTempDirectory(out rootDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(out dir)) {
+
+                var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir, targetRootDirectory: rootDir);
+                RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
+
+                // initialize the install process
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", 0,
+                    PackageState.Present));
+
+                // signal to start the install
+                planComplete.OnNext(new PlanCompleteEventArgs(0));
+
+                // wait until install is complete
+                engine.WaitUntil(e => e.Apply(It.IsAny<IntPtr>()));
+
+                // now signal an error happened
+                applyComplete.OnNext(new ApplyCompleteEventArgs(convertHResult(0x80070643), ApplyRestart.None));
+
+                var errorViewModel = router.GetCurrentViewModel();
+                Assert.IsType<ErrorViewModel>(errorViewModel);
+
+                var expectedDirectory = Path.Combine(rootDir, "SampleUpdatingApp");
+                Assert.False(Directory.Exists(expectedDirectory));
+            }
+        }
+
 
         //
         // DetectPackageComplete

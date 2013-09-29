@@ -716,5 +716,14 @@ namespace Shimmer.Client
                     .LoggedCatch<Unit, UpdateManager, UnauthorizedAccessException>(this, _ => Observable.Return(Unit.Default))
                 .Aggregate(Unit.Default, (acc, x) => acc);
         }
+
+        public IObservable<Unit> CleanDirectory()
+        {
+            if (fileSystem.GetDirectoryInfo(rootAppDirectory).Exists) {
+                return Utility.DeleteDirectory(rootAppDirectory);
+            }
+
+            return Observable.Return(Unit.Default);
+        }
     }
 }

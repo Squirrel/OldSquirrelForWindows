@@ -172,5 +172,15 @@ namespace Shimmer.Client
                 .Log(this, "Full uninstall")
                 .Finally(updateManager.Dispose);
         }
+
+        public IObservable<Unit> CleanDirectory()
+        {
+            var updateManager = new UpdateManager("http://lol", BundledRelease.PackageName, FrameworkVersion.Net40, TargetRootDirectory);
+
+            return updateManager.CleanDirectory()
+                .ObserveOn(RxApp.DeferredScheduler)
+                .Log(this, "Clean directory")
+                .Finally(updateManager.Dispose);
+        }
     }
 }

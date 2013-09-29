@@ -83,6 +83,9 @@ namespace Shimmer.WiXUi.ViewModels
             UserError.RegisterHandler(ex => {
                 this.Log().ErrorException("Something unexpected happened", ex.InnerException);
 
+                var installManager = new InstallManager(BundledRelease, targetRootDirectory);
+                installManager.CleanDirectory().Wait();
+
                 if (wixEvents.DisplayMode != Display.Full) {
                     this.Log().Error(ex.ErrorMessage);
                     wixEvents.ShouldQuit();
