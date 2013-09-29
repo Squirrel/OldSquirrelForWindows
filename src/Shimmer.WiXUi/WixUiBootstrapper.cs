@@ -160,7 +160,15 @@ namespace Shimmer.WiXUi.ViewModels
                 }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
-                    var task = installManager.ExecuteUninstall(BundledRelease.Version);
+
+                    // embedded view is fired as part of running a newer installer
+                    // otherwise it is a user-initiated uninstall
+
+                    var version = wixEvents.DisplayMode == Display.Embedded
+                                    ? BundledRelease.Version
+                                    : new Version(255,255,255,255);
+
+                    var task = installManager.ExecuteUninstall(version);
                     task.Subscribe(
                         _ => wixEvents.Engine.Apply(wixEvents.MainWindowHwnd),
                         ex => UserError.Throw(new UserError("Failed to uninstall", ex.Message, innerException: ex)));
