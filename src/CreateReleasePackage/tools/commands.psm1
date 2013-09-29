@@ -11,12 +11,14 @@ $lightExe = Join-Path $wixDir "light.exe"
 function New-TemplateFromPackage {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$packageFile,
+        [string]$PackageFile,
         [Parameter(Mandatory = $true)]
-        [string]$templateFile
+        [string]$TemplateFile,
+        [Parameter(Mandatory = $true)]
+        [string]$Version
     )
 
-    $resultFile = & $createReleasePackageExe --preprocess-template $templateFile $pkg.FullName
+    $resultFile = & $createReleasePackageExe --preprocess-template $TemplateFile $PackageFile
     $resultFile
 }
 
@@ -26,6 +28,8 @@ function New-ReleaseForPackage {
         [string]$SolutionDir,
         [Parameter(Mandatory = $true)]
         [string]$BuildDir,
+        [Parameter(Mandatory = $false)]
+        [string]$Version = "v4.0",
         [Parameter(Mandatory = $false)]
         [string]$ReleasesDir = (Join-Path $SolutionDir "Releases")
     )
@@ -104,8 +108,12 @@ function New-ReleaseForPackage {
 
     Write-Host ""
     Write-Message "Creating installer for $latestFullRelease"
+    Write-Message "Installer bootstraps .NET Framework $Version"
 
-    $candleTemplate = New-TemplateFromPackage $latestPackageSource "$toolsDir\template.wxs"
+    $candleTemplate = New-TemplateFromPackage -PackageFile $latestPackageSource `
+                                              -TemplateFile "$toolsDir\template.wxs" `
+                                              -Version $Version
+
     $wixTemplate = Join-Path $BuildDir "template.wxs"
 
     Remove-ItemSafe $wixTemplate

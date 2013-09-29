@@ -51,8 +51,13 @@ function New-Release {
 
     $solutionDir = (gci $dte.Solution.FullName).Directory
 
+    $version = Get-TargetFrameworkVersion -ProjectName $ProjectName
+
+    Write-Message "The application is targeting version $version"
+
     New-ReleaseForPackage -SolutionDir $solutionDir `
-                             -BuildDir $buildDir
+                          -BuildDir $buildDir `
+                          -Version $version
 }
 
 function Enable-BuildPackage {

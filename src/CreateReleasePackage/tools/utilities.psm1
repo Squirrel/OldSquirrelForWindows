@@ -221,3 +221,14 @@ function Get-NuGetPackagesPath {
     return Get-NuGetPackagesPath($parent)
 }
 
+function Get-TargetFrameworkVersion {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, ValueFromPipeLine=$true, Mandatory=$true)]
+        [string] $ProjectName
+    )
+
+    Write-Message "TODO: create an installer targeting for version v4.5"
+
+    return "v4.0"
+}
