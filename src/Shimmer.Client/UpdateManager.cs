@@ -719,6 +719,7 @@ namespace Shimmer.Client
 
         public IObservable<Unit> CleanDirectory()
         {
+            log.Warn("Cleaning the root directory: {0}", rootAppDirectory);
             if (fileSystem.GetDirectoryInfo(rootAppDirectory).Exists) {
                 return Utility.DeleteDirectory(rootAppDirectory);
             }
