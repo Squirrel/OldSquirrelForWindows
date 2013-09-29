@@ -80,6 +80,15 @@ namespace Shimmer.WiXUi.ViewModels
 
             registerExtensionDlls(Kernel);
 
+            wixEvents.DetectPackageCompleteObs.Do(args =>
+                this.Log().Info("DetectPackageCompleteObs: got id: '{0}', state: '{1}', status: '{2}'", args.PackageId, args.State, args.Status));
+
+            wixEvents.PlanCompleteObs.Do(args =>
+                this.Log().Info("PlanCompleteObs: got status: '{0}'", args.Status));
+
+            wixEvents.ApplyCompleteObs.Do(args =>
+                this.Log().Info("ApplyCompleteObs: got restart: '{0}', result: '{1}', status: '{2}'", args.Restart, args.Result, args.Status));
+
             UserError.RegisterHandler(ex => {
                 this.Log().ErrorException("Something unexpected happened", ex.InnerException);
 
@@ -103,7 +112,6 @@ namespace Shimmer.WiXUi.ViewModels
             bundledPackageMetadata = new Lazy<IPackage>(openBundledPackage);
 
             wixEvents.DetectPackageCompleteObs.Subscribe(eventArgs => {
-                this.Log().Info("DetectPackageCompleteObs: got id: '{0}', state: '{1}', status: '{2}'", eventArgs.PackageId, eventArgs.State, eventArgs.Status);
 
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
@@ -158,9 +166,9 @@ namespace Shimmer.WiXUi.ViewModels
             var executablesToStart = Enumerable.Empty<string>();
 
             wixEvents.PlanCompleteObs.Subscribe(eventArgs => {
-                this.Log().Info("PlanCompleteObs: got status: '{0}'", eventArgs.Status);
 
                 var installManager = new InstallManager(BundledRelease, targetRootDirectory);
+
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
                     UserError.Throw(error);
@@ -210,7 +218,6 @@ namespace Shimmer.WiXUi.ViewModels
             });
 
             wixEvents.ApplyCompleteObs.Subscribe(eventArgs => {
-                this.Log().Info("ApplyCompleteObs: got restart: '{0}', result: '{1}', status: '{2}'", eventArgs.Restart, eventArgs.Result, eventArgs.Status);
 
                 var error = convertHResultToError(eventArgs.Status);
                 if (error != null) {
