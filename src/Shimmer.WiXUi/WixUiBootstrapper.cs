@@ -108,6 +108,11 @@ namespace Shimmer.WiXUi.ViewModels
                     return;
                 }
 
+                // we now have multiple applications in the chain
+                // only run this code after the last entry in the chain
+                if (eventArgs.PackageId != "UserApplicationId")
+                    return;
+
                 if (wixEvents.Action == LaunchAction.Uninstall) {
 
                     if (wixEvents.DisplayMode != Display.Full) {
