@@ -42,12 +42,12 @@ namespace Shimmer.Tests.WiXUi
 
                 Func<uint, int> convertHResult = hr => BitConverter.ToInt32(BitConverter.GetBytes(hr), 0);
 
-                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", convertHResult(0x80004005), PackageState.Unknown));
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", convertHResult(0x80004005), PackageState.Unknown));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
 
                 router.NavigateAndReset.Execute(RxApp.GetService<IWelcomeViewModel>());
-                error.OnNext(new ErrorEventArgs(ErrorType.ExePackage, "Foo",
+                error.OnNext(new ErrorEventArgs(ErrorType.ExePackage, "UserApplicationId",
                     convertHResult(0x80004005), "Noope", 0, new string[0], 0));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(ErrorViewModel));
@@ -80,7 +80,7 @@ namespace Shimmer.Tests.WiXUi
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
-                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", 0, PackageState.Absent));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(WelcomeViewModel));
             }
@@ -111,7 +111,7 @@ namespace Shimmer.Tests.WiXUi
                 var fixture = new WixUiBootstrapper(events.Object, null, router, null, dir);
                 RxApp.GetAllServices<ICreatesObservableForProperty>().Any().ShouldBeTrue();
 
-                detectComplete.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Absent));
+                detectComplete.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", 0, PackageState.Absent));
 
                 router.GetCurrentViewModel().GetType().ShouldEqual(typeof(UninstallingViewModel));
                 engine.Verify(x => x.Plan(LaunchAction.Uninstall), Times.Once());
@@ -420,7 +420,7 @@ namespace Shimmer.Tests.WiXUi
           Mock<IEngine> engine)
         {
             // initialize the install process
-            detectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Present));
+            detectPackage.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", 0, PackageState.Present));
 
             // navigate to the next VM
             var viewModel = router.GetCurrentViewModel() as WelcomeViewModel;
@@ -443,7 +443,7 @@ namespace Shimmer.Tests.WiXUi
           Mock<IEngine> engine)
         {
             // initialize the uninstall process
-            detectPackage.OnNext(new DetectPackageCompleteEventArgs("Foo", 0, PackageState.Present));
+            detectPackage.OnNext(new DetectPackageCompleteEventArgs("UserApplicationId", 0, PackageState.Present));
 
             // signal to start the uninstall
             planComplete.OnNext(new PlanCompleteEventArgs(0));
