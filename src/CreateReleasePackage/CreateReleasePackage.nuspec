@@ -45,6 +45,7 @@
     <file src="..\..\bin\System.Reactive.Linq.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.PlatformServices.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.Windows.Threading.dll" target="tools" />
+    <file src="..\..\bin\System.Threading.Tasks.dll" target="tools" />
     <file src="..\..\bin\System.Windows.Interactivity.dll" target="tools" />
   </files>
 </package>

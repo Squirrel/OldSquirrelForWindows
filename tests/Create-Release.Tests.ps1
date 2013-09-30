@@ -47,6 +47,7 @@ function Copy-ShimmerTools {
                     "$here\..\bin\System.Reactive.Linq.dll", `
                     "$here\..\bin\System.Reactive.PlatformServices.dll", `
                     "$here\..\bin\System.Reactive.Windows.Threading.dll", `
+                    "$here\..\bin\System.Threading.Tasks.dll", `
                     "$here\..\bin\System.Windows.Interactivity.dll")
 
     copy -Path $binaries -Destination $ToolsDir
