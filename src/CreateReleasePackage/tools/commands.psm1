@@ -132,8 +132,8 @@ function New-ReleaseForPackage {
     Remove-ItemSafe "$BuildDir\template.wixobj"
 
     Write-Message "Running candle.exe"
-    & $candleExe -out "$BuildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$wixTemplate"
+    & $candleExe -out "$BuildDir\template.wixobj" -arch x86 -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" -ext "$wixDir\WixNetFxExtension.dll" "$wixTemplate"
 
     Write-Message "Running light.exe"
-    & $lightExe -out "$ReleasesDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" "$BuildDir\template.wixobj"
+    & $lightExe -out "$ReleasesDir\Setup.exe" -ext "$wixDir\WixBalExtension.dll" -ext "$wixDir\WixUtilExtension.dll" -ext "$wixDir\WixNetFxExtension.dll"  "$BuildDir\template.wixobj"
 }
