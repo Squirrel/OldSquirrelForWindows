@@ -3,7 +3,8 @@
       Name="$(var.NuGetPackage_Summary)" 
       Version="$(var.NuGetPackage_Version)"
       Manufacturer="$(var.NuGetPackage_Authors)" 
-      UpgradeCode="c99da653-84c8-4c03-bc0e-716cc966b50c">
+      UpgradeCode="c99da653-84c8-4c03-bc0e-716cc966b50c"
+      DisableModify="yes">
 
     <BootstrapperApplicationRef Id="ManagedBootstrapperApplicationHost">
       <Payload Name="BootstrapperCore.config" SourceFile="$(var.ToolsDir)\Shimmer.WiXUI.config" />
@@ -43,6 +44,7 @@
   <!-- NetFx.wxs -->
 
   <Fragment>
+
       <WixVariable Id="WixMbaPrereqPackageId" Value="Netfx4Full" />
       <WixVariable Id="WixMbaPrereqLicenseUrl" Value="NetfxLicense.rtf" />
 
