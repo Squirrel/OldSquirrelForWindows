@@ -120,7 +120,7 @@ namespace Shimmer.Core
                     zf.ExtractAll(tempPath);
                 }
     
-                extractDependentPackages(dependencies, tempDir);
+                extractDependentPackages(dependencies, tempDir, targetFramework);
 
                 var specPath = tempDir.GetFiles("*.nuspec").First().FullName;
 
@@ -143,7 +143,7 @@ namespace Shimmer.Core
             }
         }
 
-        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath)
+        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath, FrameworkName framework = null)
         {
             dependencies.ForEach(pkg => {
                 this.Log().Info("Scanning {0}", pkg.Id);
@@ -152,8 +152,19 @@ namespace Shimmer.Core
                     var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
 
                     if(isNonDesktopAssembly(file.Path)) {
-                        this.Log().Info("Ignoring {0} ", outPath);
+                        this.Log().Info("Ignoring {0}  as the platform is not acceptable", outPath);
                         return;
+                    }
+
+                    if (framework != null) {
+                        var version = framework.Version;
+                        var dependencyVersion = file.TargetFramework.Version;
+
+                        if (version == new Version(4, 0)
+                            && dependencyVersion == new Version(4, 5)) {
+                                this.Log().Info("Ignoring {0} as we do not want to ship net45 assemblies for our net40 app", outPath);
+                                return;
+                        }
                     }
 
                     Directory.CreateDirectory(outPath.Directory.FullName);
