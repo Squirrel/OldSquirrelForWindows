@@ -16,6 +16,12 @@ using Shimmer.Core.Extensions;
 
 namespace Shimmer.Core
 {
+    internal static class FrameworkTargetVersion
+    {
+        public static FrameworkName Net40 = new FrameworkName(".NETFramework,Version=v4.0");
+        public static FrameworkName Net45 = new FrameworkName(".NETFramework,Version=v4.5");
+    }
+
     public interface IReleasePackage
     {
         string InputPackageFile { get; }
@@ -157,11 +163,9 @@ namespace Shimmer.Core
                     }
 
                     if (framework != null) {
-                        var version = framework.Version;
-                        var dependencyVersion = file.TargetFramework.Version;
-
-                        if (version == new Version(4, 0)
-                            && dependencyVersion == new Version(4, 5)) {
+                        if (framework == FrameworkTargetVersion.Net40
+                            && file.TargetFramework == FrameworkTargetVersion.Net45)
+                        {
                                 this.Log().Info("Ignoring {0} as we do not want to ship net45 assemblies for our net40 app", outPath);
                                 return;
                         }
