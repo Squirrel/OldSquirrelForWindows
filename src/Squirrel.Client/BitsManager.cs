@@ -34,7 +34,12 @@ namespace Squirrel.Client
             progress = progress ?? new Subject<int>();
 
             var ret = Http.DownloadUrl(url)
-                .Select(x => {
+                .Catch<byte[], TimeoutException>(ex => {
+                    // TODO: log this exception?
+                    return Observable.Return(new byte[0]);
+                })
+                .Select(x =>
+                {
                     using (var reader = new StreamReader
                         (new MemoryStream(x), Encoding.UTF8)) {
                         return reader.ReadToEnd();
