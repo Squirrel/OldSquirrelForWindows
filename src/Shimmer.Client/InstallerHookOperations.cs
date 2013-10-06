@@ -227,16 +227,13 @@ namespace Shimmer.Client
 
             var ret = apps.SelectMany(uninstallApp).ToArray();
 
-
             AppDomain.CurrentDomain.AssemblyResolve -= resolveAssembly;
-
 
             return ret;
         }
 
         IEnumerable<ShortcutCreationRequest> uninstallApp(IAppSetup app)
         {
-
             try {
                 app.OnAppUninstall();
             } catch (Exception ex) {
@@ -268,7 +265,6 @@ namespace Shimmer.Client
                 return acc;
             });
         }
-
 
         IAppSetup createInstanceOrWhine(Type typeToCreate)
         {
