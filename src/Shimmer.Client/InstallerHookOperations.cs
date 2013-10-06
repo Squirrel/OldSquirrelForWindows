@@ -36,10 +36,41 @@ namespace Shimmer.Client
                 return new string[0];
             }
 
-            return appSetups
+            ResolveEventHandler resolveAssembly = (obj, args) =>
+            {
+                try {
+                    var directory = fileSystem.GetDirectoryInfo(info.NewAppDirectoryRoot);
+                    if (directory.Exists) {
+                        var files = directory.GetFiles("*.dll")
+                            .Concat(directory.GetFiles("*.exe"));
+
+                        foreach (var f in files) {
+                            var assemblyName = AssemblyName.GetAssemblyName(f.FullName);
+
+                            if (assemblyName.FullName == args.Name) {
+                                return Assembly.Load(assemblyName);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    log.WarnException("Could not resolve assembly: " + args.Name, ex);
+                }
+
+                return null;
+            };
+
+            AppDomain.CurrentDomain.AssemblyResolve += resolveAssembly;
+
+            var results = appSetups
                 .Select(app => installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall))
                 .Where(x => x != null)
                 .ToArray();
+
+            AppDomain.CurrentDomain.AssemblyResolve -= resolveAssembly;
+
+            return results;
+
         }
 
         public IEnumerable<ShortcutCreationRequest> RunAppSetupCleanups(string fullDirectoryPath)

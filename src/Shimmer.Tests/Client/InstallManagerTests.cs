@@ -253,5 +253,30 @@ namespace Shimmer.Tests.Client
                 }
             }
         }
+
+        [Fact]
+        public void InstallLoadsAssemblyInSameFolder()
+        {
+            string dir;
+            string outDir;
+
+            var package = "DemoConsoleApp.1.0.0.0-full.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+
+                var generatedFile = Path.Combine(outDir, "DemoConsoleApp", "app-1.0.0.0", "install");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
     }
 }
