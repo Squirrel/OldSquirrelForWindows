@@ -7,6 +7,7 @@
       DisableModify="yes">
 
     <BootstrapperApplicationRef Id="ManagedBootstrapperApplicationHost">
+      
       <Payload Name="BootstrapperCore.config" SourceFile="$(var.ToolsDir)\Shimmer.WiXUI.config" />
       <Payload SourceFile="$(var.ToolsDir)\NuGet.Core.dll" />
       <Payload SourceFile="$(var.ToolsDir)\Ionic.Zip.dll" />
@@ -38,6 +39,8 @@
 
     <Chain>
       <PackageGroupRef Id="NetFx40Web" />
+      <PackageGroupRef Id="Netfx403Update" />
+      <PackageGroupRef Id="KB2468871" />
       <MsiPackage SourceFile="$(var.ToolsDir)\DummyInstaller.msi"
                   Id="UserApplicationId"
                   Cache="yes"
@@ -47,12 +50,85 @@
 
   <Fragment>
 
-      <WixVariable Id="WixMbaPrereqPackageId" Value="Netfx4Full" />
-      <WixVariable Id="WixMbaPrereqLicenseUrl" Value="NetfxLicense.rtf" />
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+                         Value="Version"
+                         Variable="Netfx4FullVersion" />
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+                         Value="Version"
+                         Variable="Netfx4x64FullVersion"
+                         Win64="yes" />
 
-      <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4FullVersion" />
-      <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4x64FullVersion" Win64="yes" />
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Updates\Microsoft .NET Framework 4 Extended\KB2468871"
+                         Value="ThisVersionInstalled"
+                         Variable="KB2468871x86Installed" />
+    <util:RegistrySearch Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Updates\Microsoft .NET Framework 4 Extended\KB2468871"
+                         Value="ThisVersionInstalled"
+                         Variable="KB2468871x64Installed"
+                         Win64="yes" />
+
+    <PackageGroup Id="Netfx403Update">
+      <ExePackage Id="Netfx403Update"
+            Cache="no"
+            Compressed="no"
+            PerMachine="yes"
+            Permanent="yes"
+            Vital="yes"
+            Name="NDP40-KB2600211-x86-x64.exe"
+            DownloadUrl="http://download.microsoft.com/download/3/3/9/3396A3CA-BFE8-4C9B-83D3-CADAE72C17BE/NDP40-KB2600211-x86-x64.exe"
+            DetectCondition="Netfx4FullVersion AND (Netfx4FullVersion &lt;&lt; &quot;4.0.3&quot; OR Netfx4FullVersion &lt;&lt; &quot;4.5&quot;)" >
+        <RemotePayload CertificatePublicKey="B6FD04713FCDA7768A9E367750FF6A051EBEB6E6"
+                       CertificateThumbprint="8849D1C0F147A3C8327B4038783AEC3E06C76F5B"
+                       Description="Update for Microsoft .NET Framework 4.0 (KB2600211)"
+                       Hash="86290EF82BEBFABB0DF9CEFBA70B5D73034D117F"
+                       ProductName="Microsoft .NET Framework 4.0"
+                       Size="70374520"
+                       Version="10.0.30319.276" />
+      </ExePackage>
+    </PackageGroup>
+
+    <PackageGroup Id="KB2468871">
+      <ExePackage Id="KB2468871x64"
+                  Cache="no"
+                  Compressed="no"
+                  PerMachine="yes"
+                  Permanent="yes"
+                  Vital="yes"
+                  Name="NDP40-KB2468871-v2-x64.exe"
+                  DownloadUrl="http://download.microsoft.com/download/2/B/F/2BF4D7D1-E781-4EE0-9E4F-FDD44A2F8934/NDP40-KB2468871-v2-x64.exe"
+                  DetectCondition="KB2468871x64Installed AND VersionNT64">
+        <!-- .\ext\wix\heat.exe payload path\to\NDP40-KB2468871-v2-x64.exe -o output.wxs -->
+        <RemotePayload CertificatePublicKey="5C499B10F7EF186DC729991A262AB52066423909"
+                       CertificateThumbprint="93859EBF98AFDEB488CCFA263899640E81BC49F1"
+                       Description="Microsoft .NET Framework 4.0 Setup"
+                       Hash="51840E466684608D431B728916CB8BC6EFC1A552"
+                       ProductName="Microsoft .NET Framework 4.0"
+                       Size="28640160"
+                       Version="10.0.30319.233" />
+      </ExePackage>
+
+      <ExePackage Id="KB2468871x86"
+                  Cache="no"
+                  Compressed="no"
+                  PerMachine="yes"
+                  Permanent="yes"
+                  Vital="yes"
+                  Name="NDP40-KB2468871-v2-x86.exe"
+                  DownloadUrl="http://download.microsoft.com/download/2/B/F/2BF4D7D1-E781-4EE0-9E4F-FDD44A2F8934/NDP40-KB2468871-v2-x86.exe"
+                  DetectCondition="KB2468871x86Installed AND (VersionNT64 AND KB2468871x64Installed)">
+        <!-- .\ext\wix\heat.exe payload path\to\NDP40-KB2468871-v2-x86.exe -o output.wxs -->
+        <RemotePayload CertificatePublicKey="5C499B10F7EF186DC729991A262AB52066423909"
+                       CertificateThumbprint="93859EBF98AFDEB488CCFA263899640E81BC49F1"
+                       Description="Microsoft .NET Framework 4.0 Setup"
+                       Hash="8CB1F5EB7EDA5329E69629DFF3FD3757BF980717"
+                       ProductName="Microsoft .NET Framework 4.0"
+                       Size="19556328"
+                       Version="10.0.30319.233" />
+      </ExePackage>
+    </PackageGroup>
 
   </Fragment>
-
 </Wix>

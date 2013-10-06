@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -110,8 +111,9 @@ namespace Shimmer.WiXUi.ViewModels
 
                 // we now have multiple applications in the chain
                 // only run this code after the last entry in the chain
-                if (eventArgs.PackageId != "UserApplicationId")
+                if (eventArgs.PackageId != "UserApplicationId") {
                     return;
+                }
 
                 if (wixEvents.Action == LaunchAction.Uninstall) {
 
@@ -151,6 +153,14 @@ namespace Shimmer.WiXUi.ViewModels
                     RxApp.DeferredScheduler.Schedule(() => Router.Navigate.Execute(welcomeVm));
                 }
             });
+
+            wixEvents.ResolveSourceObs.Subscribe(eventArgs => {
+                this.Log().Info("ResolveSourceObs: got id: '{0}', PackageOrContainerId: '{1}', local: '{2}', download: '{3}'", eventArgs.PayloadId, eventArgs.PackageOrContainerId, eventArgs.LocalSource, eventArgs.DownloadSource);
+
+                if (!File.Exists(eventArgs.LocalSource) && !string.IsNullOrEmpty(eventArgs.DownloadSource))
+                    eventArgs.Result = Result.Download;
+            });
+
 
             var executablesToStart = Enumerable.Empty<string>();
 
