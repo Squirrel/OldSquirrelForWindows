@@ -36,28 +36,9 @@ namespace Shimmer.Client
                 return new string[0];
             }
 
-            ResolveEventHandler resolveAssembly = (obj, args) =>
-            {
-                try {
-                    var directory = fileSystem.GetDirectoryInfo(info.NewAppDirectoryRoot);
-                    if (directory.Exists) {
-                        var files = directory.GetFiles("*.dll")
-                            .Concat(directory.GetFiles("*.exe"));
-
-                        foreach (var f in files) {
-                            var assemblyName = AssemblyName.GetAssemblyName(f.FullName);
-
-                            if (assemblyName.FullName == args.Name) {
-                                return Assembly.Load(assemblyName);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex) {
-                    log.WarnException("Could not resolve assembly: " + args.Name, ex);
-                }
-
-                return null;
+            ResolveEventHandler resolveAssembly = (obj, args) => {
+                var directory = fileSystem.GetDirectoryInfo(info.NewAppDirectoryRoot);
+                return tryResolveAssembly(directory, args);
             };
 
             AppDomain.CurrentDomain.AssemblyResolve += resolveAssembly;
@@ -297,6 +278,29 @@ namespace Shimmer.Client
                 log.WarnException("Post-install: load failed for " + fileToLoad, ex);
                 return null;
             }
+        }
+
+        Assembly tryResolveAssembly(DirectoryInfoBase directory, ResolveEventArgs args)
+        {
+            try {
+                if (directory.Exists) {
+                    var files = directory.GetFiles("*.dll")
+                        .Concat(directory.GetFiles("*.exe"));
+
+                    foreach (var f in files) {
+                        var assemblyName = AssemblyName.GetAssemblyName(f.FullName);
+
+                        if (assemblyName.FullName == args.Name) {
+                            return Assembly.Load(assemblyName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                log.WarnException("Could not resolve assembly: " + args.Name, ex);
+            }
+
+            return null;
         }
     }
 }
