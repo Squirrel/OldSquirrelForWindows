@@ -209,6 +209,14 @@ namespace Shimmer.Client
 
         public IEnumerable<ShortcutCreationRequest> RunAppUninstall(string fullDirectoryPath)
         {
+            ResolveEventHandler resolveAssembly = (obj, args) =>
+            {
+                var directory = fileSystem.GetDirectoryInfo(fullDirectoryPath);
+                return tryResolveAssembly(directory, args);
+            };
+
+            AppDomain.CurrentDomain.AssemblyResolve += resolveAssembly;
+
             var apps = default(IEnumerable<IAppSetup>);
             try {
                 apps = findAppSetupsToRun(fullDirectoryPath);
@@ -219,11 +227,16 @@ namespace Shimmer.Client
 
             var ret = apps.SelectMany(uninstallApp).ToArray();
 
+
+            AppDomain.CurrentDomain.AssemblyResolve -= resolveAssembly;
+
+
             return ret;
         }
 
         IEnumerable<ShortcutCreationRequest> uninstallApp(IAppSetup app)
         {
+
             try {
                 app.OnAppUninstall();
             } catch (Exception ex) {

@@ -278,5 +278,32 @@ namespace Shimmer.Tests.Client
                 Assert.True(File.Exists(generatedFile));
             }
         }
+
+        [Fact]
+        public void UninstallLoadsAssemblyInSameFolder()
+        {
+            string dir;
+            string outDir;
+
+            var package = "DemoConsoleApp.1.0.0.0-full.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+                fixture.ExecuteUninstall().Wait();
+
+                var generatedFile = Path.Combine(outDir, "uninstall");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
     }
 }
