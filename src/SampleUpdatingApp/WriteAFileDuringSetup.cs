@@ -25,9 +25,10 @@ namespace SampleUpdatingApp
         {
             base.OnVersionInstalled(versionBeingInstalled);
 
-            var file = Path.Combine(GetCurrentDirectory(), "install-" + versionBeingInstalled);
-
-            File.WriteAllText(file, Guid.NewGuid().ToString());
+            if (versionBeingInstalled <= new Version(1, 2)) {
+                var file = Path.Combine(GetCurrentDirectory(), "install-" + versionBeingInstalled);
+                File.WriteAllText(file, Guid.NewGuid().ToString());
+            }
         }
 
         public override void OnVersionUninstalling(Version versionBeingUninstalled)
