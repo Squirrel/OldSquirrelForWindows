@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*"
+           Name="DummyInstaller"
+           Language="1033"
+           Version="1.0.0.0"
+           Manufacturer="Shimmer"
+           UpgradeCode="75479fad-42bc-4d3c-a4ad-b4056458a10e">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="ProductFeature" Title="DummyInstaller" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="ProductComponent" Guid="4D31918A-9A7A-4A63-95F5-9EE4D3357B12">
+        <RegistryKey Root="HKCU"
+             Key="Software\My Application\Uninstall">
+          <RegistryValue Value="Ignore the man behind the curtain"
+                         Type="string"
+                         KeyPath="yes" />
+        </RegistryKey>
+        <RemoveFolder On="uninstall" Directory="INSTALLFOLDER" Id="DummyInstaller"/>
+      </Component>
+    </ComponentGroup>
+	</Fragment>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLFOLDER" Name="DummyInstaller" />
+      </Directory>
+    </Directory>
+  </Fragment>
+</Wix>
