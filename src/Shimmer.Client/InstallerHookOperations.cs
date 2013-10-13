@@ -36,10 +36,22 @@ namespace Shimmer.Client
                 return new string[0];
             }
 
-            return appSetups
+            ResolveEventHandler resolveAssembly = (obj, args) => {
+                var directory = fileSystem.GetDirectoryInfo(info.NewAppDirectoryRoot);
+                return tryResolveAssembly(directory, args);
+            };
+
+            AppDomain.CurrentDomain.AssemblyResolve += resolveAssembly;
+
+            var results = appSetups
                 .Select(app => installAppVersion(app, info.NewCurrentVersion, info.ShortcutRequestsToIgnore, info.IsFirstInstall))
                 .Where(x => x != null)
                 .ToArray();
+
+            AppDomain.CurrentDomain.AssemblyResolve -= resolveAssembly;
+
+            return results;
+
         }
 
         public IEnumerable<ShortcutCreationRequest> RunAppSetupCleanups(string fullDirectoryPath)
@@ -195,6 +207,65 @@ namespace Shimmer.Client
             return locatedAppSetups;
         }
 
+        public IEnumerable<ShortcutCreationRequest> RunAppUninstall(string fullDirectoryPath)
+        {
+            ResolveEventHandler resolveAssembly = (obj, args) =>
+            {
+                var directory = fileSystem.GetDirectoryInfo(fullDirectoryPath);
+                return tryResolveAssembly(directory, args);
+            };
+
+            AppDomain.CurrentDomain.AssemblyResolve += resolveAssembly;
+
+            var apps = default(IEnumerable<IAppSetup>);
+            try {
+                apps = findAppSetupsToRun(fullDirectoryPath);
+            } catch (UnauthorizedAccessException ex) {
+                log.ErrorException("Couldn't run cleanups", ex);
+                return Enumerable.Empty<ShortcutCreationRequest>();
+            }
+
+            var ret = apps.SelectMany(uninstallApp).ToArray();
+
+            AppDomain.CurrentDomain.AssemblyResolve -= resolveAssembly;
+
+            return ret;
+        }
+
+        IEnumerable<ShortcutCreationRequest> uninstallApp(IAppSetup app)
+        {
+            try {
+                app.OnAppUninstall();
+            } catch (Exception ex) {
+                log.ErrorException("App threw exception on uninstall:  " + app.GetType().FullName, ex);
+            }
+
+            var shortcuts = Enumerable.Empty<ShortcutCreationRequest>();
+            try {
+                shortcuts = app.GetAppShortcutList();
+            } catch (Exception ex) {
+                log.ErrorException("App threw exception on shortcut uninstall:  " + app.GetType().FullName, ex);
+            }
+
+            // Get the list of shortcuts that *should've* been there, but aren't;
+            // this means that the user deleted them by hand and that they should 
+            // stay dead
+            return shortcuts.Aggregate(new List<ShortcutCreationRequest>(), (acc, x) => {
+                var path = x.GetLinkTarget(applicationName);
+                var fi = fileSystem.GetFileInfo(path);
+
+                if (fi.Exists) {
+                    fi.Delete();
+                    log.Info("Deleting shortcut: {0}", fi.FullName);
+                } else {
+                    acc.Add(x);
+                    log.Info("Shortcut not found: {0}, capturing for future reference", fi.FullName);
+                }
+
+                return acc;
+            });
+        }
+
         IAppSetup createInstanceOrWhine(Type typeToCreate)
         {
             try {
@@ -216,6 +287,29 @@ namespace Shimmer.Client
                 log.WarnException("Post-install: load failed for " + fileToLoad, ex);
                 return null;
             }
+        }
+
+        Assembly tryResolveAssembly(DirectoryInfoBase directory, ResolveEventArgs args)
+        {
+            try {
+                if (directory.Exists) {
+                    var files = directory.GetFiles("*.dll")
+                        .Concat(directory.GetFiles("*.exe"));
+
+                    foreach (var f in files) {
+                        var assemblyName = AssemblyName.GetAssemblyName(f.FullName);
+
+                        if (assemblyName.FullName == args.Name) {
+                            return Assembly.Load(assemblyName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                log.WarnException("Could not resolve assembly: " + args.Name, ex);
+            }
+
+            return null;
         }
     }
 }

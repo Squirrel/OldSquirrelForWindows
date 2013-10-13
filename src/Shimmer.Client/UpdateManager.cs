@@ -260,6 +260,7 @@ namespace Shimmer.Client
                     .SelectMany(dir => {
                         // cleanup each version
                         runAppCleanup(dir);
+                        runAppUninstall(dir);
                         // and then force a delete on each folder
                         return Utility.DeleteDirectory(dir)
                                 .Catch<Unit, Exception>(ex => {
@@ -601,6 +602,22 @@ namespace Shimmer.Client
             }
             return ret;
         }
+
+        IEnumerable<ShortcutCreationRequest> runAppUninstall(string path)
+        {
+            var installerHooks = new InstallerHookOperations(fileSystem, applicationName);
+
+            var ret = AppDomainHelper.ExecuteInNewAppDomain(path, installerHooks.RunAppUninstall);
+
+            try {
+                Utility.DeleteDirectoryAtNextReboot(path);
+            } catch (Exception ex) {
+                var message = String.Format("Couldn't delete old app directory on next reboot {0}", path);
+                log.WarnException(message, ex);
+            }
+            return ret;
+        }
+
 
         void fixPinnedExecutables(Version newCurrentVersion) 
         {

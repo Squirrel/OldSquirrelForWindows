@@ -74,10 +74,128 @@ namespace Shimmer.Tests.Client
             throw new NotImplementedException();
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact]
+        public void InstallRunsHooks()
+        {
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.2.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package,out dir)) {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+
+                var generatedFile = Path.Combine(outDir, "SampleUpdatingApp", "app-1.2.0.0", "install");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
+        public void InstallRunsSpecificVersion()
+        {
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.2.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+
+                var generatedFile = Path.Combine(outDir, "SampleUpdatingApp", "app-1.2.0.0", "install-1.2.0.0");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
+        public void InstallSkipsLatestVersion()
+        {
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.3.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+
+                var generatedFile = Path.Combine(outDir, "SampleUpdatingApp", "app-1.3.0.0", "install-1.3.0.0");
+
+                Assert.False(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
         public void UninstallRunsHooks()
         {
-            throw new NotImplementedException();
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.2.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir)) {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+                fixture.ExecuteUninstall(new Version("1.2.0.0")).Wait();
+
+                var generatedFile = Path.Combine(outDir, "uninstall");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
+        public void UninstallRunsSpecificVersion()
+        {
+            string dir;
+            string outDir;
+
+            var package = "SampleUpdatingApp.1.2.0.0.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir)) {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+                fixture.ExecuteUninstall(new Version("1.2.0.0")).Wait();
+
+                var generatedFile = Path.Combine(outDir, "uninstall-1.2.0.0");
+
+                Assert.True(File.Exists(generatedFile));
+            }
         }
 
         [Fact]
@@ -158,6 +276,58 @@ namespace Shimmer.Tests.Client
                 {
                     Directory.Delete(dir, true);
                 }
+            }
+        }
+
+        [Fact]
+        public void InstallLoadsAssemblyInSameFolder()
+        {
+            string dir;
+            string outDir;
+
+            var package = "DemoConsoleApp.1.0.0.0-full.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+
+                var generatedFile = Path.Combine(outDir, "DemoConsoleApp", "app-1.0.0.0", "install");
+
+                Assert.True(File.Exists(generatedFile));
+            }
+        }
+
+        [Fact]
+        public void UninstallLoadsAssemblyInSameFolder()
+        {
+            string dir;
+            string outDir;
+
+            var package = "DemoConsoleApp.1.0.0.0-full.nupkg";
+
+            using (Utility.WithTempDirectory(out outDir))
+            using (IntegrationTestHelper.WithFakeInstallDirectory(package, out dir))
+            {
+                var di = new DirectoryInfo(dir);
+
+                var bundledRelease = ReleaseEntry.GenerateFromFile(di.GetFiles("*.nupkg").First().FullName);
+                var fixture = new InstallManager(bundledRelease, outDir);
+
+                var pkg = new ZipPackage(Path.Combine(dir, package));
+
+                fixture.ExecuteInstall(dir, pkg).Wait();
+                fixture.ExecuteUninstall().Wait();
+
+                var generatedFile = Path.Combine(outDir, "uninstall");
+
+                Assert.True(File.Exists(generatedFile));
             }
         }
     }
