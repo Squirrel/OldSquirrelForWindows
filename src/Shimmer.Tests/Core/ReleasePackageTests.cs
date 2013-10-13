@@ -320,5 +320,75 @@ namespace Shimmer.Tests.Core
                 File.Delete(outputPackage);
             }
         }
+
+        [Fact]
+        public void WhenAProjectContainsNet45BinariesItContainsTheNecessaryDependency()
+        {
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ThisShouldBeANet45Project.1.0.nupkg");
+
+            var rightPackage = "Caliburn.Micro.1.5.2.nupkg";
+            var rightPackagePath = IntegrationTestHelper.GetPath("fixtures", rightPackage);
+
+            try
+            {
+                var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+                (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+                File.Copy(rightPackagePath, Path.Combine(sourceDir, rightPackage), true);
+
+                var package = new ReleasePackage(inputPackage);
+                var outputFileName = package.CreateReleasePackage(outputPackage, sourceDir);
+
+                var zipPackage = new ZipPackage(outputFileName);
+
+                var dependency = zipPackage.GetLibFiles()
+                    .Where(f => f.Path.EndsWith("Caliburn.Micro.dll"))
+                    .FirstOrDefault(f => f.TargetFramework
+                        == new FrameworkName(".NETFramework,Version=v4.5"));
+
+                Assert.NotNull(dependency);
+            }
+            finally
+            {
+                File.Delete(outputPackage);
+            }
+        }
+
+        [Fact]
+        public void WhenAProjectContainsNet40BinariesItDoesntShipTheNet45Dependencies()
+        {
+            var outputPackage = Path.GetTempFileName() + ".nupkg";
+
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "ThisShouldBeANet4Project.1.0.nupkg");
+
+            var rightPackage = "Caliburn.Micro.1.5.2.nupkg";
+            var rightPackagePath = IntegrationTestHelper.GetPath("fixtures", rightPackage);
+
+            try
+            {
+                var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
+                (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
+
+                File.Copy(rightPackagePath, Path.Combine(sourceDir, rightPackage), true);
+
+                var package = new ReleasePackage(inputPackage);
+                var outputFileName = package.CreateReleasePackage(outputPackage, sourceDir);
+
+                var zipPackage = new ZipPackage(outputFileName);
+
+                var dependency = zipPackage.GetLibFiles()
+                    .Where(f => f.Path.EndsWith("Caliburn.Micro.dll"))
+                    .FirstOrDefault(f => f.TargetFramework
+                        == new FrameworkName(".NETFramework,Version=v4.5"));
+
+                Assert.Null(dependency);
+            }
+            finally
+            {
+                File.Delete(outputPackage);
+            }
+        }
     }
 }
