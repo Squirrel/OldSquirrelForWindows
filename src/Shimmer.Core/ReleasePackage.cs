@@ -158,7 +158,7 @@ namespace Shimmer.Core
                     var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
 
                     if(isNonDesktopAssembly(file.Path)) {
-                        this.Log().Info("Ignoring {0}  as the platform is not acceptable", outPath);
+                        this.Log().Info("Ignoring {0} as the platform is not acceptable", outPath);
                         return;
                     }
 

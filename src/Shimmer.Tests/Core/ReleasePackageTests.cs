@@ -322,7 +322,7 @@ namespace Shimmer.Tests.Core
         }
 
         [Fact]
-        public void WhenAProjectContainsNet45ProjectItContainsTheNecessaryDependency()
+        public void WhenAProjectContainsNet45BinariesItContainsTheNecessaryDependency()
         {
             var outputPackage = Path.GetTempFileName() + ".nupkg";
 
@@ -357,7 +357,7 @@ namespace Shimmer.Tests.Core
         }
 
         [Fact]
-        public void WhenAProjectContainsNet40ProjectItDoesntShipTheNet45Dependencies()
+        public void WhenAProjectContainsNet40BinariesItDoesntShipTheNet45Dependencies()
         {
             var outputPackage = Path.GetTempFileName() + ".nupkg";
 
