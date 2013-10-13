@@ -19,7 +19,6 @@ function Run-XUnit([string]$project, [int]$timeoutDuration) {
         $exitCode = $process.ExitCode
     } else {
         $output += "Tests timed out. Backtrace:"
-        $output += Get-DotNetStack $process.Id
         $exitCode = 9999
     }
     Stop-Process -InputObject $process
@@ -34,7 +33,7 @@ function Run-XUnit([string]$project, [int]$timeoutDuration) {
 $exitCode = 0
 
 Write-Output "Running Shimmer.Tests..."
-$result = Run-XUnit Shimmer.Tests 180
+$result = Run-XUnit Shimmer.Tests 300
 if ($result.ExitCode -eq 0) {
     # Print out the test result summary.
     Write-Output $result.Output[-1]
