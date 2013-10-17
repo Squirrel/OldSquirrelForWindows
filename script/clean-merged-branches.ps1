@@ -1,9 +1,12 @@
 Set-PSDebug -Strict
 $ErrorActionPreference = "Stop"
 
+git remote prune origin
+
 $branches = git branch -a --merged | 
     ?{$_ -match "remotes\/origin"} | 
     ?{$_ -notmatch "\/master"} | 
+    ?{$_ -notmatch "pr\/"} |
     %{$_.Replace("remotes/origin/", "").Trim() }
 
 if (-not $branches) {
@@ -29,4 +32,7 @@ if ($result -eq 1) {
     exit 0
 }
 
-$branches | %{ git push origin ":$_" }
+$branches | %{
+    git push origin ":$_"
+    git branch -d $_
+ }
