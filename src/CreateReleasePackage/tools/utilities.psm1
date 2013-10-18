@@ -202,6 +202,11 @@ function Get-NuGetPackagesPath {
         [string]$directory
     )
 
+    $cfgPath = Join-Path $env:APPDATA "nuget\nuget.config"
+    if(Test-Path $cfgPath) {
+        $directory = $cfgPath | Split-Path -Resolve
+    }
+
     $cfg = Get-ChildItem -Path $directory -Filter nuget.config | Select-Object -first 1
     if($cfg) {
         [xml]$config = Get-Content $cfg.FullName
