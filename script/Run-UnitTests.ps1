@@ -32,8 +32,8 @@ function Run-XUnit([string]$project, [int]$timeoutDuration) {
 
 $exitCode = 0
 
-Write-Output "Running Shimmer.Tests..."
-$result = Run-XUnit Shimmer.Tests 300
+Write-Output "Running Squirrel.Tests..."
+$result = Run-XUnit Squirrel.Tests 300
 if ($result.ExitCode -eq 0) {
     # Print out the test result summary.
     Write-Output $result.Output[-1]

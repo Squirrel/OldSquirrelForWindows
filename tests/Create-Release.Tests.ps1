@@ -20,7 +20,7 @@ function New-DirectorySafe {
     }
 }
 
-function Copy-ShimmerTools {
+function Copy-SquirrelTools {
     param(
         [parameter(Mandatory=$true)]
         $ToolsDir
@@ -28,7 +28,7 @@ function Copy-ShimmerTools {
     copy $here\..\src\CreateReleasePackage\tools\* $ToolsDir
 
     $binaries = @("$here\..\bin\CreateReleasePackage.exe", `
-                    "$here\..\bin\Shimmer.WiXUI.config" , `
+                    "$here\..\bin\Squirrel.WiXUI.config" , `
                     "$here\..\bin\NuGet.Core.dll", `
                     "$here\..\bin\Ionic.Zip.dll", `
                     "$here\..\bin\MarkdownSharp.dll", `
@@ -37,10 +37,10 @@ function Copy-ShimmerTools {
                     "$here\..\bin\ReactiveUI.Routing.dll", `
                     "$here\..\bin\ReactiveUI.Xaml.dll", `
                     "$here\..\bin\SharpBITS.Base.dll", `
-                    "$here\..\bin\Shimmer.Client.dll", `
-                    "$here\..\bin\Shimmer.Core.dll", `
-                    "$here\..\bin\Shimmer.WiXUi.dll", `
-                    "$here\..\bin\Shimmer.WiXUiClient.dll", `
+                    "$here\..\bin\Squirrel.Client.dll", `
+                    "$here\..\bin\Squirrel.Core.dll", `
+                    "$here\..\bin\Squirrel.WiXUi.dll", `
+                    "$here\..\bin\Squirrel.WiXUiClient.dll", `
                     "$here\..\bin\System.IO.Abstractions.dll", `
                     "$here\..\bin\System.Reactive.Core.dll", `
                     "$here\..\bin\System.Reactive.Interfaces.dll", `
@@ -80,7 +80,7 @@ Describe "Create-Release" {
 
     copy $here\packages\TestApp.1.0.0-beta.nupkg $buildOutputDir
 
-    Copy-ShimmerTools -ToolsDir $toolsDir
+    Copy-SquirrelTools -ToolsDir $toolsDir
 
     . "$toolsDir\Create-Release.ps1" -SolutionDir $solutionDir `
                                      -BuildDir $buildOutputDir
@@ -116,7 +116,7 @@ Describe "Create-Release" {
 
     copy $here\packages\TestApp.1.0.0-beta.nupkg $buildOutputDir
 
-    Copy-ShimmerTools -ToolsDir $toolsDir
+    Copy-SquirrelTools -ToolsDir $toolsDir
 
     . "$toolsDir\Create-Release.ps1" -SolutionDir $solutionDir `
                                      -BuildDir $buildOutputDir

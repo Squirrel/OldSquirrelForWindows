@@ -8,7 +8,7 @@ function Write-Message {
         [string[]]$Message
     )
 
-    Write-Host "Shimmer: " -f blue -nonewline;
+    Write-Host "Squirrel: " -f blue -nonewline;
     Write-Host $Message
 }
 
@@ -18,7 +18,7 @@ function Write-Error {
         [string[]]$Message
     )
 
-    Write-Host "Shimmer: " -f red -nonewline;
+    Write-Host "Squirrel: " -f red -nonewline;
     Write-Host $Message
 }
 

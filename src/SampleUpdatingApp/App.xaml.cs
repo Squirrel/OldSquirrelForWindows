@@ -1,4 +1,4 @@
-﻿using Shimmer.Client;
+﻿using Squirrel.Client;
 
 namespace SampleUpdatingApp
 {

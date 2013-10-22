@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using ReactiveUI;
 using ReactiveUI.Xaml;
-using Shimmer.Client;
+using Squirrel.Client;
 
 namespace SampleUpdatingApp
 {

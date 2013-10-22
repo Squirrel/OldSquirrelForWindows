@@ -34,7 +34,7 @@ if ($BumpVersion) {
 
 Write-Diagnostic "Building solution"
 
-. $scriptsFolder\Build-Solution.ps1 -Project "$rootFolder\src\Shimmer.sln" `
+. $scriptsFolder\Build-Solution.ps1 -Project "$rootFolder\src\Squirrel.sln" `
                                     -Build $build -Config $config
 
 Write-Diagnostic "Recreating the CreateReleasePackage package"
@@ -47,8 +47,8 @@ Write-Host "goes away"
 . $rootFolder\src\.nuget\NuGet.exe pack $rootFolder\src\CreateReleasePackage\CreateReleasePackage.csproj -Tool -OutputDirectory $rootFolder\bin\ -Verbosity quiet -NoPackageAnalysis
 
 if (Test-Path $binaries) {
-    Remove-Item "$rootFolder\bin\Shimmer.Tests.*.nupkg"
-    Remove-Item "$rootFolder\bin\Shimmer.WiXUi.*.nupkg"
+    Remove-Item "$rootFolder\bin\Squirrel.Tests.*.nupkg"
+    Remove-Item "$rootFolder\bin\Squirrel.WiXUi.*.nupkg"
 }
 
 Write-Diagnostic "Running all the tests"
@@ -56,6 +56,6 @@ Write-Diagnostic "Running all the tests"
 . $scriptsFolder\Run-UnitTests.ps1
 . $scriptsFolder\Run-PowershellTests.ps1
 
-rm ${env:LOCALAPPDATA}\Shimmer\ProjectWithContent*
-rm ${env:LOCALAPPDATA}\Shimmer\SampleUpdatingApp*
-rm ${env:LOCALAPPDATA}\Shimmer\theApp*
+rm ${env:LOCALAPPDATA}\Squirrel\ProjectWithContent*
+rm ${env:LOCALAPPDATA}\Squirrel\SampleUpdatingApp*
+rm ${env:LOCALAPPDATA}\Squirrel\theApp*

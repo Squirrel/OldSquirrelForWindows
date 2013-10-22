@@ -34,7 +34,7 @@ solution is, "Only support per-user installs".
 
 ### Syncing the packages directory
 
-The first thing that the Shimmer client will do to start the updates process, is
+The first thing that the Squirrel client will do to start the updates process, is
 download the remote version of "Releases". Comparing this file to the Releases
 file on disk will tell us whether an update is available.
 
@@ -70,7 +70,7 @@ app.
 
 ### Client-side API
 
-Referencing Shimmer.Client.dll, `UpdateManager` is all the app dev needs to use.
+Referencing Squirrel.Client.dll, `UpdateManager` is all the app dev needs to use.
 
     UpdateManager
         UpdateInfo CheckForUpdates()
@@ -97,9 +97,9 @@ And `ReleaseEntry` contains the specifics of each release:
 
 #### A note about Reactive Extensions
 
-Shimmer uses Reactive Extensions (Rx) heavily as the process necessary to
+Squirrel uses Reactive Extensions (Rx) heavily as the process necessary to
 retrieve, download and apply updates is best done asynchronously. If you
-are using the `Microsoft.Bcl.Async` package (which Shimmer also uses) you
+are using the `Microsoft.Bcl.Async` package (which Squirrel also uses) you
 can combine the Rx APIs with the TPL async/await keywords, for maximum
 simplicity.
 
@@ -145,7 +145,7 @@ await updateManager.DownloadReleases(releases);
 
 ### Apply dem Updates
 
-And lastly, once those updates have been downloaded, tell Shimmer to apply them:
+And lastly, once those updates have been downloaded, tell Squirrel to apply them:
 
 ```
 var results = await updateManager.ApplyReleases(downloadedUpdateInfo);

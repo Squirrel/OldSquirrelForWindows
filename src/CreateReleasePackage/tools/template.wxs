@@ -7,7 +7,7 @@
       DisableModify="yes">
 
     <BootstrapperApplicationRef Id="ManagedBootstrapperApplicationHost">
-      <Payload Name="BootstrapperCore.config" SourceFile="$(var.ToolsDir)\Shimmer.WiXUI.config" />
+      <Payload Name="BootstrapperCore.config" SourceFile="$(var.ToolsDir)\Squirrel.WiXUI.config" />
       <Payload SourceFile="$(var.ToolsDir)\NuGet.Core.dll" />
       <Payload SourceFile="$(var.ToolsDir)\Ionic.Zip.dll" />
       <Payload SourceFile="$(var.ToolsDir)\MarkdownSharp.dll" />
@@ -16,10 +16,10 @@
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Routing.dll" />
       <Payload SourceFile="$(var.ToolsDir)\ReactiveUI.Xaml.dll" />
       <Payload SourceFile="$(var.ToolsDir)\SharpBITS.Base.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\Shimmer.Client.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\Shimmer.Core.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\Shimmer.WiXUi.dll" />
-      <Payload SourceFile="$(var.ToolsDir)\Shimmer.WiXUiClient.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Squirrel.Client.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Squirrel.Core.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Squirrel.WiXUi.dll" />
+      <Payload SourceFile="$(var.ToolsDir)\Squirrel.WiXUiClient.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.IO.Abstractions.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Core.dll" />
       <Payload SourceFile="$(var.ToolsDir)\System.Reactive.Interfaces.dll" />
