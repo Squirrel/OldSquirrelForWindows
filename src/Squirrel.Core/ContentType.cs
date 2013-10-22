@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Xml;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     internal static class ContentType
     {

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ShimmerIAppUpdateTestTarget.Properties
+namespace SquirrelIAppUpdateTestTarget.Properties
 {
 
 

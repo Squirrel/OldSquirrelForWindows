@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public interface IProcessFactory
     {

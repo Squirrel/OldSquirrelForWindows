@@ -11,12 +11,12 @@ using System.Windows.Threading;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using ReactiveUI;
 using ReactiveUI.Routing;
-using Shimmer.Client.WiXUi;
-using Shimmer.WiXUi.ViewModels;
-using Shimmer.WiXUi.Views;
+using Squirrel.Client.WiXUi;
+using Squirrel.WiXUi.ViewModels;
+using Squirrel.WiXUi.Views;
 using LogLevel = Microsoft.Tools.WindowsInstallerXml.Bootstrapper.LogLevel;
 
-namespace Shimmer.WiXUi
+namespace Squirrel.WiXUi
 {
     public class App : BootstrapperApplication, IWiXEvents, IEnableLogger
     {
@@ -25,7 +25,7 @@ namespace Shimmer.WiXUi
 
         protected override void Run()
         {
-            RxApp.LoggerFactory = _ => new FileLogger("Shimmer") { Level = ReactiveUI.LogLevel.Info };
+            RxApp.LoggerFactory = _ => new FileLogger("Squirrel") { Level = ReactiveUI.LogLevel.Info };
             ReactiveUIMicro.RxApp.ConfigureFileLogging(); // HACK: we can do better than this later
 
             theApp = new Application();

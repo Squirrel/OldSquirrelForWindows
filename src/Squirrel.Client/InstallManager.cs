@@ -10,10 +10,10 @@ using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
-using Shimmer.Client.Extensions;
-using Shimmer.Core;
+using Squirrel.Client.Extensions;
+using Squirrel.Core;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     public interface IInstallManager
     {
@@ -40,7 +40,7 @@ namespace Shimmer.Client
 
             // NB: This bit of code is a bit clever. The binaries that WiX 
             // has installed *itself* meets the qualifications for being a
-            // Shimmer update directory (a RELEASES file and the corresponding 
+            // Squirrel update directory (a RELEASES file and the corresponding 
             // NuGet packages). 
             //
             // So, in order to reuse some code and not write the same things 

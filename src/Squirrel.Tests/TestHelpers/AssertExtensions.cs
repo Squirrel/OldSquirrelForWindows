@@ -4,7 +4,7 @@ using System.Globalization;
 using System.IO;
 using Xunit;
 
-namespace Shimmer.Tests.TestHelpers
+namespace Squirrel.Tests.TestHelpers
 {
     public static class AssertExtensions
     {

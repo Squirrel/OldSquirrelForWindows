@@ -3,12 +3,12 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
-using Shimmer.Client;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
     public class UpdateManagerTests
     {
@@ -22,9 +22,9 @@ namespace Shimmer.Tests.Client
                     var packageDir = Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                     new[] {
-                        "Shimmer.Core.1.0.0.0-full.nupkg",
-                        "Shimmer.Core.1.1.0.0-delta.nupkg",
-                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                        "Squirrel.Core.1.0.0.0-full.nupkg",
+                        "Squirrel.Core.1.1.0.0-delta.nupkg",
+                        "Squirrel.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                     var urlDownloader = new Mock<IUrlDownloader>();
@@ -54,9 +54,9 @@ namespace Shimmer.Tests.Client
                     Directory.CreateDirectory(remotePackages);
 
                     new[] {
-                        "Shimmer.Core.1.0.0.0-full.nupkg",
-                        "Shimmer.Core.1.1.0.0-delta.nupkg",
-                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                        "Squirrel.Core.1.0.0.0-full.nupkg",
+                        "Squirrel.Core.1.1.0.0-delta.nupkg",
+                        "Squirrel.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x =>
                     {
                         var path = IntegrationTestHelper.GetPath("fixtures", x);
@@ -95,9 +95,9 @@ namespace Shimmer.Tests.Client
                     Directory.CreateDirectory(remotePackages);
 
                     new[] {
-                        "Shimmer.Core.1.0.0.0-full.nupkg",
-                        "Shimmer.Core.1.1.0.0-delta.nupkg",
-                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                        "Squirrel.Core.1.0.0.0-full.nupkg",
+                        "Squirrel.Core.1.1.0.0-delta.nupkg",
+                        "Squirrel.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x =>
                     {
                         var path = IntegrationTestHelper.GetPath("fixtures", x);
@@ -105,8 +105,8 @@ namespace Shimmer.Tests.Client
                     });
 
                     new[] {
-                        "Shimmer.Core.1.0.0.0-full.nupkg",
-                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                        "Squirrel.Core.1.0.0.0-full.nupkg",
+                        "Squirrel.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x =>
                     {
                         var path = IntegrationTestHelper.GetPath("fixtures", x);
@@ -144,7 +144,7 @@ namespace Shimmer.Tests.Client
                     Directory.CreateDirectory(remotePackages);
 
                     new[] {
-                        "Shimmer.Core.1.0.0.0-full.nupkg",
+                        "Squirrel.Core.1.0.0.0-full.nupkg",
                     }.ForEach(x =>
                     {
                         var path = IntegrationTestHelper.GetPath("fixtures", x);
@@ -152,9 +152,9 @@ namespace Shimmer.Tests.Client
                     });
 
                     new[] {
-                        "Shimmer.Core.1.0.0.0-full.nupkg",
-                        "Shimmer.Core.1.1.0.0-delta.nupkg",
-                        "Shimmer.Core.1.1.0.0-full.nupkg",
+                        "Squirrel.Core.1.0.0.0-full.nupkg",
+                        "Squirrel.Core.1.1.0.0-delta.nupkg",
+                        "Squirrel.Core.1.1.0.0-full.nupkg",
                     }.ForEach(x =>
                     {
                         var path = IntegrationTestHelper.GetPath("fixtures", x);
@@ -192,7 +192,7 @@ namespace Shimmer.Tests.Client
                     var fixture = new UpdateManager(directory, "MyAppName", FrameworkVersion.Net40);
 
                     using (fixture) {
-                        Assert.Throws<ShimmerConfigurationException>(
+                        Assert.Throws<SquirrelConfigurationException>(
                             () => fixture.CheckForUpdate().Wait());
                     }
                 }
@@ -206,7 +206,7 @@ namespace Shimmer.Tests.Client
                     var fixture = new UpdateManager(tempDir, "MyAppName", FrameworkVersion.Net40);
 
                     using (fixture) {
-                        Assert.Throws<ShimmerConfigurationException>(
+                        Assert.Throws<SquirrelConfigurationException>(
                             () => fixture.CheckForUpdate().Wait());
                     }
                 }

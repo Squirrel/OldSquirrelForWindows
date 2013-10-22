@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ShimmerIAppUpdateTestTarget.Properties
+namespace SquirrelIAppUpdateTestTarget.Properties
 {
 
 
@@ -44,7 +44,7 @@ namespace ShimmerIAppUpdateTestTarget.Properties
             {
                 if ((resourceMan == null))
                 {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ShimmerIAppUpdateTestTarget.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("SquirrelIAppUpdateTestTarget.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

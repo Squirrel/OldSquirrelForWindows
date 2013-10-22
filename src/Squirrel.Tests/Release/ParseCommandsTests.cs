@@ -2,17 +2,17 @@
 using CreateReleasePackage;
 using NuGet;
 using ReactiveUI;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 
-namespace Shimmer.Tests.Release
+namespace Squirrel.Tests.Release
 {
     public class ParseCommandsTests : IEnableLogger
     {
         [Fact]
         public void NuspecMissingRequiredFieldsThrowsExceptions()
         {
-            var path = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var path = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
             var zp = new ZipPackage(path);
 
             //Use reflection to grab an instance of the private method

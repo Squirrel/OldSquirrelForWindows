@@ -170,7 +170,7 @@ pip-log.txt
 *.wixobj
 
 ## NUnit Test Output
-nunit-Shimmer.Tests.xml
+nunit-Squirrel.Tests.xml
 
 ## Pester Test Output
 tests/Test.xml

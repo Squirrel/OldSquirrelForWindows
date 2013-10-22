@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Shimmer.Core;
+using Squirrel.Core;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     public enum FrameworkVersion {
         Net40,

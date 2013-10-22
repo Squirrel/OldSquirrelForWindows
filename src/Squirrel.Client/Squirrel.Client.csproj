@@ -8,8 +8,8 @@
     <ProjectGuid>{F23CEFD4-F1BA-4C37-A834-89A5E38055DD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shimmer.Client</RootNamespace>
-    <AssemblyName>Shimmer.Client</AssemblyName>
+    <RootNamespace>Squirrel.Client</RootNamespace>
+    <AssemblyName>Squirrel.Client</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\src\</SolutionDir>
@@ -143,21 +143,21 @@
     <Compile Include="PostInstallInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShellFile.cs" />
-    <Compile Include="ShimmerConfigurationException.cs" />
+    <Compile Include="SquirrelConfigurationException.cs" />
     <Compile Include="TaskbarHelper.cs" />
     <Compile Include="UpdateInfo.cs" />
     <Compile Include="UpdateManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shimmer.Core\Shimmer.Core.csproj">
+    <ProjectReference Include="..\Squirrel.Core\Squirrel.Core.csproj">
       <Project>{3d17d46a-a411-4922-b932-9ebe2aae0ed7}</Project>
-      <Name>Shimmer.Core</Name>
+      <Name>Squirrel.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="Shimmer.Client.nuspec">
+    <None Include="Squirrel.Client.nuspec">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

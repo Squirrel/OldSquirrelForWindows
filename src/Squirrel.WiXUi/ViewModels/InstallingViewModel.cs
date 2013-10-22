@@ -3,10 +3,10 @@ using System.Reactive.Linq;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
-using Shimmer.Client.WiXUi;
-using Shimmer.Core.Extensions;
+using Squirrel.Client.WiXUi;
+using Squirrel.Core.Extensions;
 
-namespace Shimmer.WiXUi.ViewModels
+namespace Squirrel.WiXUi.ViewModels
 {
     public class InstallingViewModel : ReactiveObject, IInstallingViewModel
     {

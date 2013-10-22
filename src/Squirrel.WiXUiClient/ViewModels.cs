@@ -3,7 +3,7 @@ using NuGet;
 using ReactiveUI.Routing;
 using ReactiveUI.Xaml;
 
-namespace Shimmer.Client.WiXUi
+namespace Squirrel.Client.WiXUi
 {
     public interface IWelcomeViewModel : IRoutableViewModel
     {

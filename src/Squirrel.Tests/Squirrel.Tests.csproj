@@ -8,8 +8,8 @@
     <ProjectGuid>{EA09F209-2552-4320-9195-ED661C33D975}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shimmer.Tests</RootNamespace>
-    <AssemblyName>Shimmer.Tests</AssemblyName>
+    <RootNamespace>Squirrel.Tests</RootNamespace>
+    <AssemblyName>Squirrel.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\src\</SolutionDir>
@@ -216,21 +216,21 @@
       <Project>{DBC4253F-26BD-46D9-94E0-1413AB59613D}</Project>
       <Name>CreateReleasePackage</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shimmer.Client\Shimmer.Client.csproj">
+    <ProjectReference Include="..\Squirrel.Client\Squirrel.Client.csproj">
       <Project>{f23cefd4-f1ba-4c37-a834-89a5e38055dd}</Project>
-      <Name>Shimmer.Client</Name>
+      <Name>Squirrel.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shimmer.Core\Shimmer.Core.csproj">
+    <ProjectReference Include="..\Squirrel.Core\Squirrel.Core.csproj">
       <Project>{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}</Project>
-      <Name>Shimmer.Core</Name>
+      <Name>Squirrel.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shimmer.WiXUiClient\Shimmer.WiXUiClient.csproj">
+    <ProjectReference Include="..\Squirrel.WiXUiClient\Squirrel.WiXUiClient.csproj">
       <Project>{c8ab928d-0990-4a84-bb06-beede0c7ab14}</Project>
-      <Name>Shimmer.WiXUiClient</Name>
+      <Name>Squirrel.WiXUiClient</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shimmer.WiXUi\Shimmer.WiXUi.csproj">
+    <ProjectReference Include="..\Squirrel.WiXUi\Squirrel.WiXUi.csproj">
       <Project>{5f84c302-8216-47e0-b822-b83b65d81309}</Project>
-      <Name>Shimmer.WiXUi</Name>
+      <Name>Squirrel.WiXUi</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

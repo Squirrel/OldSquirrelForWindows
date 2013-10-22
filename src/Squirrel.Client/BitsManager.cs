@@ -9,9 +9,9 @@ using System.Text;
 using System.Threading;
 using ReactiveUIMicro;
 using SharpBits.Base;
-using Shimmer.Core;
+using Squirrel.Core;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     public interface IUrlDownloader
     {

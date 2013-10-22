@@ -5,12 +5,12 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
-using Shimmer.Client;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
     public class CheckForUpdateTests
     {

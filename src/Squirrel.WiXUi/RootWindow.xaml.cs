@@ -15,7 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
 
-namespace Shimmer.WiXUi.Views
+namespace Squirrel.WiXUi.Views
 {
     /// <summary>
     /// Interaction logic for RootWindow.xaml

@@ -13,10 +13,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
-using Shimmer.Client.WiXUi;
-using Shimmer.WiXUi.ViewModels;
+using Squirrel.Client.WiXUi;
+using Squirrel.WiXUi.ViewModels;
 
-namespace Shimmer.WiXUi.Views
+namespace Squirrel.WiXUi.Views
 {
     /// <summary>
     /// Interaction logic for UninstallingView.xaml

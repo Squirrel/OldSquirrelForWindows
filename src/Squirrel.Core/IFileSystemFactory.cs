@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Reactive;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public interface IFileSystemFactory
     {

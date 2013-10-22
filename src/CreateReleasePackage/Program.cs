@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MarkdownSharp;
-using Shimmer.Core;
+using Squirrel.Core;
 
 namespace CreateReleasePackage
 {

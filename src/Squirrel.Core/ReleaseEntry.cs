@@ -8,9 +8,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NuGet;
 using ReactiveUIMicro;
-using Shimmer.Core.Extensions;
+using Squirrel.Core.Extensions;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public interface IReleaseEntry
     {

@@ -3,9 +3,9 @@ using System.Reactive.Linq;
 using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
-using Shimmer.Client.WiXUi;
+using Squirrel.Client.WiXUi;
 
-namespace Shimmer.WiXUi.ViewModels
+namespace Squirrel.WiXUi.ViewModels
 {
     public class UninstallingViewModel : ReactiveObject, IUninstallingViewModel
     {

@@ -4,7 +4,7 @@ $project.Object.Project.ProjectItems.Item("keep.me").Delete()
 
 Import-Module (Join-Path $toolsPath utilities.psm1)
 
-function Initialize-Shimmer {
+function Initialize-Squirrel {
     [CmdletBinding()]
     param (
         [Parameter(Position=0, ValueFromPipeLine=$true)]
@@ -39,5 +39,5 @@ function Initialize-Shimmer {
 
 Write-Message "Now to setup the project - so you don't have to..."
 Write-Host
-Initialize-Shimmer
+Initialize-Squirrel
 Write-Host

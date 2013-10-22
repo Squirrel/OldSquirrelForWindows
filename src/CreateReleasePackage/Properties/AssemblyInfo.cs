@@ -6,10 +6,10 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("CreateReleasePackage")]
-[assembly: AssemblyDescription("Tool to convert normal NuGet packages into a Shimmer release directory")]
+[assembly: AssemblyDescription("Tool to convert normal NuGet packages into a Squirrel release directory")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GitHub")]
-[assembly: AssemblyProduct("Shimmer")]
+[assembly: AssemblyProduct("Squirrel")]
 [assembly: AssemblyCopyright("Copyright © 2012 GitHub")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

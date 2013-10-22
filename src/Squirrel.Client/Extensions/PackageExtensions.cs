@@ -2,7 +2,7 @@
 using System.Linq;
 using NuGet;
 
-namespace Shimmer.Client.Extensions
+namespace Squirrel.Client.Extensions
 {
     public static class PackageExtensions
     {

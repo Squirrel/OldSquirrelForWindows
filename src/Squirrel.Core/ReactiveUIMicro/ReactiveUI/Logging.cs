@@ -153,7 +153,7 @@ namespace ReactiveUIMicro
             var fileName = String.Format("{0}-{1}.txt", appName, id);
             directoryPath = Path.Combine(
                                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                "Shimmer");
+                                "Squirrel");
             filePath = Path.Combine(directoryPath, fileName);
             messageFormat = "[{0}][{1}] {2}";
         }

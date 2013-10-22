@@ -2,10 +2,10 @@
 using Moq;
 using NuGet;
 using ReactiveUI.Routing;
-using Shimmer.WiXUi.ViewModels;
+using Squirrel.WiXUi.ViewModels;
 using Xunit;
 
-namespace Shimmer.Tests.WiXUi
+namespace Squirrel.Tests.WiXUi
 {
     public class WelcomeViewModelTests
     {

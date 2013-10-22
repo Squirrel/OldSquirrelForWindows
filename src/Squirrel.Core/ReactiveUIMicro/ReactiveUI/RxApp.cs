@@ -337,7 +337,7 @@ namespace ReactiveUIMicro
             return _getService != null && _getAllServices != null;
         }
 
-        public static void ConfigureFileLogging(string appName = "Shimmer")
+        public static void ConfigureFileLogging(string appName = "Squirrel")
         {
             LoggerFactory = _ => new FileLogger(appName) { Level = LogLevel.Info };
         }

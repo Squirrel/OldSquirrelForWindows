@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using ReactiveUI;
 
-namespace Shimmer.WiXUi
+namespace Squirrel.WiXUi
 {
     public class FileLogger : IRxUILogger
     {
@@ -24,7 +24,7 @@ namespace Shimmer.WiXUi
             get {
                 return Path.Combine(
                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                               "Shimmer");
+                               "Squirrel");
             }
         }
         

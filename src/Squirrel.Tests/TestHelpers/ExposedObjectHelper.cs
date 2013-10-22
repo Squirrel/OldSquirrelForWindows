@@ -6,7 +6,7 @@ using System.Dynamic;
 
 // Lovingly stolen from http://exposedobject.codeplex.com/
 
-namespace Shimmer.Tests.TestHelpers
+namespace Squirrel.Tests.TestHelpers
 {
     internal class ExposedObjectHelper
     {

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Shimmer.Tests")]
+[assembly: AssemblyTitle("Squirrel.Tests")]
 [assembly: AssemblyDescription("Dont Use This Package")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GitHub")]
-[assembly: AssemblyProduct("Shimmer.Tests")]
+[assembly: AssemblyProduct("Squirrel.Tests")]
 [assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -8,11 +8,11 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using Ionic.Zip;
-using Shimmer.Core;
+using Squirrel.Core;
 using ReactiveUI;
-using Shimmer.Tests.WiXUi;
+using Squirrel.Tests.WiXUi;
 
-namespace Shimmer.Tests.TestHelpers
+namespace Squirrel.Tests.TestHelpers
 {
     public static class IntegrationTestHelper
     {

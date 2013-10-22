@@ -2,7 +2,7 @@
 using System.Security;
 using System.Security.Permissions;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public static class AppDomainHelper
     {

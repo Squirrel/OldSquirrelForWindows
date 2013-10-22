@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Shimmer.Core")]
-[assembly: AssemblyDescription("Core routines for manipulating and creating Shimmer release packages")]
+[assembly: AssemblyTitle("Squirrel.Core")]
+[assembly: AssemblyDescription("Core routines for manipulating and creating Squirrel release packages")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GitHub")]
-[assembly: AssemblyProduct("Shimmer")]
+[assembly: AssemblyProduct("Squirrel")]
 [assembly: AssemblyCopyright("Copyright © 2012 GitHub")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -34,5 +34,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("0.7.4")]
 [assembly: AssemblyInformationalVersion("0.7.4")]
 
-[assembly: InternalsVisibleTo("Shimmer.Client")]
-[assembly: InternalsVisibleTo("Shimmer.Tests")]
+[assembly: InternalsVisibleTo("Squirrel.Client")]
+[assembly: InternalsVisibleTo("Squirrel.Tests")]

@@ -7,7 +7,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Diagnostics.Contracts;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public static class Http
     {

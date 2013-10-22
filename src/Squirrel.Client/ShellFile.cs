@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 // All of this code is from http://vbaccelerator.com/home/NET/Code/Libraries/Shell_Projects/Creating_and_Modifying_Shortcuts/article.asp
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     #region ShellLink Object
 

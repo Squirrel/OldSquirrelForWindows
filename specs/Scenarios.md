@@ -3,7 +3,7 @@
 #### Production
 
 I'm a developer with a WPF application. I have *zero* way to distribute my
-application at the moment. I go to NuGet and install the Shimmer client library.
+application at the moment. I go to NuGet and install the Squirrel client library.
 
 Now, I want to publish a release. To do so, I pop into the PowerShell Console
 and type `New-Release`. What does this do? It:
@@ -13,7 +13,7 @@ and type `New-Release`. What does this do? It:
   perhaps with a special "delta package" for updates)
 * It also creates a Setup.exe that I can distribute to people
 * Can also transform `changelog.md` to `changelog.html` using the bundled
-  Markdown library that ships with Shimmer
+  Markdown library that ships with Squirrel
 
 I've created a new release. Now, I want to share it with the world! I upload
 the contents of my Releases directory verbatim to the web via S3 / FTP /

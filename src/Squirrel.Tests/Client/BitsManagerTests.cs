@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
-using Shimmer.Client;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using ReactiveUI;
 using Xunit;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
 #if FALSE
     public class BitsManagerTests

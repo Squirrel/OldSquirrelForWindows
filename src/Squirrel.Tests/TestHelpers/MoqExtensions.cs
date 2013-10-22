@@ -5,7 +5,7 @@ using System.Threading;
 using Moq;
 using ReactiveUI;
 
-namespace Shimmer.Tests.TestHelpers
+namespace Squirrel.Tests.TestHelpers
 {
     public static class MoqExtensions
     {

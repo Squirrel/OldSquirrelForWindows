@@ -1,8 +1,8 @@
 using System;
 using ReactiveUI.Routing;
-using Shimmer.Core;
+using Squirrel.Core;
 
-namespace Shimmer.Client.WiXUi
+namespace Squirrel.Client.WiXUi
 {
     public interface IWixUiBootstrapper : IScreen
     {

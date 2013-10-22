@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows;
 using ReactiveUI;
-using Shimmer.WiXUi.ViewModels;
+using Squirrel.WiXUi.ViewModels;
 
-namespace Shimmer.WiXUi.Views
+namespace Squirrel.WiXUi.Views
 {
     public partial class InstallingView : IViewFor<InstallingViewModel>
     {

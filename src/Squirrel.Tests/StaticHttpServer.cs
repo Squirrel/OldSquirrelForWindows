@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Shimmer.Tests
+namespace Squirrel.Tests
 {
     public sealed class StaticHttpServer : IDisposable
     {

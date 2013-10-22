@@ -17,7 +17,7 @@ $scriptPath = Split-Path $MyInvocation.MyCommand.Path
 $rootDirectory = join-path $scriptPath ..
 $srcFolder = join-path $scriptPath "..\src"
 
-$projFile = join-path $srcFolder Shimmer.sln
+$projFile = join-path $srcFolder Squirrel.sln
 $nugetExe = join-path $srcFolder .nuget\NuGet.exe
 
 . $nugetExe config -Set Verbosity=quiet

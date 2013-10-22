@@ -8,8 +8,8 @@
     <ProjectGuid>{3D17D46A-A411-4922-B932-9EBE2AAE0ED7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shimmer.Core</RootNamespace>
-    <AssemblyName>Shimmer.Core</AssemblyName>
+    <RootNamespace>Squirrel.Core</RootNamespace>
+    <AssemblyName>Squirrel.Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\src\</SolutionDir>
@@ -158,7 +158,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="ReactiveUIMicro\Rx-Shim\LICENSE" />
-    <None Include="Shimmer.Core.nuspec" />
+    <None Include="Squirrel.Core.nuspec" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

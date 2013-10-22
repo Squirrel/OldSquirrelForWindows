@@ -1,9 +1,9 @@
 ﻿using System;
 using NuGet;
-using Shimmer.Core;
+using Squirrel.Core;
 using Xunit;
 
-namespace Shimmer.Tests.Core
+namespace Squirrel.Tests.Core
 {
     public class VersionComparerTests
     {

@@ -7,8 +7,8 @@
     <ProjectGuid>{C8AB928D-0990-4A84-BB06-BEEDE0C7AB14}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shimmer.WiXUiClient</RootNamespace>
-    <AssemblyName>Shimmer.WiXUiClient</AssemblyName>
+    <RootNamespace>Squirrel.WiXUiClient</RootNamespace>
+    <AssemblyName>Squirrel.WiXUiClient</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -121,16 +121,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Shimmer.WixUiClient.nuspec" />
+    <None Include="Squirrel.WixUiClient.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shimmer.Client\Shimmer.Client.csproj">
+    <ProjectReference Include="..\Squirrel.Client\Squirrel.Client.csproj">
       <Project>{f23cefd4-f1ba-4c37-a834-89a5e38055dd}</Project>
-      <Name>Shimmer.Client</Name>
+      <Name>Squirrel.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shimmer.Core\Shimmer.Core.csproj">
+    <ProjectReference Include="..\Squirrel.Core\Squirrel.Core.csproj">
       <Project>{3d17d46a-a411-4922-b932-9ebe2aae0ed7}</Project>
-      <Name>Shimmer.Core</Name>
+      <Name>Squirrel.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

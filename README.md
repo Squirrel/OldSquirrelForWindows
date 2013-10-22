@@ -1,9 +1,9 @@
-# Shimmer: It's like ClickOnce but Works™
+# Squirrel: It's like ClickOnce but Works™
 
 ## Relevant Links
 
- - [Wiki](https://github.com/github/Shimmer/wiki)
- - [Contributing to Shimmer](https://github.com/github/Shimmer/wiki/Contributing-to-Shimmer)
+ - [Wiki](https://github.com/github/Squirrel/wiki)
+ - [Contributing to Squirrel](https://github.com/github/Squirrel/wiki/Contributing-to-Squirrel)
 
 ## What Do We Want?
 
@@ -49,7 +49,7 @@ without having to jump through insane hoops
 ### Want to learn more?
 
 Check out 
-[the specs directory](https://github.com/github/Shimmer/tree/master/specs) for
+[the specs directory](https://github.com/github/Squirrel/tree/master/specs) for
 more information about how the framework works.
 
 ## Getting Started
@@ -58,16 +58,16 @@ After cloning this repository, run the `script\bootstrap.ps1` script to fetch
 the necessary NuGet packages (until NuGet supports this natively and won't 
 break your solution on opening).
 
-Then you can open the `src\Shimmer.sln` solution in Visual Studio to explore 
+Then you can open the `src\Squirrel.sln` solution in Visual Studio to explore 
 all the bits.
 
-Shimmer itself is made up of four components:
+Squirrel itself is made up of four components:
 
- - **Shimmer.Core** - the logic shared between the installation and updating 
+ - **Squirrel.Core** - the logic shared between the installation and updating 
  of your application.
- - **Shimmer.Client** - the component responsible for detecting, downloading 
+ - **Squirrel.Client** - the component responsible for detecting, downloading 
  and installing updates once your application has been installed.
- - **Shimmer** - the component responsible for generating the Shimmer 
+ - **Squirrel** - the component responsible for generating the Squirrel 
  packages and creating the WiX installer.
- - **Shimmer.WiXUiClient** - the components for creating a custom WPF 
+ - **Squirrel.WiXUiClient** - the components for creating a custom WPF 
  install experience as part of your application.

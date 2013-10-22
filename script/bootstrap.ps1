@@ -10,4 +10,4 @@ git submodule init
 $nuget = "$srcFolder\.nuget\nuget.exe"
 
 . $nuget config -Set Verbosity=quiet
-. $nuget restore "$srcFolder\Shimmer.sln" -OutputDirectory "$srcFolder\packages"
+. $nuget restore "$srcFolder\Squirrel.sln" -OutputDirectory "$srcFolder\packages"

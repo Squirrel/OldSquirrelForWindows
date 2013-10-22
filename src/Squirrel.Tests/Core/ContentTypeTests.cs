@@ -5,13 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 using Xunit.Extensions;
 using Assert = Xunit.Assert;
 
-namespace Shimmer.Tests.Core
+namespace Squirrel.Tests.Core
 {
     public class ContentTypeTests
     {

@@ -1,16 +1,16 @@
 ﻿using NuGet;
-using Shimmer.Client;
-using Shimmer.Client.Extensions;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Client.Extensions;
+using Squirrel.Tests.TestHelpers;
 using Xunit.Extensions;
 using Assert = Xunit.Assert;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
     public class PackageExtensionsTests
     {
         [Theory]
-        [InlineData("Shimmer.Core.1.0.0.0-full.nupkg", FrameworkVersion.Net40)]
+        [InlineData("Squirrel.Core.1.0.0.0-full.nupkg", FrameworkVersion.Net40)]
         [InlineData("Caliburn.Micro.1.5.2.nupkg", FrameworkVersion.Net45)]
         public void DetectFrameworkVersion(string packageName, FrameworkVersion expected)
         {

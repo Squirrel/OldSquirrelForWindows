@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Shimmer.Core.Extensions
+namespace Squirrel.Core.Extensions
 {
     public static class VersionExtensions
     {

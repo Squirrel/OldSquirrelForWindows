@@ -12,12 +12,12 @@ using System.Threading;
 using Moq;
 using NuGet;
 using ReactiveUI;
-using Shimmer.Client;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
     public class ApplyReleasesTests : IEnableLogger
     {
@@ -52,7 +52,7 @@ namespace Shimmer.Tests.Client
                 var packages = Path.Combine(tempDir, "theApp", "packages");
                 Directory.CreateDirectory(packages);
 
-                var package = "Shimmer.Core.1.0.0.0-full.nupkg";
+                var package = "Squirrel.Core.1.0.0.0-full.nupkg";
                 File.Copy(IntegrationTestHelper.GetPath("fixtures", package),
                           Path.Combine(packages, package));
 
@@ -75,13 +75,13 @@ namespace Shimmer.Tests.Client
                 var packages = Path.Combine(tempDir, "theApp", "packages");
                 Directory.CreateDirectory(packages);
 
-                var baseFile = "Shimmer.Core.1.0.0.0-full.nupkg";
+                var baseFile = "Squirrel.Core.1.0.0.0-full.nupkg";
                 File.Copy(IntegrationTestHelper.GetPath("fixtures", baseFile),
                           Path.Combine(packages, baseFile));
                 var basePackage = Path.Combine(packages, baseFile);
                 var baseEntry = ReleaseEntry.GenerateFromFile(basePackage);
 
-                var deltaFile = "Shimmer.Core.1.1.0.0-delta.nupkg";
+                var deltaFile = "Squirrel.Core.1.1.0.0-delta.nupkg";
                 File.Copy(IntegrationTestHelper.GetPath("fixtures", deltaFile),
                           Path.Combine(packages, deltaFile));
                 var deltaPackage = Path.Combine(packages, deltaFile);
@@ -102,14 +102,14 @@ namespace Shimmer.Tests.Client
                 Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                 new[] {
-                    "Shimmer.Core.1.0.0.0-full.nupkg",
-                    "Shimmer.Core.1.1.0.0-full.nupkg",
+                    "Squirrel.Core.1.0.0.0-full.nupkg",
+                    "Squirrel.Core.1.1.0.0-full.nupkg",
                 }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.0.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
 
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
@@ -151,14 +151,14 @@ namespace Shimmer.Tests.Client
                 Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                 new[] {
-                    "Shimmer.Core.1.1.0.0-full.nupkg",
-                    "Shimmer.Core.1.2.0.0-full.nupkg",
+                    "Squirrel.Core.1.1.0.0-full.nupkg",
+                    "Squirrel.Core.1.2.0.0-full.nupkg",
                 }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.2.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.2.0.0-full.nupkg"));
 
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
@@ -200,14 +200,14 @@ namespace Shimmer.Tests.Client
                 Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                 new[] {
-                    "Shimmer.Core.1.1.0.0-full.nupkg",
-                    "Shimmer.Core.1.3.0.0-full.nupkg",
+                    "Squirrel.Core.1.1.0.0-full.nupkg",
+                    "Squirrel.Core.1.3.0.0-full.nupkg",
                 }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.3.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.3.0.0-full.nupkg"));
 
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
@@ -250,16 +250,16 @@ namespace Shimmer.Tests.Client
                 Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                 new[] {
-                    "Shimmer.Core.1.0.0.0-full.nupkg",
-                    "Shimmer.Core.1.1.0.0-delta.nupkg",
-                    "Shimmer.Core.1.1.0.0-full.nupkg",
+                    "Squirrel.Core.1.0.0.0-full.nupkg",
+                    "Squirrel.Core.1.1.0.0-delta.nupkg",
+                    "Squirrel.Core.1.1.0.0-full.nupkg",
                 }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
-                var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-delta.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.0.0.0-full.nupkg"));
+                var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-delta.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
 
                 var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, "dontcare", FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
@@ -300,15 +300,15 @@ namespace Shimmer.Tests.Client
                 Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
 
                 new[] {
-                    "Shimmer.Core.1.0.0.0-full.nupkg",
-                    "Shimmer.Core.1.1.0.0-delta.nupkg"
+                    "Squirrel.Core.1.0.0.0-full.nupkg",
+                    "Squirrel.Core.1.1.0.0-delta.nupkg"
                 }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
 
                 var urlDownloader = new Mock<IUrlDownloader>();
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, urlDownloader.Object);
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.0.0.0-full.nupkg"));
-                var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Shimmer.Core.1.1.0.0-delta.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.0.0.0-full.nupkg"));
+                var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-delta.nupkg"));
 
                 var resultObs = (IObservable<ReleaseEntry>)fixture.GetType().GetMethod("createFullPackagesFromDeltas", BindingFlags.NonPublic | BindingFlags.Instance)
                     .Invoke(fixture, new object[] { new[] {deltaEntry}, baseEntry });
@@ -335,7 +335,7 @@ namespace Shimmer.Tests.Client
                 var di = Path.Combine(tempDir, "theApp", "app-1.1.0.0");
                 Directory.CreateDirectory(di);
 
-                File.Copy(getPathToShimmerTestTarget(), Path.Combine(di, "ShimmerIAppUpdateTestTarget.exe"));
+                File.Copy(getPathToSquirrelTestTarget(), Path.Combine(di, "SquirrelIAppUpdateTestTarget.exe"));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
 
@@ -358,7 +358,7 @@ namespace Shimmer.Tests.Client
                 var di = Path.Combine(tempDir, "theApp", "app-1.1.0.0");
                 Directory.CreateDirectory(di);
 
-                File.Copy(getPathToShimmerTestTarget(), Path.Combine(di, "ShimmerIAppUpdateTestTarget.exe"));
+                File.Copy(getPathToSquirrelTestTarget(), Path.Combine(di, "SquirrelIAppUpdateTestTarget.exe"));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
 
@@ -387,7 +387,7 @@ namespace Shimmer.Tests.Client
                 var di = Path.Combine(tempDir, "theApp", "app-1.1.0.0");
                 Directory.CreateDirectory(di);
 
-                File.Copy(getPathToShimmerTestTarget(), Path.Combine(di, "ShimmerIAppUpdateTestTarget.exe"));
+                File.Copy(getPathToSquirrelTestTarget(), Path.Combine(di, "SquirrelIAppUpdateTestTarget.exe"));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, null);
 
@@ -453,7 +453,7 @@ namespace Shimmer.Tests.Client
             }
         }
 
-        string getPathToShimmerTestTarget()
+        string getPathToSquirrelTestTarget()
         {
 #if DEBUG
             const string config = "Debug";
@@ -461,7 +461,7 @@ namespace Shimmer.Tests.Client
             const string config = "Release";
 #endif
 
-            var ret = IntegrationTestHelper.GetPath("..", "ShimmerIAppUpdateTestTarget", "bin", config, "ShimmerIAppUpdateTestTarget.exe");
+            var ret = IntegrationTestHelper.GetPath("..", "SquirrelIAppUpdateTestTarget", "bin", config, "SquirrelIAppUpdateTestTarget.exe");
             File.Exists(ret).ShouldBeTrue();
 
             return ret;

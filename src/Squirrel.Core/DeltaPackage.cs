@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using Ionic.Zip;
 using ReactiveUIMicro;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public interface IDeltaPackageBuilder
     {

@@ -8,19 +8,19 @@ using System.Reactive.Subjects;
 using System.Text;
 using Moq;
 using ReactiveUI;
-using Shimmer.Client;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
     public class DownloadReleasesTests : IEnableLogger
     {
         [Fact]
         public void ChecksumShouldPassOnValidPackages()
         {
-            var filename = "Shimmer.Core.1.0.0.0.nupkg";
+            var filename = "Squirrel.Core.1.0.0.0.nupkg";
             var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
             var fs = new Mock<IFileSystemFactory>();
             var urlDownloader = new Mock<IUrlDownloader>();
@@ -46,7 +46,7 @@ namespace Shimmer.Tests.Client
         [Fact]
         public void ChecksumShouldFailIfFilesAreMissing()
         {
-            var filename = "Shimmer.Core.1.0.0.0.nupkg";
+            var filename = "Squirrel.Core.1.0.0.0.nupkg";
             var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
             var fs = new Mock<IFileSystemFactory>();
             var urlDownloader = new Mock<IUrlDownloader>();
@@ -80,7 +80,7 @@ namespace Shimmer.Tests.Client
         [Fact]
         public void ChecksumShouldFailIfFilesAreBogus()
         {
-            var filename = "Shimmer.Core.1.0.0.0.nupkg";
+            var filename = "Squirrel.Core.1.0.0.0.nupkg";
             var nuGetPkg = IntegrationTestHelper.GetPath("fixtures", filename);
             var fs = new Mock<IFileSystemFactory>();
             var urlDownloader = new Mock<IUrlDownloader>();

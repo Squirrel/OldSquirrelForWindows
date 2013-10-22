@@ -5,9 +5,9 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Reflection;
 using ReactiveUIMicro;
-using Shimmer.Core;
+using Squirrel.Core;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     [Serializable]
     class InstallerHookOperations

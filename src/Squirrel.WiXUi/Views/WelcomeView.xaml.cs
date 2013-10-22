@@ -2,9 +2,9 @@
 using System.Windows;
 using ReactiveUI;
 using ReactiveUI.Xaml;
-using Shimmer.WiXUi.ViewModels;
+using Squirrel.WiXUi.ViewModels;
 
-namespace Shimmer.WiXUi.Views
+namespace Squirrel.WiXUi.Views
 {
     public partial class WelcomeView : IViewFor<WelcomeViewModel>
     {

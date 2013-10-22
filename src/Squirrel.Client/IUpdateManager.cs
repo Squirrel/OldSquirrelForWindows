@@ -8,9 +8,9 @@ using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
-using Shimmer.Core;
+using Squirrel.Core;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     [ContractClass(typeof(UpdateManagerContracts))]
     public interface IUpdateManager : IDisposable

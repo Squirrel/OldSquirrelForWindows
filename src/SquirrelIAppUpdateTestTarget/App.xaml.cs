@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace ShimmerIAppUpdateTestTarget
+namespace SquirrelIAppUpdateTestTarget
 {
     public partial class App
     {

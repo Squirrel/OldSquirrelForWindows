@@ -2,8 +2,8 @@
 using MarkdownSharp;
 using NuGet;
 using ReactiveUI;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,14 +12,14 @@ using System.Reflection;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Shimmer.Tests.Core
+namespace Squirrel.Tests.Core
 {
     public class CreateReleasePackageTests : IEnableLogger
     {
         [Fact]
         public void ReleasePackageIntegrationTest()
         {
-            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
             var outputPackage = Path.GetTempFileName() + ".nupkg";
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
 
@@ -55,7 +55,7 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void FindPackageInOurLocalPackageList()
         {
-            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
@@ -70,7 +70,7 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void FindDependentPackagesForDummyPackage()
         {
-            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
             var fixture = ExposedObject.From(new ReleasePackage(inputPackage));
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
@@ -82,7 +82,7 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void CanLoadPackageWhichHasNoDependencies()
         {
-            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.NoDependencies.1.0.0.0.nupkg");
+            var inputPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.NoDependencies.1.0.0.0.nupkg");
             var outputPackage = Path.GetTempFileName() + ".nupkg";
             var fixture = new ReleasePackage(inputPackage);
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
@@ -136,8 +136,8 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void SpecFileMarkdownRenderingTest()
         {
-            var dontcare = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
-            var inputSpec = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nuspec");
+            var dontcare = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
+            var inputSpec = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nuspec");
             var fixture = new ReleasePackage(dontcare);
 
             var targetFile = Path.GetTempFileName();

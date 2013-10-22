@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Shimmer.WiXUiClient")]
-[assembly: AssemblyDescription("Shimmer library for creating custom Setup UIs")]
+[assembly: AssemblyTitle("Squirrel.WiXUiClient")]
+[assembly: AssemblyDescription("Squirrel library for creating custom Setup UIs")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GitHub")]
-[assembly: AssemblyProduct("Shimmer")]
+[assembly: AssemblyProduct("Squirrel")]
 [assembly: AssemblyCopyright("Copyright © 2012 GitHub")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

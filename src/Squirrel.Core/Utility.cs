@@ -17,7 +17,7 @@ using System.Security.Principal;
 using System.Threading;
 using ReactiveUIMicro;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     public static class Utility
     {

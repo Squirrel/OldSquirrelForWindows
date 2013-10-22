@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
-    public class ShimmerConfigurationException : Exception
+    public class SquirrelConfigurationException : Exception
     {
-        public ShimmerConfigurationException(string message) : base(message) { }
+        public SquirrelConfigurationException(string message) : base(message) { }
     }
 }

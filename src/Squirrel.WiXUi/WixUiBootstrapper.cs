@@ -13,16 +13,16 @@ using NuGet;
 using ReactiveUI;
 using ReactiveUI.Routing;
 using ReactiveUI.Xaml;
-using Shimmer.Client;
-using Shimmer.Client.WiXUi;
-using Shimmer.Core;
-using Shimmer.WiXUi.Views;
+using Squirrel.Client;
+using Squirrel.Client.WiXUi;
+using Squirrel.Core;
+using Squirrel.WiXUi.Views;
 using TinyIoC;
 
 using Path = System.IO.Path;
 using FileNotFoundException = System.IO.FileNotFoundException;
 
-namespace Shimmer.WiXUi.ViewModels
+namespace Squirrel.WiXUi.ViewModels
 {
     public class WixUiBootstrapper : ReactiveObject, IWixUiBootstrapper
     {
@@ -116,12 +116,12 @@ namespace Shimmer.WiXUi.ViewModels
                 if (wixEvents.Action == LaunchAction.Uninstall) {
 
                     if (wixEvents.DisplayMode != Display.Full) {
-                        this.Log().Info("Shimmer is doing a silent uninstall! Sneaky!");
+                        this.Log().Info("Squirrel is doing a silent uninstall! Sneaky!");
                         wixEvents.Engine.Plan(LaunchAction.Uninstall);
                         return;
                     }
 
-                    this.Log().Info("Shimmer is doing an uninstall! Sadface!");
+                    this.Log().Info("Squirrel is doing an uninstall! Sadface!");
                     var uninstallVm = RxApp.GetService<IUninstallingViewModel>();
                     Router.Navigate.Execute(uninstallVm);
                     wixEvents.Engine.Plan(LaunchAction.Uninstall);
@@ -134,7 +134,7 @@ namespace Shimmer.WiXUi.ViewModels
                 if (wixEvents.Action == LaunchAction.Install) {
                     
                     if (wixEvents.DisplayMode != Display.Full) {
-                        this.Log().Info("Shimmer is doing a silent install! Sneaky!");
+                        this.Log().Info("Squirrel is doing a silent install! Sneaky!");
                         wixEvents.Engine.Plan(LaunchAction.Install);
                         return;
                     }

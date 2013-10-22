@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     public class DidntFollowInstructionsAppSetup : AppSetup
     {

@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Shimmer.Client 
+namespace Squirrel.Client 
 {
     public static class TaskbarHelper 
     {

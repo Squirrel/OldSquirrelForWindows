@@ -1,7 +1,7 @@
 ﻿using System;
 using NuGet;
 
-namespace Shimmer.Core.Extensions
+namespace Squirrel.Core.Extensions
 {
     public static class PackageExtensions
     {

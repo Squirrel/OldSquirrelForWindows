@@ -1,22 +1,22 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Shimmer</id>
+    <id>Squirrel</id>
     <version>$version$</version>
-    <title>Shimmer</title>
+    <title>Squirrel</title>
     <description>It's like ClickOnce but Works™</description>
     <authors>$author$</authors>
     <owners>$author$</owners>
-    <licenseUrl>https://github.com/github/Shimmer/blob/master/COPYING</licenseUrl>
-    <projectUrl>https://github.com/github/Shimmer/blob/master</projectUrl>
+    <licenseUrl>https://github.com/github/Squirrel/blob/master/COPYING</licenseUrl>
+    <projectUrl>https://github.com/github/Squirrel/blob/master</projectUrl>
     <iconUrl>http://f.cl.ly/items/1G1J1l220W0J1W2R1o2E/Image%202012.09.06%204:03:56%20PM.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>Copyright 2012 GitHub</copyright>
     <tags>Installer Desktop WiX</tags>
 
     <dependencies>
-      <dependency id="Shimmer.Core" version="[$version$]" />
-      <dependency id="Shimmer.Client" version="[$version$]" />
+      <dependency id="Squirrel.Core" version="[$version$]" />
+      <dependency id="Squirrel.Client" version="[$version$]" />
     </dependencies>
   </metadata>
 
@@ -34,11 +34,11 @@
     <file src="..\..\bin\ReactiveUI.Routing.dll" target="tools" />
     <file src="..\..\bin\ReactiveUI.Xaml.dll" target="tools" />
     <file src="..\..\bin\SharpBITS.Base.dll" target="tools" />
-    <file src="..\..\bin\Shimmer.Client.dll" target="tools" />
-    <file src="..\..\bin\Shimmer.Core.dll" target="tools" />
-    <file src="..\..\bin\Shimmer.WiXUI.config" target="tools" />
-    <file src="..\..\bin\Shimmer.WiXUi.dll" target="tools" />
-    <file src="..\..\bin\Shimmer.WiXUiClient.dll" target="tools" />
+    <file src="..\..\bin\Squirrel.Client.dll" target="tools" />
+    <file src="..\..\bin\Squirrel.Core.dll" target="tools" />
+    <file src="..\..\bin\Squirrel.WiXUI.config" target="tools" />
+    <file src="..\..\bin\Squirrel.WiXUi.dll" target="tools" />
+    <file src="..\..\bin\Squirrel.WiXUiClient.dll" target="tools" />
     <file src="..\..\bin\System.IO.Abstractions.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.Core.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.Interfaces.dll" target="tools" />

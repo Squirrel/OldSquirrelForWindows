@@ -1,11 +1,11 @@
 ﻿using ReactiveUI;
 using ReactiveUI.Xaml;
-using Shimmer.WiXUi.ViewModels;
+using Squirrel.WiXUi.ViewModels;
 using System;
 using System.Reactive.Linq;
 using System.Windows;
 
-namespace Shimmer.WiXUi.Views
+namespace Squirrel.WiXUi.Views
 {
     public partial class ErrorView : IViewFor<ErrorViewModel>
     {

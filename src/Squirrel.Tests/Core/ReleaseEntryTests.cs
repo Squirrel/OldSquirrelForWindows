@@ -2,12 +2,12 @@
 using System.IO;
 using System.Linq;
 using Moq;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 using Xunit.Extensions;
 
-namespace Shimmer.Tests.Core
+namespace Squirrel.Tests.Core
 {
     public class ReleaseEntryTests
     {
@@ -23,8 +23,8 @@ namespace Shimmer.Tests.Core
         }
 
         [Theory]
-        [InlineData("Shimmer.Core.1.0.0.0.nupkg", 4457, "75255cfd229a1ed1447abe1104f5635e69975d30")]
-        [InlineData("Shimmer.Core.1.1.0.0.nupkg", 15830, "9baf1dbacb09940086c8c62d9a9dbe69fe1f7593")]
+        [InlineData("Squirrel.Core.1.0.0.0.nupkg", 4457, "75255cfd229a1ed1447abe1104f5635e69975d30")]
+        [InlineData("Squirrel.Core.1.1.0.0.nupkg", 15830, "9baf1dbacb09940086c8c62d9a9dbe69fe1f7593")]
         public void GenerateFromFileTest(string name, long size, string sha1)
         {
             var path = IntegrationTestHelper.GetPath("fixtures", name);
@@ -51,7 +51,7 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void CanParseGeneratedReleaseEntryAsString()
         {
-            var path = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var path = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
             var entryAsString = ReleaseEntry.GenerateFromFile(path).EntryAsString;
             ReleaseEntry.ParseReleaseEntry(entryAsString);
         }
@@ -59,7 +59,7 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void InvalidReleaseNotesThrowsException()
         {
-            var path = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var path = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
             var fixture = ReleaseEntry.GenerateFromFile(path);
             Assert.Throws<Exception>(() => fixture.GetReleaseNotes(IntegrationTestHelper.GetPath("fixtures")));
         }

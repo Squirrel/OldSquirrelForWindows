@@ -7,7 +7,7 @@ using System.Reflection;
 
 // Lovingly stolen from http://exposedobject.codeplex.com/
 
-namespace Shimmer.Tests.TestHelpers
+namespace Squirrel.Tests.TestHelpers
 {
     public class ExposedObject : DynamicObject
     {

@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Authentication;
-using Shimmer.Client;
+using Squirrel.Client;
 
-namespace ShimmerIAppUpdateTestTarget
+namespace SquirrelIAppUpdateTestTarget
 {
     // NB: CAUTION!! If you change this code, you *must* Rebuild All in order 
     // to see the changes you've made - since VS doesn't know that this is

@@ -4,7 +4,7 @@
            Name="DummyInstaller"
            Language="1033"
            Version="1.0.0.0"
-           Manufacturer="Shimmer"
+           Manufacturer="Squirrel"
            UpgradeCode="75479fad-42bc-4d3c-a4ad-b4056458a10e">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" />
 

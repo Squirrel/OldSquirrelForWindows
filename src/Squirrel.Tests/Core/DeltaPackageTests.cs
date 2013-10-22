@@ -4,21 +4,21 @@ using System.Linq;
 using System.Reactive.Linq;
 using NuGet;
 using ReactiveUI;
-using Shimmer.Client;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
+using Squirrel.Client;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
 using Xunit;
 
-namespace Shimmer.Tests.Core
+namespace Squirrel.Tests.Core
 {
     public class ApplyDeltaPackageTests : IEnableLogger
     {
         [Fact]
         public void ApplyDeltaPackageSmokeTest()
         {
-            var basePackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0-full.nupkg"));
-            var deltaPackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0-delta.nupkg"));
-            var expectedPackageFile = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0-full.nupkg");
+            var basePackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0-full.nupkg"));
+            var deltaPackage = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0-delta.nupkg"));
+            var expectedPackageFile = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0-full.nupkg");
             var outFile = Path.GetTempFileName() + ".nupkg";
 
             try {
@@ -52,16 +52,16 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void ApplyMultipleDeltaPackagesGeneratesCorrectHash()
         {
-            var firstRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "ShimmerDesktopDemo-1.0.0-full.nupkg"), true);
-            var secondRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "ShimmerDesktopDemo-1.1.0-full.nupkg"), true);
-            var thirdRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "ShimmerDesktopDemo-1.2.0-full.nupkg"), true);
+            var firstRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "SquirrelDesktopDemo-1.0.0-full.nupkg"), true);
+            var secondRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "SquirrelDesktopDemo-1.1.0-full.nupkg"), true);
+            var thirdRelease = new ReleasePackage(IntegrationTestHelper.GetPath("fixtures", "SquirrelDesktopDemo-1.2.0-full.nupkg"), true);
 
             string installDir, releasesDir;
             using(Utility.WithTempDirectory(out releasesDir))
-            using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledShimmerDesktopDemo-1.0.0.zip", out installDir)) {
+            using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledSquirrelDesktopDemo-1.0.0.zip", out installDir)) {
 
-                var firstDelta = Path.Combine(releasesDir, "ShimmerDesktopDemo-1.1.0-delta.nupkg");
-                var secondDelta = Path.Combine(releasesDir, "ShimmerDesktopDemo-1.2.0-delta.nupkg");
+                var firstDelta = Path.Combine(releasesDir, "SquirrelDesktopDemo-1.1.0-delta.nupkg");
+                var secondDelta = Path.Combine(releasesDir, "SquirrelDesktopDemo-1.2.0-delta.nupkg");
 
             
                 new[] { firstRelease, secondRelease, thirdRelease }
@@ -79,7 +79,7 @@ namespace Shimmer.Tests.Core
                 ReleaseEntry.BuildReleasesFile(releasesDir);
 
                 var updateManager = new UpdateManager(
-                    releasesDir, "ShimmerDesktopDemo", FrameworkVersion.Net40, installDir);
+                    releasesDir, "SquirrelDesktopDemo", FrameworkVersion.Net40, installDir);
 
                 using (updateManager) {
                     var updateInfo = updateManager.CheckForUpdate().First();
@@ -91,10 +91,10 @@ namespace Shimmer.Tests.Core
                 }
 
                 string referenceDir;
-                using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledShimmerDesktopDemo-1.2.0.zip", out referenceDir)) {
+                using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledSquirrelDesktopDemo-1.2.0.zip", out referenceDir)) {
 
-                    var referenceVersion = Path.Combine(referenceDir, "ShimmerDesktopDemo", "app-1.2.0");
-                    var installVersion = Path.Combine(installDir, "ShimmerDesktopDemo", "app-1.2.0");
+                    var referenceVersion = Path.Combine(referenceDir, "SquirrelDesktopDemo", "app-1.2.0");
+                    var installVersion = Path.Combine(installDir, "SquirrelDesktopDemo", "app-1.2.0");
 
                     var referenceFiles = Directory.GetFiles(referenceVersion);
                     var actualFiles = Directory.GetFiles(installVersion);
@@ -123,8 +123,8 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void CreateDeltaPackageIntegrationTest()
         {
-            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
-            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
 
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
@@ -193,8 +193,8 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void WhenBasePackageIsNewerThanNewPackageThrowException()
         {
-            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
-            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
 
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
@@ -229,8 +229,8 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void WhenBasePackageReleaseIsNullThrowsException()
         {
-            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
-            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
 
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
@@ -256,8 +256,8 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void WhenBasePackageDoesNotExistThrowException()
         {
-            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
-            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
 
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
@@ -295,8 +295,8 @@ namespace Shimmer.Tests.Core
         [Fact]
         public void WhenNewPackageDoesNotExistThrowException()
         {
-            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.0.0.0.nupkg");
-            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Shimmer.Core.1.1.0.0.nupkg");
+            var basePackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.0.0.0.nupkg");
+            var newPackage = IntegrationTestHelper.GetPath("fixtures", "Squirrel.Core.1.1.0.0.nupkg");
 
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();

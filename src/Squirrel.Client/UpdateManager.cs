@@ -15,18 +15,18 @@ using System.Threading.Tasks;
 using System.Reactive.Threading.Tasks;
 using NuGet;
 using ReactiveUIMicro;
-using Shimmer.Core;
+using Squirrel.Core;
 
 // NB: These are whitelisted types from System.IO, so that we always end up 
 // using fileSystem instead.
-using Shimmer.Core.Extensions;
+using Squirrel.Core.Extensions;
 using FileAccess = System.IO.FileAccess;
 using FileMode = System.IO.FileMode;
 using MemoryStream = System.IO.MemoryStream;
 using Path = System.IO.Path;
 using StreamReader = System.IO.StreamReader;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     public sealed class UpdateManager : IUpdateManager, IEnableLogger
     {
@@ -109,7 +109,7 @@ namespace Shimmer.Client
                         var message =
                             String.Format(
                                 "The directory {0} does not exist, something is probably broken with your application", updateUrlOrPath);
-                        var ex = new ShimmerConfigurationException(message);
+                        var ex = new SquirrelConfigurationException(message);
                         return Observable.Throw<UpdateInfo>(ex);
                     }
 
@@ -119,7 +119,7 @@ namespace Shimmer.Client
                         var message =
                             String.Format(
                                 "The file {0} does not exist, something is probably broken with your application", fi.FullName);
-                        var ex = new ShimmerConfigurationException(message);
+                        var ex = new SquirrelConfigurationException(message);
                         return Observable.Throw<UpdateInfo>(ex);
                     }
 

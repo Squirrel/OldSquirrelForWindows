@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 
-namespace Shimmer.Client.WiXUi
+namespace Squirrel.Client.WiXUi
 {
     public interface IWiXEvents
     {

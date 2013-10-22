@@ -12,9 +12,9 @@ using System.Xml;
 using Ionic.Zip;
 using NuGet;
 using ReactiveUIMicro;
-using Shimmer.Core.Extensions;
+using Squirrel.Core.Extensions;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     internal static class FrameworkTargetVersion
     {

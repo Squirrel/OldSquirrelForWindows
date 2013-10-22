@@ -10,15 +10,15 @@ using System.Text;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using Moq;
 using NuGet;
-using Shimmer.Client;
-using Shimmer.Client.WiXUi;
-using Shimmer.Core;
-using Shimmer.Tests.TestHelpers;
-using Shimmer.WiXUi.ViewModels;
+using Squirrel.Client;
+using Squirrel.Client.WiXUi;
+using Squirrel.Core;
+using Squirrel.Tests.TestHelpers;
+using Squirrel.WiXUi.ViewModels;
 using Xunit;
 using ErrorEventArgs = Microsoft.Tools.WindowsInstallerXml.Bootstrapper.ErrorEventArgs;
 
-namespace Shimmer.Tests.Client
+namespace Squirrel.Tests.Client
 {
     public class InstallManagerTests
     {

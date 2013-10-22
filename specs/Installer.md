@@ -11,14 +11,14 @@ Installer just installs `WixUI` whose job is to:
 
 1. WiX unpacks `WixUI` and runs it, and puts an entry in *Programs and
    Features*.
-1. `WixUI` executes initial install using `Shimmer.Client` for the full
+1. `WixUI` executes initial install using `Squirrel.Client` for the full
    NuGet package, doing the update in-place so the installer never needs to be
    rebuilt.  
 
 ### On Uninstall:
 
 1. WiX gets notified about the uninstall, calls `WixUI` to do app
-   uninstall via `Shimmer.Client`
+   uninstall via `Squirrel.Client`
 1. WiX then blows away `WixUI`, the "real" installed app.
 
 ## Bootstrap UI
@@ -38,7 +38,7 @@ installed, we just execute the app, a-la ClickOnce.
 The WiX install script is generated via a Mustache template, whose contents
 are primarily populated via the generated NuGet release package. WiX will end
 up installing `WixUI`, the latest NuGet package file, and a one-line
-RELEASES file (meaning that what WiX installs is technically a valid Shimmer
+RELEASES file (meaning that what WiX installs is technically a valid Squirrel
 remote update directory).
 
 ## WiX Engine Events and what we should do about them
@@ -46,7 +46,7 @@ remote update directory).
 * `DetectedPackage` - if we're installed (determine this by looking at the
    NuGet package in the same directory as the app), we run the app and bail.
 
-* `DetectComplete` - Do what we're actually here to do (invoke the Shimmer
+* `DetectComplete` - Do what we're actually here to do (invoke the Squirrel
   installer), then on the UI thread, tell WiX to finish up.
 
 * `PlanPackageBegin` - squelch installation of .NET 4

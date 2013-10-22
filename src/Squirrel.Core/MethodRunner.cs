@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shimmer.Core
+namespace Squirrel.Core
 {
     /// <summary>
     /// Container object used to execute code in another app domain

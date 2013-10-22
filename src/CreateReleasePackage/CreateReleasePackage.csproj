@@ -110,9 +110,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shimmer.Core\Shimmer.Core.csproj">
+    <ProjectReference Include="..\Squirrel.Core\Squirrel.Core.csproj">
       <Project>{3d17d46a-a411-4922-b932-9ebe2aae0ed7}</Project>
-      <Name>Shimmer.Core</Name>
+      <Name>Squirrel.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

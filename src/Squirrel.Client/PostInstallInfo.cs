@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shimmer.Client
+namespace Squirrel.Client
 {
     [Serializable]
     public class PostInstallInfo

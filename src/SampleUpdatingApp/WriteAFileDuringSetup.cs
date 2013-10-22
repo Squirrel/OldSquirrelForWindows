@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using Shimmer.Client;
+using Squirrel.Client;
 
 namespace SampleUpdatingApp
 {

@@ -2,16 +2,16 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
-using Shimmer.WiXUi;
+using Squirrel.WiXUi;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Shimmer.WiXUi")]
+[assembly: AssemblyTitle("Squirrel.WiXUi")]
 [assembly: AssemblyDescription("Dont Use This Package")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GitHub")]
-[assembly: AssemblyProduct("Shimmer.WiXUi")]
+[assembly: AssemblyProduct("Squirrel.WiXUi")]
 [assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
