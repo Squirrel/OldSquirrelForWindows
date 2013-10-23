@@ -49,7 +49,7 @@ without having to jump through insane hoops
 ### Want to learn more?
 
 Check out 
-[the specs directory](https://github.com/Squirrel/Squirrel.Windows/tree/master/specs) for
+[the specs directory](/specs) for
 more information about how the framework works.
 
 ## Getting Started
