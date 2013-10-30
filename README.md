@@ -2,8 +2,8 @@
 
 ## Relevant Links
 
- - [Wiki](https://github.com/github/Squirrel/wiki)
- - [Contributing to Squirrel](https://github.com/github/Squirrel/wiki/Contributing-to-Squirrel)
+ - [Wiki](https://github.com/Squirrel/Squirrel.Windows/wiki)
+ - [Contributing to Squirrel](https://github.com/Squirrel/Squirrel.Windows/wiki/Contributing-to-Squirrel)
 
 ## What Do We Want?
 
