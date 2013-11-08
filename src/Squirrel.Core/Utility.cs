@@ -106,12 +106,24 @@ namespace Squirrel.Core
 
         public static IDisposable WithTempDirectory(out string path)
         {
-            var di = new DirectoryInfo(Environment.GetEnvironmentVariable("TEMP") ?? "");
+            var di = new DirectoryInfo(Environment.GetEnvironmentVariable("SQUIRREL_TEMP") ?? Environment.GetEnvironmentVariable("TEMP") ?? "");
             if (!di.Exists) {
                 throw new Exception("%TEMP% isn't defined, go set it");
             }
 
-            var tempDir = di.CreateSubdirectory(Guid.NewGuid().ToString());
+            var tempDir = default(DirectoryInfo);
+
+            var chars = "abcdefghijklmnopqrstuvwxyz123456789-_";
+            foreach (var c in chars) {
+                var target = Path.Combine(di.FullName, c.ToString());
+
+                if (!File.Exists(target) && !Directory.Exists(target)) {
+                    Directory.CreateDirectory(target);
+                    tempDir = new DirectoryInfo(target);
+                    break;
+                }
+            }
+
             path = tempDir.FullName;
 
             return Disposable.Create(() =>
