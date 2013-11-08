@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Threading;
 using ReactiveUIMicro;
+using System.Text;
 
 namespace Squirrel.Core
 {
@@ -104,6 +105,7 @@ namespace Squirrel.Core
             return This.ToObservable().Select(x => Observable.Defer(() => selector(x))).Merge(degreeOfParallelism).ToList();
         }
 
+        static string directoryChars;
         public static IDisposable WithTempDirectory(out string path)
         {
             var di = new DirectoryInfo(Environment.GetEnvironmentVariable("SQUIRREL_TEMP") ?? Environment.GetEnvironmentVariable("TEMP") ?? "");
@@ -113,8 +115,13 @@ namespace Squirrel.Core
 
             var tempDir = default(DirectoryInfo);
 
-            var chars = "abcdefghijklmnopqrstuvwxyz123456789-_";
-            foreach (var c in chars) {
+            directoryChars = directoryChars ?? (
+                "abcdefghijklmnopqrstuvwxyz" +
+                Enumerable.Range(0x4E00, 0x9FCC - 0x4E00)  // CJK UNIFIED IDEOGRAPHS
+                    .Aggregate(new StringBuilder(), (acc, x) => { acc.Append(Char.ConvertFromUtf32(x)); return acc; })
+                    .ToString());
+
+            foreach (var c in directoryChars) {
                 var target = Path.Combine(di.FullName, c.ToString());
 
                 if (!File.Exists(target) && !Directory.Exists(target)) {
