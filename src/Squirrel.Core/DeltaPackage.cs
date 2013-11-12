@@ -5,8 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Ionic.Zip;
+using Microsoft.Deployment.Compression.Zip;
 using ReactiveUIMicro;
+using Microsoft.Deployment.Compression;
 
 namespace Squirrel.Core
 {
@@ -50,14 +51,10 @@ namespace Squirrel.Core
             using (Utility.WithTempDirectory(out tempPath)) {
                 var baseTempInfo = new DirectoryInfo(baseTempPath);
                 var tempInfo = new DirectoryInfo(tempPath);
+                var zipEngine = new ZipEngine();
 
-                using (var zf = new ZipFile(basePackage.ReleasePackageFile)) {
-                    zf.ExtractAll(baseTempInfo.FullName);
-                }
-                
-                using (var zf = new ZipFile(newPackage.ReleasePackageFile)) {
-                    zf.ExtractAll(tempInfo.FullName);
-                }
+                (new ZipInfo(basePackage.ReleasePackageFile)).Unpack(baseTempInfo.FullName);
+                (new ZipInfo(newPackage.ReleasePackageFile)).Unpack(baseTempInfo.FullName);
 
                 // Collect a list of relative paths under 'lib' and map them 
                 // to their full name. We'll use this later to determine in
@@ -74,10 +71,7 @@ namespace Squirrel.Core
 
                 ReleasePackage.addDeltaFilesToContentTypes(tempInfo.FullName);
 
-                using (var zf = new ZipFile(outputFile)) {
-                    zf.AddDirectory(tempInfo.FullName);
-                    zf.Save();
-                }
+                (new ZipInfo(outputFile)).Pack(tempInfo.FullName, true, CompressionLevel.Max, (o, e) => { });
             }
 
             return new ReleasePackage(outputFile);
@@ -92,11 +86,9 @@ namespace Squirrel.Core
             string deltaPath;
 
             using (Utility.WithTempDirectory(out deltaPath))
-            using (Utility.WithTempDirectory(out workingPath))
-            using (var deltaZip = new ZipFile(deltaPackage.InputPackageFile))
-            using (var baseZip = new ZipFile(basePackage.InputPackageFile)) {
-                deltaZip.ExtractAll(deltaPath);
-                baseZip.ExtractAll(workingPath);
+            using (Utility.WithTempDirectory(out workingPath)) {
+                (new ZipInfo(deltaPackage.InputPackageFile)).Unpack(deltaPath);
+                (new ZipInfo(basePackage.InputPackageFile)).Unpack(workingPath);
 
                 var pathsVisited = new List<string>();
 
@@ -131,10 +123,7 @@ namespace Squirrel.Core
                         File.Copy(Path.Combine(deltaPath, x), Path.Combine(workingPath, x), true);
                     });
 
-                using (var zf = new ZipFile(outputFile)) {
-                    zf.AddDirectory(workingPath);
-                    zf.Save();
-                }
+                (new ZipInfo(outputFile)).Pack(workingPath, true, CompressionLevel.Max, (o, e) => { });
             }
 
             return new ReleasePackage(outputFile);

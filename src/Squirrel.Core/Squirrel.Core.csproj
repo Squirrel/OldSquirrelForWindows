@@ -73,6 +73,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ext\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Deployment.Compression, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ce35f76fcda82bad, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ext\wix\sdk\Microsoft.Deployment.Compression.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Deployment.Compression.Zip, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ce35f76fcda82bad, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ext\wix\sdk\Microsoft.Deployment.Compression.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Threading.Tasks">
       <HintPath>..\packages\Microsoft.Bcl.Async.1.0.16\lib\net40\Microsoft.Threading.Tasks.dll</HintPath>
     </Reference>

@@ -9,10 +9,11 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
-using Ionic.Zip;
 using NuGet;
 using ReactiveUIMicro;
 using Squirrel.Core.Extensions;
+using Microsoft.Deployment.Compression.Zip;
+using Microsoft.Deployment.Compression;
 
 namespace Squirrel.Core
 {
@@ -122,9 +123,7 @@ namespace Squirrel.Core
             using (Utility.WithTempDirectory(out tempPath)) {
                 var tempDir = new DirectoryInfo(tempPath);
 
-                using(var zf = new ZipFile(InputPackageFile)) {
-                    zf.ExtractAll(tempPath);
-                }
+                (new ZipInfo(InputPackageFile)).Unpack(tempPath);
     
                 extractDependentPackages(dependencies, tempDir, targetFramework);
 
@@ -139,10 +138,7 @@ namespace Squirrel.Core
 
                 addDeltaFilesToContentTypes(tempDir.FullName);
 
-                using (var zf = new ZipFile(outputFile)) {
-                    zf.AddDirectory(tempPath);
-                    zf.Save();
-                }
+                (new ZipInfo(outputFile)).Pack(tempPath, true, CompressionLevel.Max, (o, e) => { });
 
                 ReleasePackageFile = outputFile;
                 return ReleasePackageFile;
