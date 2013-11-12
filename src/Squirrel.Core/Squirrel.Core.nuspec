@@ -17,5 +17,7 @@
 
   <files>
     <file src="..\..\bin\Ionic.Zip.dll" target="lib\net40\" />
+    <file src="..\..\bin\Microsoft.Deployment.Compression.dll" target="lib\net40\" />
+    <file src="..\..\bin\Microsoft.Deployment.Compression.Zip.dll" target="lib\net40\" />
   </files>
 </package>
