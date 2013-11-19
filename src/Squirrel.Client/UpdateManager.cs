@@ -720,7 +720,10 @@ namespace Squirrel.Client
         // an uninstaller on an already-uninstalled version.
         IObservable<Unit> cleanDeadVersions(Version currentVersion)
         {
+            if (currentVersion == null) return Observable.Return(Unit.Default);
+
             var di = fileSystem.GetDirectoryInfo(rootAppDirectory);
+            if (!di.Exists) return Observable.Return(Unit.Default);
 
             log.Info("cleanDeadVersions: for version {0}", currentVersion);
 
