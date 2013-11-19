@@ -25,7 +25,8 @@ namespace Squirrel.Client
             get { return CurrentlyInstalledVersion == null;  }
         }
 
-        readonly string packageDirectory;
+        [IgnoreDataMember]
+        public string PackageDirectory { get; protected set; }
 
         protected UpdateInfo(ReleaseEntry currentlyInstalledVersion, IEnumerable<ReleaseEntry> releasesToApply, string packageDirectory, FrameworkVersion appFrameworkVersion)
         {
@@ -37,13 +38,13 @@ namespace Squirrel.Client
                     : null;
             AppFrameworkVersion = appFrameworkVersion;
 
-            this.packageDirectory = packageDirectory;
+            this.PackageDirectory = packageDirectory;
         }
 
         public Dictionary<ReleaseEntry, string> FetchReleaseNotes()
         {
             return ReleasesToApply
-                .Select(x => new { Entry = x, Readme = x.GetReleaseNotes(packageDirectory) })
+                .Select(x => new { Entry = x, Readme = x.GetReleaseNotes(PackageDirectory) })
                 .ToDictionary(k => k.Entry, v => v.Readme);
         }
 
