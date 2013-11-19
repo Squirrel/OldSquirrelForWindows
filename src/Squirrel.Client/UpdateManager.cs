@@ -114,13 +114,21 @@ namespace Squirrel.Client
                     }
 
                     var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
-                    if (!fi.Exists)
-                    {
-                        var message =
-                            String.Format(
-                                "The file {0} does not exist, something is probably broken with your application", fi.FullName);
-                        var ex = new SquirrelConfigurationException(message);
-                        return Observable.Throw<UpdateInfo>(ex);
+                    if (!fi.Exists) {
+                        var message = String.Format(
+                            "The file {0} does not exist, something is probably broken with your application", fi.FullName);
+
+                        log.Warn(message);
+
+                        var packages = fileSystem.GetDirectoryInfo(updateUrlOrPath).GetFiles("*.nupkg");
+                        if (packages.Length == 0) {
+                            var ex = new SquirrelConfigurationException(message);
+                            return Observable.Throw<UpdateInfo>(ex);
+                        }
+
+                        // NB: Create a new RELEASES file since we've got a directory of packages
+                        ReleaseEntry.WriteReleaseFile(
+                            packages.Select(x => ReleaseEntry.GenerateFromFile(x.FullName)), fi.FullName);
                     }
 
                     using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
@@ -448,7 +456,7 @@ namespace Squirrel.Client
 
         List<string> installPackageToAppDir(UpdateInfo updateInfo, ReleaseEntry release)
         {
-            var pkg = new ZipPackage(Path.Combine(rootAppDirectory, "packages", release.Filename));
+            var pkg = new ZipPackage(Path.Combine(updateInfo.PackageDirectory, release.Filename));
             var target = getDirectoryForRelease(release.Version);
 
             // NB: This might happen if we got killed partially through applying the release
@@ -712,7 +720,10 @@ namespace Squirrel.Client
         // an uninstaller on an already-uninstalled version.
         IObservable<Unit> cleanDeadVersions(Version currentVersion)
         {
+            if (currentVersion == null) return Observable.Return(Unit.Default);
+
             var di = fileSystem.GetDirectoryInfo(rootAppDirectory);
+            if (!di.Exists) return Observable.Return(Unit.Default);
 
             log.Info("cleanDeadVersions: for version {0}", currentVersion);
 

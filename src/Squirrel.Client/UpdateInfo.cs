@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Squirrel.Core;
+using System.Runtime.Serialization;
 
 namespace Squirrel.Client
 {
@@ -11,36 +12,39 @@ namespace Squirrel.Client
         Net45,
     }
 
+    [DataContract]
     public class UpdateInfo
     {
-        public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
-        public ReleaseEntry FutureReleaseEntry { get; protected set; }
-        public IEnumerable<ReleaseEntry> ReleasesToApply { get; protected set; }
-        public FrameworkVersion AppFrameworkVersion { get; protected set; }
+        [DataMember] public ReleaseEntry CurrentlyInstalledVersion { get; protected set; }
+        [DataMember] public ReleaseEntry FutureReleaseEntry { get; protected set; }
+        [DataMember] public List<ReleaseEntry> ReleasesToApply { get; protected set; }
+        [DataMember] public FrameworkVersion AppFrameworkVersion { get; protected set; }
 
+        [IgnoreDataMember]
         public bool IsBootstrapping {
             get { return CurrentlyInstalledVersion == null;  }
         }
 
-        readonly string packageDirectory;
+        [IgnoreDataMember]
+        public string PackageDirectory { get; protected set; }
 
         protected UpdateInfo(ReleaseEntry currentlyInstalledVersion, IEnumerable<ReleaseEntry> releasesToApply, string packageDirectory, FrameworkVersion appFrameworkVersion)
         {
             // NB: When bootstrapping, CurrentlyInstalledVersion is null!
             CurrentlyInstalledVersion = currentlyInstalledVersion;
-            ReleasesToApply = releasesToApply ?? Enumerable.Empty<ReleaseEntry>();
+            ReleasesToApply = (releasesToApply ?? Enumerable.Empty<ReleaseEntry>()).ToList();
             FutureReleaseEntry = ReleasesToApply.Any()
                     ? ReleasesToApply.MaxBy(x => x.Version).FirstOrDefault()
                     : null;
             AppFrameworkVersion = appFrameworkVersion;
 
-            this.packageDirectory = packageDirectory;
+            this.PackageDirectory = packageDirectory;
         }
 
         public Dictionary<ReleaseEntry, string> FetchReleaseNotes()
         {
             return ReleasesToApply
-                .Select(x => new { Entry = x, Readme = x.GetReleaseNotes(packageDirectory) })
+                .Select(x => new { Entry = x, Readme = x.GetReleaseNotes(PackageDirectory) })
                 .ToDictionary(k => k.Entry, v => v.Readme);
         }
 

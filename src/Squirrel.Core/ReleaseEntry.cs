@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using NuGet;
 using ReactiveUIMicro;
 using Squirrel.Core.Extensions;
+using System.Runtime.Serialization;
 
 namespace Squirrel.Core
 {
@@ -25,12 +26,13 @@ namespace Squirrel.Core
         string GetReleaseNotes(string packageDirectory);
     }
 
+    [DataContract]
     public class ReleaseEntry : IEnableLogger, IReleaseEntry
     {
-        public string SHA1 { get; protected set; }
-        public string Filename { get; protected set; }
-        public long Filesize { get; protected set; }
-        public bool IsDelta { get; protected set; }
+        [DataMember] public string SHA1 { get; protected set; }
+        [DataMember] public string Filename { get; protected set; }
+        [DataMember] public long Filesize { get; protected set; }
+        [DataMember] public bool IsDelta { get; protected set; }
 
         protected ReleaseEntry(string sha1, string filename, long filesize, bool isDelta)
         {
@@ -42,12 +44,15 @@ namespace Squirrel.Core
             SHA1 = sha1; Filename = filename; Filesize = filesize; IsDelta = isDelta;
         }
 
+        [IgnoreDataMember]
         public string EntryAsString {
             get { return String.Format("{0} {1} {2}", SHA1, Filename, Filesize); } 
         }
 
+        [IgnoreDataMember]
         public Version Version { get { return Filename.ToVersion(); } }
 
+        [IgnoreDataMember]
         public string PackageName {
             get {
                 return Filename.Substring(0, Filename.IndexOfAny(new[] { '-', '.' }));
