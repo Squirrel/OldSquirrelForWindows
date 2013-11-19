@@ -87,11 +87,12 @@ namespace Squirrel.Client
 
     public static class RxHatersMixin
     {
-        public static Task<ReleaseEntry> UpdateAppAsync(this IUpdateManager This, Action<int> progress)
+        public static Task<ReleaseEntry> UpdateAppAsync(this IUpdateManager This, Action<int> progress = null)
         {
             var checkSubj = new Subject<int>();
             var downloadSubj = new Subject<int>();
             var applySubj = new Subject<int>();
+            progress = progress ?? (_ => { });
 
             var ret = This.CheckForUpdate(false, checkSubj)
                 .SelectMany(x => This.DownloadReleases(x.ReleasesToApply, downloadSubj).TakeLast(1).Select(_ => x))
