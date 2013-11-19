@@ -42,8 +42,8 @@ namespace Squirrel.Updater
             }
 
             if (showHelp) {
-                Console.WriteLine("\nCreateReleasePackage - take a NuGet package and create a Release Package");
-                Console.WriteLine(@"Usage: CreateReleasePackage.exe [Options] \path\to\app.nupkg");
+                Console.WriteLine("\nSquirrel.Updater.exe - Check for updates or update an application");
+                Console.WriteLine(@"Usage: Squirrel.Updater.exe [options]");
 
                 Console.WriteLine("Options:");
                 foreach(var v in opts) {
