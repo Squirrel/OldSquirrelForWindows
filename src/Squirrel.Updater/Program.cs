@@ -63,9 +63,21 @@ namespace Squirrel.Updater
                     var updateInfo = default(UpdateInfo);
                     try {
                         updateInfo = mgr.CheckForUpdate().First();
+
+                        if (updateInfo.ReleasesToApply.Count > 0) {
+                            mgr.DownloadReleases(updateInfo.ReleasesToApply).First();
+                        }
                     } catch (Exception ex) {
                         writeJsonForException(ex, "Failed to check for updates");
                         return -1;
+                    }
+
+                    var releaseNotes = new Dictionary<ReleaseEntry, string>();
+
+                    try {
+                        releaseNotes = (updateInfo.ReleasesToApply.Count > 0) ? updateInfo.FetchReleaseNotes() : releaseNotes;
+                    } catch (Exception ex) {
+                        // TODO: Find a way to log this
                     }
 
                     Console.WriteLine(JsonConvert.SerializeObject(new {
