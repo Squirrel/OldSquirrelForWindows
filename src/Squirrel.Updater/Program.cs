@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Mono.Options;
 using Squirrel.Client;
 using Newtonsoft.Json;
+using System.Reflection;
+using Squirrel.Core;
 
 namespace Squirrel.Updater
 {
@@ -56,19 +58,14 @@ namespace Squirrel.Updater
             }
 
             appName = appName ?? determineAppName();
+            var mgr = new UpdateManager(target, appName, FrameworkVersion.Net40);
 
             if (command.ToLowerInvariant() == "check") {
-                var mgr = new UpdateManager(target, appName, FrameworkVersion.Net40);
-
                 var updateInfo = default(UpdateInfo);
                 try {
                     updateInfo = mgr.CheckForUpdate().First();
                 } catch (Exception ex) {
-                    Console.WriteLine(JsonConvert.SerializeObject(new {
-                        message = "Failed to check for updates",
-                        exceptionInfo = ex.ToString(),
-                    }));
-
+                    writeJsonForException(ex, "Failed to check for updates");
                     return -1;
                 }
 
@@ -80,12 +77,26 @@ namespace Squirrel.Updater
                 return 0;
             }
 
+            if (command.ToLowerInvariant() == "update") {
+                var result = default(ReleaseEntry);
+                try {
+                    result = mgr.UpdateAppAsync().Result;
+                } catch (Exception ex) {
+                    writeJsonForException(ex, "Failed to update application");
+                    return -1;
+                }
+
+                Console.WriteLine(JsonConvert.SerializeObject(result));
+                return 0;
+            }
+
             throw new Exception("How even did we get here?");
         }
 
         static string determineAppName()
         {
-            throw new NotImplementedException();
+            var ourDir = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            return ourDir.Parent.Name;
         }
 
         static bool isAUrl(string possiblyAUrl)
@@ -96,6 +107,14 @@ namespace Squirrel.Updater
             } catch {
                 return false;
             }
+        }
+
+        static void writeJsonForException(Exception ex, string message)
+        {
+            Console.WriteLine(JsonConvert.SerializeObject(new {
+                message = message,
+                exceptionInfo = ex.ToString(),
+            }));
         }
     }
 }
