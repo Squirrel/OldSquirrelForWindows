@@ -31,12 +31,12 @@ namespace Squirrel.Updater
 
             opts.Parse(args);
 
-            if (!new[] { "check", "update" }.Any(x => command.ToLowerInvariant() == x)) {
+            if (!new[] { "check", "update", "install", }.Any(x => command.ToLowerInvariant() == x)) {
                 Console.Error.WriteLine("Command must be either 'check' or 'update'");
                 showHelp = true;
             }
 
-            if (!Directory.Exists(target) && !isAUrl(target)) {
+            if (!Directory.Exists(target) && !File.Exists(target) && !isAUrl(target)) {
                 Console.Error.WriteLine("Target must be either a directory or a URL to check for updates");
                 showHelp = true;
             }
@@ -58,36 +58,42 @@ namespace Squirrel.Updater
             }
 
             appName = appName ?? determineAppName();
-            var mgr = new UpdateManager(target, appName, FrameworkVersion.Net40);
+            using (var mgr = new UpdateManager(target, appName, FrameworkVersion.Net40)) {
+                if (command.ToLowerInvariant() == "check") {
+                    var updateInfo = default(UpdateInfo);
+                    try {
+                        updateInfo = mgr.CheckForUpdate().First();
+                    } catch (Exception ex) {
+                        writeJsonForException(ex, "Failed to check for updates");
+                        return -1;
+                    }
 
-            if (command.ToLowerInvariant() == "check") {
-                var updateInfo = default(UpdateInfo);
-                try {
-                    updateInfo = mgr.CheckForUpdate().First();
-                } catch (Exception ex) {
-                    writeJsonForException(ex, "Failed to check for updates");
-                    return -1;
+                    Console.WriteLine(JsonConvert.SerializeObject(new {
+                        updateInfo = updateInfo,
+                        releaseNotes = updateInfo.FetchReleaseNotes(),
+                    }));
+
+                    return 0;
                 }
 
-                Console.WriteLine(JsonConvert.SerializeObject(new {
-                    updateInfo = updateInfo,
-                    releaseNotes = updateInfo.FetchReleaseNotes(),
-                }));
+                if (command.ToLowerInvariant() == "update") {
+                    var result = default(ReleaseEntry);
+                    try {
+                        result = mgr.UpdateAppAsync().Result;
+                    } catch (Exception ex) {
+                        writeJsonForException(ex, "Failed to update application");
+                        return -1;
+                    }
 
-                return 0;
-            }
-
-            if (command.ToLowerInvariant() == "update") {
-                var result = default(ReleaseEntry);
-                try {
-                    result = mgr.UpdateAppAsync().Result;
-                } catch (Exception ex) {
-                    writeJsonForException(ex, "Failed to update application");
-                    return -1;
+                    Console.WriteLine(JsonConvert.SerializeObject(result));
+                    return 0;
                 }
 
-                Console.WriteLine(JsonConvert.SerializeObject(result));
-                return 0;
+                if (command.ToLowerInvariant() == "install") {
+                    var targetRelease = ReleaseEntry.GenerateFromFile(target);
+                    mgr.ApplyReleases(UpdateInfo.Create(null, new[] { targetRelease }, Path.GetDirectoryName(target), FrameworkVersion.Net40)).First();
+                    return 0;
+                }
             }
 
             throw new Exception("How even did we get here?");
