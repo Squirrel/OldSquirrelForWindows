@@ -81,8 +81,8 @@ namespace Squirrel.Updater
                     }
 
                     Console.WriteLine(JsonConvert.SerializeObject(new {
-                        updateInfo = updateInfo,
-                        releaseNotes = updateInfo.FetchReleaseNotes(),
+                        UpdateInfo = updateInfo,
+                        ReleaseNotes = releaseNotes,
                     }));
 
                     return 0;
@@ -130,8 +130,8 @@ namespace Squirrel.Updater
         static void writeJsonForException(Exception ex, string message)
         {
             Console.WriteLine(JsonConvert.SerializeObject(new {
-                message = message,
-                exceptionInfo = ex.ToString(),
+                Message = message,
+                ExceptionInfo = ex.ToString(),
             }));
         }
     }
