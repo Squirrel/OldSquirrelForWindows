@@ -114,13 +114,21 @@ namespace Squirrel.Client
                     }
 
                     var fi = fileSystem.GetFileInfo(Path.Combine(updateUrlOrPath, "RELEASES"));
-                    if (!fi.Exists)
-                    {
-                        var message =
-                            String.Format(
-                                "The file {0} does not exist, something is probably broken with your application", fi.FullName);
-                        var ex = new SquirrelConfigurationException(message);
-                        return Observable.Throw<UpdateInfo>(ex);
+                    if (!fi.Exists) {
+                        var message = String.Format(
+                            "The file {0} does not exist, something is probably broken with your application", fi.FullName);
+
+                        log.Warn(message);
+
+                        var packages = fileSystem.GetDirectoryInfo(updateUrlOrPath).GetFiles("*.nupkg");
+                        if (packages.Length == 0) {
+                            var ex = new SquirrelConfigurationException(message);
+                            return Observable.Throw<UpdateInfo>(ex);
+                        }
+
+                        // NB: Create a new RELEASES file since we've got a directory of packages
+                        ReleaseEntry.WriteReleaseFile(
+                            packages.Select(x => ReleaseEntry.GenerateFromFile(x.FullName)), fi.FullName);
                     }
 
                     using (var sr = new StreamReader(fi.OpenRead(), Encoding.UTF8)) {
