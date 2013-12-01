@@ -171,12 +171,12 @@ namespace Squirrel.Core
                 Observable.Start(() => {
                     Log().Debug("Now deleting file: {0}", file);
                     File.SetAttributes(file, FileAttributes.Normal);
-                    File.Delete(Path.Combine(directoryPath, file));
+                    File.Delete(file);
                 }, scheduler))
             .Select(_ => Unit.Default);
 
             var directoryOperations =
-                dirs.MapReduce(dir => DeleteDirectory(Path.Combine(directoryPath, dir), scheduler)
+                dirs.MapReduce(dir => DeleteDirectory(dir, scheduler)
                     .Retry(3))
                     .Select(_ => Unit.Default);
 
