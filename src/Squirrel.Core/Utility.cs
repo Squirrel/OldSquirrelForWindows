@@ -134,7 +134,7 @@ namespace Squirrel.Core
             path = tempDir.FullName;
 
             return Disposable.Create(() =>
-                DeleteDirectory(tempDir.FullName));
+                DeleteDirectory(tempDir.FullName).Wait());
         }
 
         public static IObservable<Unit> DeleteDirectory(string directoryPath, IScheduler scheduler = null)
