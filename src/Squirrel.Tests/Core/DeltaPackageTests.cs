@@ -104,9 +104,9 @@ namespace Squirrel.Tests.Core
                     var invalidFiles =
                         Enumerable.Zip(referenceFiles, actualFiles,
                         (reference, actual) => {
-                            
-                            var refSha = Utility.CalculateStreamSHA1(File.OpenRead(reference));
-                            var actualSha = Utility.CalculateStreamSHA1(File.OpenRead(actual));
+
+                            var refSha = Utility.CalculateFileSHA1(reference);
+                            var actualSha = Utility.CalculateFileSHA1(actual);
 
                             return new { File = actual, Result = refSha == actualSha };
                         })

@@ -40,12 +40,22 @@ namespace Squirrel.Core
                 .Concat(Directory.GetFiles(rootPath));
         }
 
+        public static string CalculateFileSHA1(string filePath)
+        {
+            Contract.Requires(filePath != null);
+
+            using (var stream = File.OpenRead(filePath)) {
+                return CalculateStreamSHA1(stream);
+            }
+        }
+
         public static string CalculateStreamSHA1(Stream file)
         {
             Contract.Requires(file != null && file.CanRead);
 
-            var sha1 = SHA1.Create();
-            return BitConverter.ToString(sha1.ComputeHash(file)).Replace("-", String.Empty);
+            using (var sha1 = SHA1.Create()) {
+                return BitConverter.ToString(sha1.ComputeHash(file)).Replace("-", String.Empty);
+            }
         }
 
         public static IObservable<Unit> CopyToAsync(string from, string to)
