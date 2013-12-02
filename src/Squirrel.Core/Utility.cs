@@ -134,7 +134,7 @@ namespace Squirrel.Core
             path = tempDir.FullName;
 
             return Disposable.Create(() =>
-                DeleteDirectory(tempDir.FullName));
+                DeleteDirectory(tempDir.FullName).Wait());
         }
 
         public static IObservable<Unit> DeleteDirectory(string directoryPath, IScheduler scheduler = null)
@@ -171,12 +171,12 @@ namespace Squirrel.Core
                 Observable.Start(() => {
                     Log().Debug("Now deleting file: {0}", file);
                     File.SetAttributes(file, FileAttributes.Normal);
-                    File.Delete(Path.Combine(directoryPath, file));
+                    File.Delete(file);
                 }, scheduler))
             .Select(_ => Unit.Default);
 
             var directoryOperations =
-                dirs.MapReduce(dir => DeleteDirectory(Path.Combine(directoryPath, dir), scheduler)
+                dirs.MapReduce(dir => DeleteDirectory(dir, scheduler)
                     .Retry(3))
                     .Select(_ => Unit.Default);
 
