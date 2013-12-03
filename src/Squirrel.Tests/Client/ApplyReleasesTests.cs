@@ -98,20 +98,20 @@ namespace Squirrel.Tests.Client
             string tempDir;
 
             using (Utility.WithTempDirectory(out tempDir)) {
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+                string packagesDir = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packagesDir);
 
                 new[] {
                     "Squirrel.Core.1.0.0.0-full.nupkg",
                     "Squirrel.Core.1.1.0.0-full.nupkg",
-                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(packagesDir, x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.0.0.0-full.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.0.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.1.0.0-full.nupkg"));
 
-                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, packagesDir, FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                 using (fixture) {
@@ -147,20 +147,20 @@ namespace Squirrel.Tests.Client
             string tempDir;
 
             using (Utility.WithTempDirectory(out tempDir)) {
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+                string packagesDir = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packagesDir);
 
                 new[] {
                     "Squirrel.Core.1.1.0.0-full.nupkg",
                     "Squirrel.Core.1.2.0.0-full.nupkg",
-                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(packagesDir, x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.2.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.1.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.2.0.0-full.nupkg"));
 
-                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, packagesDir, FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                 using (fixture) {
@@ -196,20 +196,20 @@ namespace Squirrel.Tests.Client
 
             using (Utility.WithTempDirectory(out tempDir))
             {
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+                string packagesDir = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packagesDir);
 
                 new[] {
                     "Squirrel.Core.1.1.0.0-full.nupkg",
                     "Squirrel.Core.1.3.0.0-full.nupkg",
-                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(packagesDir, x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.3.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.1.0.0-full.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.3.0.0-full.nupkg"));
 
-                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                var updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, packagesDir, FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(latestFullEntry).ShouldBeTrue();
 
                 using (fixture) {
@@ -247,21 +247,22 @@ namespace Squirrel.Tests.Client
             string tempDir;
 
             using (Utility.WithTempDirectory(out tempDir)) {
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+                string packagesDir = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packagesDir);
 
                 new[] {
                     "Squirrel.Core.1.0.0.0-full.nupkg",
                     "Squirrel.Core.1.1.0.0-delta.nupkg",
                     "Squirrel.Core.1.1.0.0-full.nupkg",
-                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(packagesDir, x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.0.0.0-full.nupkg"));
-                var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-delta.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "Squirrel.Core.1.1.0.0-full.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.0.0.0-full.nupkg"));
+                var deltaEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.1.0.0-delta.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "Squirrel.Core.1.1.0.0-full.nupkg"));
 
-                var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                var updateInfo = UpdateInfo.Create(baseEntry, new[] { deltaEntry, latestFullEntry }, packagesDir, FrameworkVersion.Net40);
                 updateInfo.ReleasesToApply.Contains(deltaEntry).ShouldBeTrue();
 
                 using (fixture) {
@@ -418,20 +419,20 @@ namespace Squirrel.Tests.Client
             string tempDir;
 
             using (Utility.WithTempDirectory(out tempDir)) {
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp"));
-                Directory.CreateDirectory(Path.Combine(tempDir, "theApp", "packages"));
+                string packagesDir = Path.Combine(tempDir, "theApp", "packages");
+                Directory.CreateDirectory(packagesDir);
 
                 new[] {
                     "SampleUpdatingApp.1.0.0.0.nupkg",
                     "SampleUpdatingApp.1.1.0.0.nupkg",
-                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(tempDir, "theApp", "packages", x)));
+                }.ForEach(x => File.Copy(IntegrationTestHelper.GetPath("fixtures", x), Path.Combine(packagesDir, x)));
 
                 var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net40, tempDir, null, new FakeUrlDownloader());
 
-                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "SampleUpdatingApp.1.0.0.0.nupkg"));
-                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(tempDir, "theApp", "packages", "SampleUpdatingApp.1.1.0.0.nupkg"));
+                var baseEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "SampleUpdatingApp.1.0.0.0.nupkg"));
+                var latestFullEntry = ReleaseEntry.GenerateFromFile(Path.Combine(packagesDir, "SampleUpdatingApp.1.1.0.0.nupkg"));
 
-                var updateInfo = UpdateInfo.Create(null, new[] { baseEntry }, "dontcare", FrameworkVersion.Net40);
+                var updateInfo = UpdateInfo.Create(null, new[] { baseEntry }, packagesDir, FrameworkVersion.Net40);
                 using (fixture) {
                     fixture.ApplyReleases(updateInfo).ToList().First();
                 }
@@ -440,7 +441,7 @@ namespace Squirrel.Tests.Client
                 File.Exists(oldExecutable).ShouldBeTrue();
                 TaskbarHelper.PinToTaskbar(oldExecutable);
 
-                updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, "dontcare", FrameworkVersion.Net40);
+                updateInfo = UpdateInfo.Create(baseEntry, new[] { latestFullEntry }, packagesDir, FrameworkVersion.Net40);
                 using (fixture) {
                     fixture.ApplyReleases(updateInfo).ToList().First();
                 }

@@ -79,7 +79,7 @@ namespace Squirrel.Tests.Core
                 ReleaseEntry.BuildReleasesFile(releasesDir);
 
                 var updateManager = new UpdateManager(
-                    releasesDir, "SquirrelDesktopDemo", FrameworkVersion.Net40, installDir);
+                    releasesDir, "ShimmerDesktopDemo", FrameworkVersion.Net40, installDir);
 
                 using (updateManager) {
                     var updateInfo = updateManager.CheckForUpdate().First();
@@ -93,8 +93,8 @@ namespace Squirrel.Tests.Core
                 string referenceDir;
                 using (IntegrationTestHelper.WithFakeAlreadyInstalledApp("InstalledSquirrelDesktopDemo-1.2.0.zip", out referenceDir)) {
 
-                    var referenceVersion = Path.Combine(referenceDir, "SquirrelDesktopDemo", "app-1.2.0");
-                    var installVersion = Path.Combine(installDir, "SquirrelDesktopDemo", "app-1.2.0");
+                    var referenceVersion = Path.Combine(referenceDir, "ShimmerDesktopDemo", "app-1.2.0");
+                    var installVersion = Path.Combine(installDir, "ShimmerDesktopDemo", "app-1.2.0");
 
                     var referenceFiles = Directory.GetFiles(referenceVersion);
                     var actualFiles = Directory.GetFiles(installVersion);
@@ -104,9 +104,9 @@ namespace Squirrel.Tests.Core
                     var invalidFiles =
                         Enumerable.Zip(referenceFiles, actualFiles,
                         (reference, actual) => {
-                            
-                            var refSha = Utility.CalculateStreamSHA1(File.OpenRead(reference));
-                            var actualSha = Utility.CalculateStreamSHA1(File.OpenRead(actual));
+
+                            var refSha = Utility.CalculateFileSHA1(reference);
+                            var actualSha = Utility.CalculateFileSHA1(actual);
 
                             return new { File = actual, Result = refSha == actualSha };
                         })
