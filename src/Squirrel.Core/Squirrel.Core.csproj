@@ -80,6 +80,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NuGet.Core.2.7.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="SharpBITS.Base">
       <HintPath>..\..\ext\SharpBITS.Base.dll</HintPath>
     </Reference>
@@ -106,11 +108,13 @@
       <HintPath>..\packages\Rx-PlatformServices.2.1.30214.0\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppDomainHelper.cs" />
@@ -124,10 +128,18 @@
     <Compile Include="IFileSystemFactory.cs" />
     <Compile Include="ProcessFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\Errors.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\ReactiveCommand.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Interfaces.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Logging.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\MemoizingMRUCache.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\ObservableAsPropertyHelper.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\ReactiveCollection.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\ReactiveObject.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\RefcountDisposeWrapper.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\Reflection.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\RxApp.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\ScheduledSubject.cs" />
     <Compile Include="ReleaseEntry.cs" />
     <Compile Include="ReleasePackage.cs" />
     <Compile Include="MethodRunner.cs" />
