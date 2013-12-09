@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 namespace Squirrel.Client.WiXUi
 {
-    public interface IWixUiBootstrapper : INotifyPropertyChanged
+    public interface IWixUiBootstrapper : IScreen
     {
         IWiXEvents WiXEvents { get; }
     }

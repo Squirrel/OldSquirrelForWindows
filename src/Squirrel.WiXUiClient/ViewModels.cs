@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace Squirrel.Client.WiXUi
 {
-    public interface IWelcomeViewModel : INotifyPropertyChanged
+    public interface IWelcomeViewModel : IRoutableViewModel
     {
         IPackage PackageMetadata { get; set; }
         string Title { get; }
@@ -13,21 +13,21 @@ namespace Squirrel.Client.WiXUi
         ReactiveCommand ShouldProceed { get; }
     }
 
-    public interface IInstallingViewModel : INotifyPropertyChanged
+    public interface IInstallingViewModel : IRoutableViewModel
     {
         IPackage PackageMetadata { get; set; }
         IObserver<int> ProgressValue { get; }
         int LatestProgress { get; }
     }
 
-    public interface IUninstallingViewModel : INotifyPropertyChanged
+    public interface IUninstallingViewModel : IRoutableViewModel
     {
         IPackage PackageMetadata { get; set; }
         IObserver<int> ProgressValue { get; }
         int LatestProgress { get; }
     }
 
-    public interface IErrorViewModel : INotifyPropertyChanged
+    public interface IErrorViewModel : IRoutableViewModel
     {
         IPackage PackageMetadata { get; set; }
         UserError Error { get; set; }
