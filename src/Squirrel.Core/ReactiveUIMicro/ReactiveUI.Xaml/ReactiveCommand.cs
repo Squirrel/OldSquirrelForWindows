@@ -18,7 +18,7 @@ namespace ReactiveUIMicro.Xaml
     /// ICommand.Execute and its value is the CommandParameter that was
     /// provided.
     /// </summary>
-    public class ReactiveCommand : IObservable<object>, IDisposable, IEnableLogger
+    public class ReactiveCommand : ICommand, IObservable<object>, IDisposable, IEnableLogger
     {
         /// <summary>
         /// Creates a new ReactiveCommand object.

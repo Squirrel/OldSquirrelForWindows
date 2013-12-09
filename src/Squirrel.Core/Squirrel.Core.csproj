@@ -128,6 +128,8 @@
     <Compile Include="IFileSystemFactory.cs" />
     <Compile Include="ProcessFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\Interfaces.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\RoutingState.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\Errors.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\ReactiveCommand.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Interfaces.cs" />
