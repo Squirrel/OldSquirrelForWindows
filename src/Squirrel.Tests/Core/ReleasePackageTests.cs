@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Versioning;
 using MarkdownSharp;
 using NuGet;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Core;
 using Squirrel.Tests.TestHelpers;
 using System;

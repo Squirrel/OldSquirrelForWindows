@@ -10,9 +10,9 @@ using System.Text;
 using System.Windows;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
 using NuGet;
-using ReactiveUI;
-using ReactiveUI.Routing;
-using ReactiveUI.Xaml;
+using ReactiveUIMicro;
+using ReactiveUIMicro.Routing;
+using ReactiveUIMicro.Xaml;
 using Squirrel.Client;
 using Squirrel.Client.WiXUi;
 using Squirrel.Core;
@@ -49,6 +49,8 @@ namespace Squirrel.WiXUi.ViewModels
             Kernel = testKernel ?? createDefaultKernel();
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
             this.currentAssemblyDir = currentAssemblyDir ?? Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            Debugger.Launch();
 
             RxApp.ConfigureServiceLocator(
                 (type, contract) => {
@@ -278,13 +280,14 @@ namespace Squirrel.WiXUi.ViewModels
 
             try {
                 var fileText = fileSystem
-                                 .GetFile(release.FullName)
-                                 .ReadAllText(release.FullName, Encoding.UTF8);
+                 .GetFile(release.FullName)
+                 .ReadAllText(release.FullName, Encoding.UTF8);
+
                 ret = ReleaseEntry
-                        .ParseReleaseFile(fileText)
-                        .Where(x => !x.IsDelta)
-                        .OrderByDescending(x => x.Version)
-                        .First();
+                    .ParseReleaseFile(fileText)
+                    .Where(x => !x.IsDelta)
+                    .OrderByDescending(x => x.Version)
+                    .First();
             } catch (Exception ex) {
                 this.Log().ErrorException("Couldn't read bundled RELEASES file", ex);
                 UserError.Throw("This installer is incorrectly configured, please contact the author", ex);
@@ -292,7 +295,7 @@ namespace Squirrel.WiXUi.ViewModels
             }
 
             // now set the logger to the found package name
-            RxApp.LoggerFactory = _ => new FileLogger(ret.PackageName) { Level = ReactiveUI.LogLevel.Info };
+            RxApp.LoggerFactory = _ => new FileLogger(ret.PackageName) { Level = ReactiveUIMicro.LogLevel.Info };
             ReactiveUIMicro.RxApp.ConfigureFileLogging(ret.PackageName); // HACK: we can do better than this later
 
             return ret;

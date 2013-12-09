@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using CreateReleasePackage;
 using NuGet;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Tests.TestHelpers;
 using Xunit;
 

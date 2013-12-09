@@ -1,7 +1,7 @@
 ﻿using System;
 using Moq;
 using NuGet;
-using ReactiveUI.Routing;
+using ReactiveUIMicro.Routing;
 using Squirrel.WiXUi.ViewModels;
 using Xunit;
 

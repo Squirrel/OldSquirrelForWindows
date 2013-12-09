@@ -1,11 +1,11 @@
 ﻿using System;
 using NuGet;
-using ReactiveUI.Routing;
-using ReactiveUI.Xaml;
+using ReactiveUIMicro.Xaml;
+using System.ComponentModel;
 
 namespace Squirrel.Client.WiXUi
 {
-    public interface IWelcomeViewModel : IRoutableViewModel
+    public interface IWelcomeViewModel : INotifyPropertyChanged
     {
         IPackage PackageMetadata { get; set; }
         string Title { get; }
@@ -13,21 +13,21 @@ namespace Squirrel.Client.WiXUi
         ReactiveCommand ShouldProceed { get; }
     }
 
-    public interface IInstallingViewModel : IRoutableViewModel
+    public interface IInstallingViewModel : INotifyPropertyChanged
     {
         IPackage PackageMetadata { get; set; }
         IObserver<int> ProgressValue { get; }
         int LatestProgress { get; }
     }
 
-    public interface IUninstallingViewModel : IRoutableViewModel
+    public interface IUninstallingViewModel : INotifyPropertyChanged
     {
         IPackage PackageMetadata { get; set; }
         IObserver<int> ProgressValue { get; }
         int LatestProgress { get; }
     }
 
-    public interface IErrorViewModel : IRoutableViewModel
+    public interface IErrorViewModel : INotifyPropertyChanged
     {
         IPackage PackageMetadata { get; set; }
         UserError Error { get; set; }

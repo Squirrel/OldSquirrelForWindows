@@ -2,9 +2,9 @@
 using System.Reactive.Linq;
 using System.Windows.Input;
 using NuGet;
-using ReactiveUI;
-using ReactiveUI.Routing;
-using ReactiveUI.Xaml;
+using ReactiveUIMicro;
+using ReactiveUIMicro.Routing;
+using ReactiveUIMicro.Xaml;
 using Squirrel.Client.WiXUi;
 using Squirrel.Core.Extensions;
 

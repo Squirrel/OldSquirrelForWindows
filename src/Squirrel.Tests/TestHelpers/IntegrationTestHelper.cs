@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using Ionic.Zip;
 using Squirrel.Core;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Tests.WiXUi;
 
 namespace Squirrel.Tests.TestHelpers

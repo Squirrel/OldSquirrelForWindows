@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Threading;
 using Moq;
 using NuGet;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Client;
 using Squirrel.Core;
 using Squirrel.Tests.TestHelpers;

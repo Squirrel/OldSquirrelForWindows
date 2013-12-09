@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using System.Reactive.Subjects;
 using System.Threading;
 using Moq;
-using ReactiveUI;
+using ReactiveUIMicro;
 
 namespace Squirrel.Tests.TestHelpers
 {

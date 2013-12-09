@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using NuGet;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Client;
 using Squirrel.Core;
 using Squirrel.Tests.TestHelpers;

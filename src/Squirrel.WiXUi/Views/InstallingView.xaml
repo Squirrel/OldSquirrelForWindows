@@ -14,12 +14,13 @@
         </Grid.RowDefinitions>
 
         <StackPanel Margin="8,0">
-            <TextBlock x:Name="Title" FontWeight="ExtraLight" FontSize="32" />
-            <TextBlock x:Name="Description" FontWeight="Normal" FontSize="16" TextWrapping="Wrap" />
+            <TextBlock x:Name="Title" Text="Atom" FontWeight="ExtraLight" FontSize="32" />
+            <TextBlock x:Name="Description" Text="The hackable, collaborative editor of tomorrow!
+" FontWeight="Normal" FontSize="16" TextWrapping="Wrap" />
         </StackPanel>
         <Border Grid.Row="1" Margin="0,16,0,0" Background="#efefef" BorderBrush="LightGray" BorderThickness="0,1,0,1">
             <StackPanel VerticalAlignment="Center" Margin="32,0,32,0">
-                <ProgressBar x:Name="ProgressValue" Height="16" />
+                <ProgressBar x:Name="ProgressValue" Height="16" Value="50" Maximum="100" />
                 <TextBlock Text="Installing Application..." FontSize="14" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>

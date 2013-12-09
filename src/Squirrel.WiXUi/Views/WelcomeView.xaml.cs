@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
-using ReactiveUI;
-using ReactiveUI.Xaml;
+using ReactiveUIMicro;
+using ReactiveUIMicro.Xaml;
 using Squirrel.WiXUi.ViewModels;
 
 namespace Squirrel.WiXUi.Views

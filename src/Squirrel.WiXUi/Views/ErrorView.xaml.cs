@@ -1,5 +1,5 @@
-﻿using ReactiveUI;
-using ReactiveUI.Xaml;
+﻿using ReactiveUIMicro;
+using ReactiveUIMicro.Xaml;
 using Squirrel.WiXUi.ViewModels;
 using System;
 using System.Reactive.Linq;

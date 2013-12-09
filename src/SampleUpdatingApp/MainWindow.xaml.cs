@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using ReactiveUI;
-using ReactiveUI.Xaml;
+using ReactiveUIMicro;
+using ReactiveUIMicro.Xaml;
 using Squirrel.Client;
 
 namespace SampleUpdatingApp

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using ReactiveUI;
+using ReactiveUIMicro;
 
 namespace Squirrel.WiXUi
 {

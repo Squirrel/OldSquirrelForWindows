@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using Moq;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Client;
 using Squirrel.Core;
 using Squirrel.Tests.TestHelpers;

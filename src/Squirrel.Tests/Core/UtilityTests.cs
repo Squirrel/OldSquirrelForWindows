@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.Core;
 using Squirrel.Tests.TestHelpers;
 using Xunit;

@@ -9,8 +9,8 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Microsoft.Tools.WindowsInstallerXml.Bootstrapper;
-using ReactiveUI;
-using ReactiveUI.Routing;
+using ReactiveUIMicro;
+using ReactiveUIMicro.Routing;
 using Squirrel.Client.WiXUi;
 using Squirrel.WiXUi.ViewModels;
 using Squirrel.WiXUi.Views;
@@ -25,7 +25,7 @@ namespace Squirrel.WiXUi
 
         protected override void Run()
         {
-            RxApp.LoggerFactory = _ => new FileLogger("Squirrel") { Level = ReactiveUI.LogLevel.Info };
+            RxApp.LoggerFactory = _ => new FileLogger("Squirrel") { Level = ReactiveUIMicro.LogLevel.Info };
             ReactiveUIMicro.RxApp.ConfigureFileLogging(); // HACK: we can do better than this later
 
             theApp = new Application();

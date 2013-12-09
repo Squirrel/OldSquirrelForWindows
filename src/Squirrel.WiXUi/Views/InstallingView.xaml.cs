@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Squirrel.WiXUi.ViewModels;
 
 namespace Squirrel.WiXUi.Views

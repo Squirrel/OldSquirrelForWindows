@@ -1,10 +1,10 @@
 using System;
-using ReactiveUI.Routing;
 using Squirrel.Core;
+using System.ComponentModel;
 
 namespace Squirrel.Client.WiXUi
 {
-    public interface IWixUiBootstrapper : IScreen
+    public interface IWixUiBootstrapper : INotifyPropertyChanged
     {
         IWiXEvents WiXEvents { get; }
     }

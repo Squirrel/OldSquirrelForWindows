@@ -7,7 +7,7 @@ using System.Text;
 using Squirrel.Client;
 using Squirrel.Core;
 using Squirrel.Tests.TestHelpers;
-using ReactiveUI;
+using ReactiveUIMicro;
 using Xunit;
 
 namespace Squirrel.Tests.Client
