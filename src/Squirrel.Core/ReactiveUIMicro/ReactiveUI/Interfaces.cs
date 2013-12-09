@@ -15,7 +15,7 @@ namespace ReactiveUIMicro
     /// will be Covariant which will allow simpler casting between specific and
     /// generic changes.
     /// </summary>
-    internal interface IObservedChange<TSender, TValue>
+    public interface IObservedChange<TSender, TValue>
     {
         /// <summary>
         /// The object that has raised the change.
@@ -37,7 +37,7 @@ namespace ReactiveUIMicro
         TValue Value { get; }
     }
 
-    internal class ObservedChange<TSender, TValue> : IObservedChange<TSender, TValue>
+    public class ObservedChange<TSender, TValue> : IObservedChange<TSender, TValue>
     {
         public TSender Sender { get; set; }
         public string PropertyName { get; set; }
@@ -48,7 +48,7 @@ namespace ReactiveUIMicro
     /// IReactiveNotifyPropertyChanged represents an extended version of
     /// INotifyPropertyChanged that also exposes Observables.
     /// </summary>
-    internal interface IReactiveNotifyPropertyChanged : INotifyPropertyChanged, INotifyPropertyChanging, IEnableLogger
+    public interface IReactiveNotifyPropertyChanged : INotifyPropertyChanged, INotifyPropertyChanging, IEnableLogger
     {
         /// <summary>
         /// Represents an Observable that fires *before* a property is about to
@@ -78,7 +78,7 @@ namespace ReactiveUIMicro
     /// IReactiveNotifyPropertyChanged of TSender is a helper interface that adds
     /// typed versions of Changing and Changed.
     /// </summary>
-    internal interface IReactiveNotifyPropertyChanged<TSender> : IReactiveNotifyPropertyChanged
+    public interface IReactiveNotifyPropertyChanged<TSender> : IReactiveNotifyPropertyChanged
     {
         new IObservable<IObservedChange<TSender, object>> Changing { get; }
         new IObservable<IObservedChange<TSender, object>> Changed { get; }
@@ -95,11 +95,11 @@ namespace ReactiveUIMicro
     /// you aren't listening to ThrownExceptions and one appears, the exception
     /// will appear on the UI thread and crash the application.
     /// </summary>
-    internal interface IHandleObservableErrors
+    public interface IHandleObservableErrors
     {
         /// <summary>
         /// Fires whenever an exception would normally terminate ReactiveUI 
-        /// internal state.
+        /// public state.
         /// </summary>
         IObservable<Exception> ThrownExceptions { get; }
     }
@@ -113,7 +113,7 @@ namespace ReactiveUIMicro
     /// IReactiveNotifyPropertyChanged semantically as "Fire when *anything* in
     /// the collection or any of its items have changed, in any way".
     /// </summary>
-    internal interface IReactiveCollection : IReactiveNotifyPropertyChanged, IEnumerable, INotifyCollectionChanged
+    public interface IReactiveCollection : IReactiveNotifyPropertyChanged, IEnumerable, INotifyCollectionChanged
     {
         //
         // Collection Tracking
@@ -190,7 +190,7 @@ namespace ReactiveUIMicro
     /// IReactiveCollection of T is the typed version of IReactiveCollection and
     /// adds type-specified versions of Observables
     /// </summary>
-    internal interface IReactiveCollection<T> : IEnumerable<T>, IReactiveCollection
+    public interface IReactiveCollection<T> : IEnumerable<T>, IReactiveCollection
     {
         new IObservable<T> ItemsAdded { get; }
 
@@ -215,7 +215,7 @@ namespace ReactiveUIMicro
     /// unique string used to distinguish between messages of the same Type, and
     /// is arbitrarily set by the client. 
     /// </summary>
-    internal interface IMessageBus : IEnableLogger
+    public interface IMessageBus : IEnableLogger
     {
         /// <summary>
         /// Registers a scheduler for the type, which may be specified at
@@ -287,7 +287,7 @@ namespace ReactiveUIMicro
     /// are porting RxUI to a new UI toolkit, or generally want to enable WhenAny
     /// for another type of object that can be observed in a unique way.
     /// </summary>
-    internal interface ICreatesObservableForProperty : IEnableLogger
+    public interface ICreatesObservableForProperty : IEnableLogger
     {
         /// <summary>
         /// Returns a positive integer when this class supports 
@@ -318,7 +318,7 @@ namespace ReactiveUIMicro
         IObservable<IObservedChange<object, object>> GetNotificationForProperty(object sender, string propertyName, bool beforeChanged = false);
     }
 
-    internal interface IViewFor
+    public interface IViewFor
     {
         object ViewModel { get; set; }
     }
@@ -326,7 +326,7 @@ namespace ReactiveUIMicro
     /// <summary>
     /// Implement this interface on your Views to support Routing and Binding.
     /// </summary>
-    internal interface IViewFor<T> : IViewFor
+    public interface IViewFor<T> : IViewFor
         where T : class
     {
         /// <summary>
@@ -335,12 +335,12 @@ namespace ReactiveUIMicro
         new T ViewModel { get; set; }
     }
 
-    internal interface IDefaultPropertyBindingProvider
+    public interface IDefaultPropertyBindingProvider
     {
         Tuple<string, int> GetPropertyForControl(object control);
     }
 
-    internal interface IWantsToRegisterStuff
+    public interface IWantsToRegisterStuff
     {                       
         void Register();
     }

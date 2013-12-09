@@ -17,7 +17,7 @@ namespace ReactiveUIMicro
     /// <typeparam name="TParam">The type of the parameter to the calculation function.</typeparam>
     /// <typeparam name="TVal">The type of the value returned by the calculation
     /// function.</typeparam>
-    internal class MemoizingMRUCache<TParam, TVal> : IEnableLogger
+    public class MemoizingMRUCache<TParam, TVal> : IEnableLogger
     {
         private readonly Func<TParam, object, TVal> calculationFunction;
         private readonly Action<TVal> releaseFunction;

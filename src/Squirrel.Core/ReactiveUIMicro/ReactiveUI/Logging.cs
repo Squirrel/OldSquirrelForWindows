@@ -11,17 +11,17 @@ using System.Diagnostics.Contracts;
 
 namespace ReactiveUIMicro
 {
-    internal enum LogLevel {
+    public enum LogLevel {
         Debug = 1, Info, Warn, Error, Fatal,
     }
 
-    internal interface IRxUILogger
+    public interface IRxUILogger
     {
         void Write([Localizable(false)] string message, LogLevel logLevel);
         LogLevel Level { get; set; }
     }
 
-    internal interface IRxUIFullLogger : IRxUILogger
+    public interface IRxUIFullLogger : IRxUILogger
     {
         void Debug<T>(T value);
         void Debug<T>(IFormatProvider formatProvider, T value);
@@ -89,7 +89,7 @@ namespace ReactiveUIMicro
         void Fatal<TArgument1, TArgument2, TArgument3>([Localizable(false)] string message, TArgument1 argument1, TArgument2 argument2, TArgument3 argument3);
     }
 
-    internal static class LogManager
+    public static class LogManager
     {
         static LogManager()
         {
@@ -120,14 +120,14 @@ namespace ReactiveUIMicro
     }
 
     [Serializable]
-    internal class NullLogger : IRxUILogger
+    public class NullLogger : IRxUILogger
     {
         public void Write(string message, LogLevel logLevel) {}
         public LogLevel Level { get; set; }
     }
 
     [Serializable]
-    internal class DebugLogger : IRxUILogger
+    public class DebugLogger : IRxUILogger
     {
         public void Write(string message, LogLevel logLevel)
         {
@@ -139,7 +139,7 @@ namespace ReactiveUIMicro
     }
 
     [Serializable]
-    internal class FileLogger : IRxUILogger
+    public class FileLogger : IRxUILogger
     {
         readonly string filePath;
         readonly string messageFormat;
@@ -195,7 +195,7 @@ namespace ReactiveUIMicro
     public interface IEnableLogger { }
 
     [Serializable]
-    internal static class LogHost
+    public static class LogHost
     {
         /// <summary>
         /// Use this logger inside miscellaneous static methods where creating
@@ -215,7 +215,7 @@ namespace ReactiveUIMicro
         }
     }
 
-    internal static class ObservableLoggingMixin
+    public static class ObservableLoggingMixin
     {
         public static IObservable<T> Log<T, TObj>(this IObservable<T> This, 
             TObj klass, 
@@ -261,7 +261,7 @@ namespace ReactiveUIMicro
 
     #region Extremely Dull Code Ahead
     [Serializable]
-    internal class WrappingFullLogger : IRxUIFullLogger
+    public class WrappingFullLogger : IRxUIFullLogger
     {
         readonly IRxUILogger _inner;
         readonly string prefix;

@@ -128,8 +128,8 @@ namespace ReactiveUIMicro
         /// </summary>
 
         static Func<Type, IRxUILogger> _LoggerFactory;
-        static internal readonly Subject<Unit> _LoggerFactoryChanged = new Subject<Unit>();
-        internal static Func<Type, IRxUILogger> LoggerFactory {
+        static public readonly Subject<Unit> _LoggerFactoryChanged = new Subject<Unit>();
+        public static Func<Type, IRxUILogger> LoggerFactory {
             get { return _LoggerFactory; }
             set { _LoggerFactory = value; _LoggerFactoryChanged.OnNext(Unit.Default); }
         }
