@@ -192,7 +192,7 @@ namespace ReactiveUIMicro
     /// Mixin, which will give you a Logger that includes the class name in the
     /// log.
     /// </summary>
-    internal interface IEnableLogger { }
+    public interface IEnableLogger { }
 
     [Serializable]
     internal static class LogHost

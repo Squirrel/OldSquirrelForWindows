@@ -193,36 +193,30 @@ namespace Squirrel.Client
 
         public IObservable<List<string>> ApplyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
         {
-            return acquireUpdateLock().SelectMany(_ => applyReleases(updateInfo, progress).ToObservable());
-        }
-
-        async Task<List<string>> applyReleases(UpdateInfo updateInfo, IObserver<int> progress = null)
-        {
             progress = progress ?? new Subject<int>();
 
             // NB: It's important that we update the local releases file *only* 
             // once the entire operation has completed, even though we technically
             // could do it after DownloadUpdates finishes. We do this so that if
             // we get interrupted / killed during this operation, we'll start over
+            return Observable.Using(_ => acquireUpdateLock().ToTask(), (dontcare, ct) => {
+                var obs = cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null)
+                    .Do(_ => progress.OnNext(10))
+                    .SelectMany(_ => createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion))
+                    .Do(_ => progress.OnNext(50))
+                    .Select(release => installPackageToAppDir(updateInfo, release))
+                    .Do(_ => progress.OnNext(95))
+                    .SelectMany(ret => UpdateLocalReleasesFile().Select(_ => ret))
+                    .Finally(() => progress.OnCompleted())
+                    .PublishLast();
 
-            var ret = default(List<string>);
-            try {
-                await cleanDeadVersions(updateInfo.CurrentlyInstalledVersion != null ? updateInfo.CurrentlyInstalledVersion.Version : null);
-                progress.OnNext(10);
+                obs.Connect();
 
-                var release = await createFullPackagesFromDeltas(updateInfo.ReleasesToApply, updateInfo.CurrentlyInstalledVersion);
-                progress.OnNext(50);
-
-                ret = await Observable.Start(() => installPackageToAppDir(updateInfo, release), RxApp.TaskpoolScheduler);
-                progress.OnNext(95);
-
-                await UpdateLocalReleasesFile();
-                progress.OnNext(100);
-            } finally {
-                progress.OnCompleted();
-            }
-            
-            return ret;
+                // NB: This overload of Using is high as a kite.
+                var tcs = new TaskCompletionSource<IObservable<List<string>>>();
+                tcs.SetResult(obs);
+                return tcs.Task;
+            });
         }
 
         public IObservable<Unit> UpdateLocalReleasesFile()
