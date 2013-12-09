@@ -21,7 +21,7 @@ namespace ReactiveUIMicro
     /// Changing and Changed Observables to monitor object changes.
     /// </summary>
     [DataContract]
-    public class ReactiveObject : IEnableLogger
+    public class ReactiveObject : IReactiveNotifyPropertyChanged, IEnableLogger
     {
         [field: IgnoreDataMember]
         bool rxObjectsSetup = false;
