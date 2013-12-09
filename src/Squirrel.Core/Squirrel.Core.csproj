@@ -128,9 +128,6 @@
     <Compile Include="ReactiveUIMicro\ReactiveUI\Logging.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\MemoizingMRUCache.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\RxApp.cs" />
-    <Compile Include="ReactiveUIMicro\Rx-Shim\AwaitableAsyncSubject.cs" />
-    <Compile Include="ReactiveUIMicro\Rx-Shim\GetAwaiter.cs" />
-    <Compile Include="ReactiveUIMicro\Rx-Shim\ImmutableList.cs" />
     <Compile Include="ReleaseEntry.cs" />
     <Compile Include="ReleasePackage.cs" />
     <Compile Include="MethodRunner.cs" />
@@ -140,7 +137,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="ReactiveUIMicro\Rx-Shim\LICENSE" />
     <None Include="Squirrel.Core.nuspec" />
   </ItemGroup>
   <ItemGroup />
