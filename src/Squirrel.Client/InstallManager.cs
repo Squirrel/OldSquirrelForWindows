@@ -15,7 +15,7 @@ using Squirrel.Core;
 
 namespace Squirrel.Client
 {
-    public interface IInstallManager
+    public interface IInstallManager : IEnableLogger
     {
         IObservable<List<string>> ExecuteInstall(string currentAssemblyDir, IPackage bundledPackageMetadata, IObserver<int> progress = null);
         IObservable<Unit> ExecuteUninstall(Version version);
@@ -67,7 +67,7 @@ namespace Squirrel.Client
             return updateUsingDeltas;
         }
 
-        async Task<List<string>> executeInstall(
+        Task<List<string>> executeInstall(
             string currentAssemblyDir,
             IPackage bundledPackageMetadata,
             bool ignoreDeltaUpdates = false,
@@ -83,14 +83,7 @@ namespace Squirrel.Client
             var realCopyFileProgress = new Subject<int>();
             var realApplyProgress = new Subject<int>();
 
-            List<string> ret = null;
-
-            using (var eigenUpdater = new UpdateManager(
-                        currentAssemblyDir, 
-                        bundledPackageMetadata.Id, 
-                        fxVersion,
-                        TargetRootDirectory)) {
-
+            var eigenUpdateObs = Observable.Using(() => new UpdateManager(currentAssemblyDir, bundledPackageMetadata.Id, fxVersion, TargetRootDirectory), eigenUpdater => {
                 // The real update takes longer than the eigenupdate because we're
                 // downloading from the Internet instead of doing everything 
                 // locally, so give it more weight
@@ -102,65 +95,57 @@ namespace Squirrel.Client
                     .Select(x => (int) x)
                     .Subscribe(progress);
 
-                var updateInfo = await eigenUpdater.CheckForUpdate(ignoreDeltaUpdates, eigenCheckProgress);
+                var updateInfoObs = eigenUpdater.CheckForUpdate(ignoreDeltaUpdates, eigenCheckProgress);
 
-                log.Info("The checking of releases completed - and there was much rejoicing");
+                return updateInfoObs.SelectMany(updateInfo => {
+                    log.Info("The checking of releases completed - and there was much rejoicing");
 
-                if (!updateInfo.ReleasesToApply.Any()) {
+                    if (!updateInfo.ReleasesToApply.Any()) {
 
-                    var rootDirectory = TargetRootDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                        var rootDirectory = TargetRootDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-                    var version = updateInfo.CurrentlyInstalledVersion;
-                    var releaseFolder = String.Format("app-{0}", version.Version);
-                    var absoluteFolder = Path.Combine(rootDirectory, version.PackageName, releaseFolder);
+                        var version = updateInfo.CurrentlyInstalledVersion;
+                        var releaseFolder = String.Format("app-{0}", version.Version);
+                        var absoluteFolder = Path.Combine(rootDirectory, version.PackageName, releaseFolder);
 
-                    if (!Directory.Exists(absoluteFolder)) {
-                        log.Warn("executeInstall: the directory {0} doesn't exist - cannot find the current app?!!?");
-                    } else {
-                        return Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly)
-                                        .ToList();
+                        if (!Directory.Exists(absoluteFolder)) {
+                            log.Warn("executeInstall: the directory {0} doesn't exist - cannot find the current app?!!?");
+                        } else {
+                            return Observable.Return(
+                                Directory.GetFiles(absoluteFolder, "*.exe", SearchOption.TopDirectoryOnly).ToList());
+                        }
                     }
+
+                    foreach (var u in updateInfo.ReleasesToApply) {
+                        log.Info("HEY! We should be applying update {0}", u.Filename);
+                    }
+
+                    return eigenUpdater.DownloadReleases(updateInfo.ReleasesToApply, eigenCopyFileProgress)
+                        .Do(_ => log.Info("The downloading of releases completed - and there was much rejoicing"))
+                        .SelectMany(_ => eigenUpdater.ApplyReleases(updateInfo, eigenApplyProgress))
+                        .Do(_ => log.Info("The applying of releases completed - and there was much rejoicing"));
+                });
+            });
+
+            return eigenUpdateObs.SelectMany(ret => {
+                var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
+                updateUrl = null; //XXX REMOVE ME
+                if (updateUrl == null) {
+                    realCheckProgress.OnNext(100); realCheckProgress.OnCompleted();
+                    realCopyFileProgress.OnNext(100); realCopyFileProgress.OnCompleted();
+                    realApplyProgress.OnNext(100); realApplyProgress.OnCompleted();
+
+                    return Observable.Return(ret);
                 }
 
-                foreach (var u in updateInfo.ReleasesToApply) {
-                    log.Info("HEY! We should be applying update {0}", u.Filename);
-                }
-
-                await eigenUpdater.DownloadReleases(updateInfo.ReleasesToApply, eigenCopyFileProgress);
-
-                log.Info("The downloading of releases completed - and there was much rejoicing");
-
-                ret = await eigenUpdater.ApplyReleases(updateInfo, eigenApplyProgress);
-
-                log.Info("The applying of releases completed - and there was much rejoicing");
-            }
-
-            var updateUrl = bundledPackageMetadata.ProjectUrl != null ? bundledPackageMetadata.ProjectUrl.ToString() : null;
-            updateUrl = null; //XXX REMOVE ME
-            if (updateUrl == null) {
-                realCheckProgress.OnNext(100); realCheckProgress.OnCompleted();
-                realCopyFileProgress.OnNext(100); realCopyFileProgress.OnCompleted();
-                realApplyProgress.OnNext(100); realApplyProgress.OnCompleted();
-
-                return ret;
-            }
-
-            using(var realUpdater = new UpdateManager(
-                    updateUrl,
-                    bundledPackageMetadata.Id,
-                    fxVersion,
-                    TargetRootDirectory)) {
-                try {
-                    var updateInfo = await realUpdater.CheckForUpdate(progress: realCheckProgress);
-                    await realUpdater.DownloadReleases(updateInfo.ReleasesToApply, realCopyFileProgress);
-                    await realUpdater.ApplyReleases(updateInfo, realApplyProgress);
-                } catch (Exception ex) {
-                    log.ErrorException("Failed to update to latest remote version", ex);
-                    return new List<string>();
-                }
-            }
-
-            return ret;
+                return Observable.Using(() => new UpdateManager(updateUrl, bundledPackageMetadata.Id, fxVersion, TargetRootDirectory), realUpdater => {
+                    return realUpdater.CheckForUpdate(progress: realCheckProgress)
+                        .SelectMany(x => realUpdater.DownloadReleases(x.ReleasesToApply, realCopyFileProgress).Select(_ => x))
+                        .SelectMany(x => realUpdater.ApplyReleases(x, realApplyProgress))
+                        .Select(_ => ret)
+                        .LoggedCatch(this, Observable.Return(new List<string>()), "Failed to update to latest remote version");
+                });
+            }).ToTask();
         }
 
         public IObservable<Unit> ExecuteUninstall(Version version = null)
