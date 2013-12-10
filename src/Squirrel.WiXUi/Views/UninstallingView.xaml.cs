@@ -30,7 +30,7 @@ namespace Squirrel.WiXUi.Views
             this.WhenAnyDP(x => x.ViewModel, x => x.Value)
                 .Select(x => x.WhenAny(y => x.LatestProgress, y => (double) y.Value)).Switch()
                 .ObserveOn(RxApp.DeferredScheduler) // XXX: WHYYYYY
-                .BindTo(ProgressValue, x => x.Value);
+                .Subscribe(x => ProgressValue.Value = x);
         }
 
         public UninstallingViewModel ViewModel {

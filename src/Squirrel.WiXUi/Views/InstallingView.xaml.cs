@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using ReactiveUIMicro;
+using ReactiveUIMicro.Xaml;
 using Squirrel.WiXUi.ViewModels;
 
 namespace Squirrel.WiXUi.Views
@@ -11,9 +12,9 @@ namespace Squirrel.WiXUi.Views
         {
             InitializeComponent();
 
-            this.OneWayBind(ViewModel, x => x.LatestProgress, x => x.ProgressValue.Value);
-            this.OneWayBind(ViewModel, x => x.Title, x => x.Title.Text);
-            this.OneWayBind(ViewModel, x => x.Description, x => x.Description.Text);
+            this.WhenAnyVM(x => x.LatestProgress, x => x.Value).Subscribe(x => ProgressValue.Value = x);
+            this.WhenAnyVM(x => x.Title, x => x.Value).Subscribe(x => Title.Text = x);
+            this.WhenAnyVM(x => x.Description, x => x.Value).Subscribe(x => Description.Text = x);
         }
 
         public InstallingViewModel ViewModel {

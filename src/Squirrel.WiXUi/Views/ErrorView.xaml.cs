@@ -19,10 +19,10 @@ namespace Squirrel.WiXUi.Views
                 .Select(x => x.WhenAny(y => y.Error, y => y.Value)).Switch()
                 .Where(x => x != null)
                 .Select(x => String.Format("{0}\n{1}", x.ErrorMessage, x.ErrorCauseOrResolution))
-                .BindTo(this, x => x.ErrorMessage.Text);
+                .Subscribe(x => ErrorMessage.Text = x);
 
-            this.BindCommand(ViewModel, x => x.Shutdown, x => x.Shutdown);
-            this.BindCommand(ViewModel, x => x.OpenLogsFolder, x => x.LogsCommand);
+            this.WhenAnyVM(x => x.Shutdown, x => x.Value).Subscribe(x => Shutdown.Command = x);
+            this.WhenAnyVM(x => x.OpenLogsFolder, x => x.Value).Subscribe(x => LogsCommand.Command = x);
         }
 
         public ErrorViewModel ViewModel {

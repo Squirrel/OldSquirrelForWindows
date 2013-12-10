@@ -12,9 +12,9 @@ namespace Squirrel.WiXUi.Views
         {
             InitializeComponent();
 
-            this.OneWayBind(ViewModel, x => x.Title, x => x.Title.Text);
-            this.OneWayBind(ViewModel, x => x.Description, x => x.Description.Text);
-            this.BindCommand(ViewModel, x => x.ShouldProceed, x => x.ShouldProceed);
+            this.WhenAnyVM(x => x.Title, x => x.Value).Subscribe(x => Title.Text = x);
+            this.WhenAnyVM(x => x.Description, x => x.Value).Subscribe(x => Description.Text = x);
+            this.WhenAnyVM(x => x.ShouldProceed, x => x.Value).Subscribe(x => ShouldProceed.Command = x);
         }
 
         public WelcomeViewModel ViewModel {
