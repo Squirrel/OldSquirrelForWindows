@@ -14,7 +14,7 @@ namespace ReactiveUIMicro
             where TSender : IReactiveNotifyPropertyChanged
         {
             var propName = Reflection.SimpleExpressionToPropertyName(property);
-            var getter = Reflection.GetValueFetcherForProperty<TSender>(propName);
+            var getter = Reflection.GetValueFetcherForProperty(This.GetType(), propName);
 
             return This.Changed
                 .Where(x => x.PropertyName == propName)
