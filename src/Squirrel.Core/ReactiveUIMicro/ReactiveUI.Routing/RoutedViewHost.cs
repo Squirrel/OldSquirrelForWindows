@@ -54,7 +54,8 @@ namespace ReactiveUIMicro.Routing
 
             if (RxApp.InUnitTestRunner()) return;
 
-            this.WhenAny(x => x.Router.NavigationStack, x => x.Value)
+            this.WhenAnyDP(x => x.Router, x => x.Value)
+                .Select(x => x.WhenAny(y => y.NavigationStack, y => y.Value)).Switch()
                 .SelectMany(x => x.CollectionCountChanged.StartWith(x.Count).Select(_ => x.LastOrDefault()))
                 .Subscribe(vm => {
                     if (vm == null) {

@@ -23,7 +23,7 @@ namespace ReactiveUIMicro
 {
     public static class WhenAnyDPShim
     {
-        public static IObservable<TVal> WhenAny<TSender, TTarget, TVal>(this TSender This, Expression<Func<TSender, TTarget>> property, Func<IObservedChange<TSender, TTarget>, TVal> selector)
+        public static IObservable<TVal> WhenAnyDP<TSender, TTarget, TVal>(this TSender This, Expression<Func<TSender, TTarget>> property, Func<IObservedChange<TSender, TTarget>, TVal> selector)
             where TSender : DependencyObject
         {
             var propName = Reflection.SimpleExpressionToPropertyName(property);

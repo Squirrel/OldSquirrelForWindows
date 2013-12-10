@@ -27,7 +27,8 @@ namespace Squirrel.WiXUi.Views
         {
             InitializeComponent();
 
-            this.WhenAny(x => x.ViewModel.LatestProgress, x => (double) x.Value)
+            this.WhenAnyDP(x => x.ViewModel, x => x.Value)
+                .Select(x => x.WhenAny(y => x.LatestProgress, y => (double) y.Value)).Switch()
                 .ObserveOn(RxApp.DeferredScheduler) // XXX: WHYYYYY
                 .BindTo(ProgressValue, x => x.Value);
         }

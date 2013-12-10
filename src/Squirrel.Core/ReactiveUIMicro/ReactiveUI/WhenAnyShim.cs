@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
+using System.Windows;
 
 namespace ReactiveUIMicro
 {

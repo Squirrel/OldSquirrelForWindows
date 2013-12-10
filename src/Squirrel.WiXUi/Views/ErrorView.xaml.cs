@@ -15,7 +15,8 @@ namespace Squirrel.WiXUi.Views
 
             // TODO: when uninstall error occurs, set Title accordingly
 
-            this.WhenAny(x => x.ViewModel.Error, x => x.Value)
+            this.WhenAnyDP(x => x.ViewModel, x => x.Value)
+                .Select(x => x.WhenAny(y => y.Error, y => y.Value)).Switch()
                 .Where(x => x != null)
                 .Select(x => String.Format("{0}\n{1}", x.ErrorMessage, x.ErrorCauseOrResolution))
                 .BindTo(this, x => x.ErrorMessage.Text);

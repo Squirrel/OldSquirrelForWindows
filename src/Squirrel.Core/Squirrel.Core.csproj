@@ -129,11 +129,13 @@
     <Compile Include="ProcessFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\Interfaces.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\RoutedViewHost.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\RoutingState.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\Errors.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\Interfaces.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\ReactiveAsyncCommand.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\ReactiveCommand.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\WhenAnyDPShim.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Interfaces.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\Logging.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\MemoizingMRUCache.cs" />
@@ -144,6 +146,7 @@
     <Compile Include="ReactiveUIMicro\ReactiveUI\Reflection.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\RxApp.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI\ScheduledSubject.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI\WhenAnyShim.cs" />
     <Compile Include="ReleaseEntry.cs" />
     <Compile Include="ReleasePackage.cs" />
     <Compile Include="MethodRunner.cs" />
