@@ -29,10 +29,6 @@
     <file src="..\..\bin\Ionic.Zip.dll" target="tools" />
     <file src="..\..\bin\MarkdownSharp.dll" target="tools" />
     <file src="..\..\bin\NuGet.Core.dll" target="tools" />
-    <file src="..\..\bin\ReactiveUI.dll" target="tools" />
-    <file src="..\..\bin\ReactiveUI.Blend.dll" target="tools" />
-    <file src="..\..\bin\ReactiveUI.Routing.dll" target="tools" />
-    <file src="..\..\bin\ReactiveUI.Xaml.dll" target="tools" />
     <file src="..\..\bin\SharpBITS.Base.dll" target="tools" />
     <file src="..\..\bin\Squirrel.Client.dll" target="tools" />
     <file src="..\..\bin\Squirrel.Core.dll" target="tools" />
@@ -45,6 +41,5 @@
     <file src="..\..\bin\System.Reactive.Linq.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.PlatformServices.dll" target="tools" />
     <file src="..\..\bin\System.Reactive.Windows.Threading.dll" target="tools" />
-    <file src="..\..\bin\System.Windows.Interactivity.dll" target="tools" />
   </files>
 </package>
