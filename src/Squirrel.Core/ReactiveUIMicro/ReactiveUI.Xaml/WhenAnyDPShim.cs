@@ -27,6 +27,12 @@ namespace ReactiveUIMicro
             where TSender : DependencyObject
         {
             var propName = Reflection.SimpleExpressionToPropertyName(property);
+            return WhenAnyDP(This, propName, selector);
+        }
+
+        public static IObservable<TVal> WhenAnyDP<TSender, TTarget, TVal>(this TSender This, string propName, Func<IObservedChange<TSender, TTarget>, TVal> selector)
+            where TSender : DependencyObject
+        {
             var getter = Reflection.GetValueFetcherForProperty<TSender>(propName);
             var obsForProp = new DependencyObjectObservableForProperty();
 

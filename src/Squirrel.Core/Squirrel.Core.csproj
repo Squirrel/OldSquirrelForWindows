@@ -132,6 +132,7 @@
     <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\RoutedViewHost.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\RoutingState.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Routing\RxRouting.cs" />
+    <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\BinderShims.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\Errors.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\Interfaces.cs" />
     <Compile Include="ReactiveUIMicro\ReactiveUI.Xaml\ReactiveAsyncCommand.cs" />
