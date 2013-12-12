@@ -198,7 +198,7 @@ namespace ReactiveUIMicro
         public static Func<TObj, object> GetValueFetcherForProperty<TObj>(string propName)
         {
             var ret = GetValueFetcherForProperty(typeof(TObj), propName);
-            return x => (TObj) ret(x);
+            return x => ret(x);
         }
 
         public static Func<object, object> GetValueFetcherForProperty(Type type, string propName)

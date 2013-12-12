@@ -16,6 +16,10 @@ namespace ReactiveUIMicro
             var propName = Reflection.SimpleExpressionToPropertyName(property);
             var getter = Reflection.GetValueFetcherForProperty(This.GetType(), propName);
 
+            if (This == null) {
+                return Observable.Never<TVal>();
+            }
+
             return This.Changed
                 .Where(x => x.PropertyName == propName)
                 .Select(_ => new ObservedChange<TSender, TTarget>() {

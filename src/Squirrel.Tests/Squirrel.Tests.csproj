@@ -96,6 +96,7 @@
       <HintPath>..\packages\Nuget.Core.2.7.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Abstractions">
@@ -125,6 +126,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-Xaml.2.1.30214.0\lib\Net40\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -153,6 +155,7 @@
     <Compile Include="Core\DeltaPackageTests.cs" />
     <Compile Include="Core\ReleaseEntryTests.cs" />
     <Compile Include="Core\ReleasePackageTests.cs" />
+    <Compile Include="Core\RxUIMicro\WhenAnyTests.cs" />
     <Compile Include="Core\UtilityTests.cs" />
     <Compile Include="Core\VersionComparerTests.cs" />
     <Compile Include="Release\ParseCommandsTests.cs" />
