@@ -38,9 +38,6 @@ namespace Squirrel.WiXUi
 
             this.Log().Info("WiX events: DisplayMode: {0}, Action: {1}", Command.Display, Command.Action);
 
-#if DEBUG
-            Debugger.Launch();
-#endif
             setupWiXEventHooks();
 
             var bootstrapper = new WixUiBootstrapper(this);

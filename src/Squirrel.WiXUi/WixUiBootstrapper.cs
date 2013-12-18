@@ -50,8 +50,6 @@ namespace Squirrel.WiXUi.ViewModels
             this.fileSystem = fileSystem ?? AnonFileSystem.Default;
             this.currentAssemblyDir = currentAssemblyDir ?? Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-            Debugger.Launch();
-
             RxApp.ConfigureServiceLocator(
                 (type, contract) => {
                     this.Log().Debug("Resolving type '{0}' with contract '{1}'", type, contract);

@@ -12,10 +12,6 @@ namespace CreateReleasePackage
     {
         static int Main(string[] args)
         {
-#if DEBUG
-            Debugger.Launch();
-#endif
-
             var optParams = ParseCommands.ParseOptions(args);
             if (optParams == null) {
                 return -1;
