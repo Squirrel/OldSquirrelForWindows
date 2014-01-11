@@ -114,7 +114,7 @@ namespace Squirrel.Core
             // dependent packages into the a temporary directory
             var dependencies = findAllDependentPackages(
                 package,
-                packagesRootDir,
+                new LocalPackageRepository(packagesRootDir),
                 frameworkName: targetFramework);
 
             string tempPath = null;
@@ -243,23 +243,23 @@ namespace Squirrel.Core
 
         IEnumerable<IPackage> findAllDependentPackages(
             IPackage package = null,
-            string packagesRootDir = null,
+            IPackageRepository packageRepository = null,
             HashSet<string> packageCache = null,
             FrameworkName frameworkName = null)
         {
             package = package ?? new ZipPackage(InputPackageFile);
             packageCache = packageCache ?? new HashSet<string>();
-
+            
             var deps = package.DependencySets
                 .Where(x => x.TargetFramework == null
                             || x.TargetFramework == frameworkName)
                 .SelectMany(x => x.Dependencies);
 
             return deps.SelectMany(dependency => {
-                var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
+                var ret = matchPackage(packageRepository, dependency.Id, dependency.VersionSpec);
 
                 if (ret == null) {
-                    var message = String.Format("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
+                    var message = String.Format("Couldn't find file for package in {1}: {0}", dependency.Id, packageRepository.Source);
                     this.Log().Error(message);
                     throw new Exception(message);
                 }
@@ -270,34 +270,15 @@ namespace Squirrel.Core
 
                 packageCache.Add(ret.GetFullName());
 
-                return findAllDependentPackages(ret, packagesRootDir, packageCache, frameworkName).StartWith(ret).Distinct(y => y.GetFullName());
+                return findAllDependentPackages(ret, packageRepository, packageCache, frameworkName).StartWith(ret).Distinct(y => y.GetFullName());
             }).ToArray();
         }
 
-        IPackage findPackageFromName(
-            string id,
-            IVersionSpec versionSpec,
-            string packagesRootDir = null,
-            IQueryable<IPackage> machineCache = null)
+        IPackage matchPackage(IPackageRepository packageRepository, string id, IVersionSpec version)
         {
-            machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
-
-            if (packagesRootDir != null && localPackageCache == null) {
-                localPackageCache = Utility.GetAllFilePathsRecursively(packagesRootDir)
-                    .Where(PackageHelper.IsPackageFile)
-                    .Select(x => new ZipPackage(x))
-                    .ToArray();
-            }
-
-            return findPackageFromNameInList(id, versionSpec, localPackageCache ?? Enumerable.Empty<IPackage>()) ?? 
-                findPackageFromNameInList(id, versionSpec, machineCache);
+            return packageRepository.FindPackagesById(id).FirstOrDefault(x => VersionComparer.Matches(version, x.Version));
         }
 
-        static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IEnumerable<IPackage> packageList)
-        {
-            return packageList.Where(x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase)).ToArray()
-                .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));
-        }
 
         static internal void addDeltaFilesToContentTypes(string rootDirectory)
         {

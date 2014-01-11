@@ -60,7 +60,7 @@ namespace Squirrel.Tests.Core
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
             var fixture = ExposedObject.From(new ReleasePackage(inputPackage));
-            IPackage result = fixture.findPackageFromName("xunit", VersionUtility.ParseVersionSpec("[1.0,2.0]"), sourceDir, null);
+            IPackage result = fixture.matchPackage(new LocalPackageRepository(sourceDir), "xunit", VersionUtility.ParseVersionSpec("[1.0,2.0]"));
 
             result.Id.ShouldEqual("xunit");
             result.Version.Version.Major.ShouldEqual(1);
@@ -75,7 +75,7 @@ namespace Squirrel.Tests.Core
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
-            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir, null, null);
+            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, new LocalPackageRepository(sourceDir), null, null);
             results.Count().ShouldBeGreaterThan(0);
         }
 
