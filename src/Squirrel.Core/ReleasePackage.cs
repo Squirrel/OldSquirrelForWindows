@@ -149,7 +149,7 @@ namespace Squirrel.Core
             }
         }
 
-        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath, FrameworkName framework = null)
+        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath, FrameworkName framework)
         {
             dependencies.ForEach(pkg => {
                 this.Log().Info("Scanning {0}", pkg.Id);
@@ -157,18 +157,10 @@ namespace Squirrel.Core
                 pkg.GetLibFiles().ForEach(file => {
                     var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
 
-                    if(isNonDesktopAssembly(file.Path)) {
-                        this.Log().Info("Ignoring {0} as the platform is not acceptable", outPath);
+                    if (!VersionUtility.IsCompatible(framework , new[] { file.TargetFramework }))
+                    {
+                        this.Log().Info("Ignoring {0} as the target framework is not compatible", outPath);
                         return;
-                    }
-
-                    if (framework != null) {
-                        if (framework == FrameworkTargetVersion.Net40
-                            && file.TargetFramework == FrameworkTargetVersion.Net45)
-                        {
-                                this.Log().Info("Ignoring {0} as we do not want to ship net45 assemblies for our net40 app", outPath);
-                                return;
-                        }
                     }
 
                     Directory.CreateDirectory(outPath.Directory.FullName);
@@ -188,18 +180,6 @@ namespace Squirrel.Core
                 .Select(x => new FileInfo(x.FullName.ToLowerInvariant().Replace(".dll", ".xml")))
                 .Where(x => x.Exists)
                 .ForEach(x => x.Delete());
-        }
-
-        bool isNonDesktopAssembly(string path)
-        {
-            // NB: Nuke Silverlight, WinRT, WindowsPhone and Xamarin assemblies. 
-            // We can't tell as easily if other profiles can be removed because 
-            // you can load net20 DLLs inside .NET 4.0 apps
-            var bannedFrameworks = new[] {"sl", "winrt", "netcore", "win8", "windows8", "MonoAndroid", "MonoTouch", "MonoMac", "wp", };
-
-            string frameworkPath = path.Substring(4);
-
-            return bannedFrameworks.Any(x => frameworkPath.StartsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
 
         void renderReleaseNotesMarkdown(string specPath, Func<string, string> releaseNotesProcessor)
