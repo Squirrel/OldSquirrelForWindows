@@ -194,8 +194,7 @@ namespace Squirrel.Tests.Core
                 var fileName = "Caliburn.Micro.dll";
                 var dependency = zipPackage.GetLibFiles()
                     .Where(f => f.Path.EndsWith(fileName))
-                    .Single(f => f.TargetFramework 
-                        == new FrameworkName(".NETFramework,Version=v4.0"));
+                    .Single(f => f.TargetFramework == FrameworkTargetVersion.Net40);
 
                 outputFile = new FileInfo(Path.Combine(sourceDir, fileName)).FullName;
 
@@ -345,8 +344,7 @@ namespace Squirrel.Tests.Core
 
                 var dependency = zipPackage.GetLibFiles()
                     .Where(f => f.Path.EndsWith("Caliburn.Micro.dll"))
-                    .FirstOrDefault(f => f.TargetFramework
-                        == new FrameworkName(".NETFramework,Version=v4.5"));
+                    .FirstOrDefault(f => f.TargetFramework == FrameworkTargetVersion.Net45);
 
                 Assert.NotNull(dependency);
             }
