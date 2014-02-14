@@ -144,9 +144,12 @@ namespace Squirrel.Client
                 return Observable.Throw<UpdateInfo>(ex);
             }
 
+            // Return null if no updates found
             var ret = releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
-                .SelectMany(releases => determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates))
+                .SelectMany(releases =>
+                    releases.Count() > 0 ? determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates)
+                        : Observable.Return<UpdateInfo>(null))
                 .PublishLast();
 
             ret.Connect();
