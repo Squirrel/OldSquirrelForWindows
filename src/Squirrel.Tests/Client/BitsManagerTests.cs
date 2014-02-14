@@ -69,4 +69,28 @@ namespace Squirrel.Tests.Client
         }
     }
 #endif
+
+    public class DirectUrlDownloaderTests
+    {
+        /*[Fact]
+        public void DownloadUrlShouldHandleTimeoutExceptions()
+        {
+            var urlDownloader = new DirectUrlDownloader(null);
+
+            // TODO: create a socket, make it accept connections, don't make it send anything to the client
+
+            Assert.True(bytes.Count() == 0);
+        }*/
+
+        [Fact]
+        public void DownloadUrlShouldHandleWebExceptions()
+        {
+            var urlDownloader = new DirectUrlDownloader(null);
+            
+            // This should be an empty byte array unless you can actually access http://lol
+            var bytes = urlDownloader.DownloadUrl("http://lol").First();
+
+            Assert.True(bytes.Count() == 0);
+        }
+    }
 }

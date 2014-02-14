@@ -211,6 +211,20 @@ namespace Squirrel.Tests.Client
                     }
                 }
             }
+
+            [Fact]
+            public void WhenReleasesFileIsBlankReturnNull()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    var fixture = new UpdateManager(tempDir, "MyAppName", FrameworkVersion.Net40);
+                    File.WriteAllText(Path.Combine(tempDir, "RELEASES"), "");
+
+                    using (fixture) {
+                        Assert.Null(fixture.CheckForUpdate().Wait());
+                    }
+                }
+            }
         }
     }
 }
