@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -35,6 +36,10 @@ namespace Squirrel.Client
 
             var ret = Http.DownloadUrl(url)
                 .Catch<byte[], TimeoutException>(ex => {
+                    // TODO: log this exception?
+                    return Observable.Return(new byte[0]);
+                })
+                .Catch<byte[], WebException>(ex => {
                     // TODO: log this exception?
                     return Observable.Return(new byte[0]);
                 })
