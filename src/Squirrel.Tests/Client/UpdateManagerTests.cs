@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
@@ -224,6 +227,36 @@ namespace Squirrel.Tests.Client
                         Assert.Null(fixture.CheckForUpdate().Wait());
                     }
                 }
+            }
+
+            [Fact]
+            public void WhenUrlTimesOutReturnNull()
+            {
+                var listener = new TcpListener(IPAddress.Loopback, 0);
+                listener.Start();
+
+                var endPoint = (IPEndPoint)listener.LocalEndpoint;
+                var uri = new UriBuilder("http", endPoint.Address.ToString(), endPoint.Port).Uri;
+
+                listener.BeginAcceptSocket(_ => { }, null);
+
+                var fixture = new UpdateManager(uri.ToString(), "theApp", FrameworkVersion.Net45);
+
+                var updateInfo = fixture.CheckForUpdate().Wait();
+
+                Assert.Null(updateInfo);
+            }
+
+            [Fact]
+            public void WhenUrlResultsInWebExceptionReturnNull()
+            {
+                // This should result in a WebException (which gets caught) unless you can actually access http://lol
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net45);
+
+                var updateInfo = fixture.CheckForUpdate().Wait();
+
+                Assert.Null(updateInfo);
             }
         }
     }

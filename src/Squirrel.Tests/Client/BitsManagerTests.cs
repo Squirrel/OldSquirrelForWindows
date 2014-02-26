@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Text;
 using Squirrel.Client;
@@ -71,38 +69,4 @@ namespace Squirrel.Tests.Client
         }
     }
 #endif
-
-    public class DirectUrlDownloaderTests
-    {
-        [Fact]
-        public void DownloadUrlShouldHandleTimeoutExceptions()
-        {
-            var urlDownloader = new DirectUrlDownloader(null);
-
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-
-            var endPoint = (IPEndPoint)listener.LocalEndpoint;
-            var uri = new UriBuilder("http", endPoint.Address.ToString(), endPoint.Port).Uri;
-
-            listener.BeginAcceptSocket(_ => { }, null);
-
-            var bytes = urlDownloader.DownloadUrl(uri.ToString()).First();
-
-            listener.Stop();
-
-            Assert.True(bytes.Count() == 0);
-        }
-
-        [Fact]
-        public void DownloadUrlShouldHandleWebExceptions()
-        {
-            var urlDownloader = new DirectUrlDownloader(null);
-            
-            // This should be an empty byte array unless you can actually access http://lol
-            var bytes = urlDownloader.DownloadUrl("http://lol").First();
-
-            Assert.True(bytes.Count() == 0);
-        }
-    }
 }

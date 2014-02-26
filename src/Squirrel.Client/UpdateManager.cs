@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Net;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -101,7 +102,17 @@ namespace Squirrel.Client
             try {
                 if (isHttpUrl(updateUrlOrPath)) {
                     log.Info("Downloading RELEASES file from {0}", updateUrlOrPath);
-                    releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
+                    releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress)
+                        .Catch<string, TimeoutException>(ex =>
+                        {
+                            // TODO: log this exception
+                            return Observable.Return(default(string));
+                        })
+                        .Catch<string, WebException>(ex =>
+                        {
+                            // TODO: log this exception
+                            return Observable.Return(default(string));
+                        });
                 } else {
                     log.Info("Reading RELEASES file from {0}", updateUrlOrPath);
 
