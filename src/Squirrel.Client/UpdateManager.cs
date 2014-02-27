@@ -103,15 +103,13 @@ namespace Squirrel.Client
                 if (isHttpUrl(updateUrlOrPath)) {
                     log.Info("Downloading RELEASES file from {0}", updateUrlOrPath);
                     releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress)
-                        .Catch<string, TimeoutException>(ex =>
-                        {
-                            // TODO: log this exception
-                            return Observable.Return(default(string));
+                        .Catch<string, TimeoutException>(ex => {
+                            log.Info("Download timed out (returning blank release list)");
+                            return Observable.Return(String.Empty);
                         })
-                        .Catch<string, WebException>(ex =>
-                        {
-                            // TODO: log this exception
-                            return Observable.Return(default(string));
+                        .Catch<string, WebException>(ex => {
+                            log.InfoException("Download resulted in WebException (returning blank release list)", ex);
+                            return Observable.Return(String.Empty);
                         });
                 } else {
                     log.Info("Reading RELEASES file from {0}", updateUrlOrPath);
