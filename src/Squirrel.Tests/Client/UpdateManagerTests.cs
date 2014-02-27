@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
@@ -15,6 +15,19 @@ namespace Squirrel.Tests.Client
 {
     public class UpdateManagerTests
     {
+        public class TimingOutUrlDownloader : IUrlDownloader
+        {
+            public IObservable<string> DownloadUrl(string url, IObserver<int> progress = null)
+            {
+                return Observable.Start<string>(new Func<string>(() => { throw new TimeoutException(); }));
+            }
+
+            public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress = null)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public class UpdateLocalReleasesTests
         {
             [Fact]
@@ -232,15 +245,7 @@ namespace Squirrel.Tests.Client
             [Fact]
             public void WhenUrlTimesOutReturnNull()
             {
-                var listener = new TcpListener(IPAddress.Loopback, 0);
-                listener.Start();
-
-                var endPoint = (IPEndPoint)listener.LocalEndpoint;
-                var uri = new UriBuilder("http", endPoint.Address.ToString(), endPoint.Port).Uri;
-
-                listener.BeginAcceptSocket(_ => { }, null);
-
-                var fixture = new UpdateManager(uri.ToString(), "theApp", FrameworkVersion.Net45);
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net45, null, null, new TimingOutUrlDownloader());
 
                 var updateInfo = fixture.CheckForUpdate().Wait();
 
