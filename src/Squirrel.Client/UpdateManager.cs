@@ -157,7 +157,7 @@ namespace Squirrel.Client
             var ret = releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
                 .SelectMany(releases =>
-                    releases.Count() > 0 ? determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates)
+                    releases.Any() ? determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates)
                         : Observable.Return<UpdateInfo>(null))
                 .PublishLast();
 
