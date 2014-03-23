@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Net;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -101,7 +102,15 @@ namespace Squirrel.Client
             try {
                 if (isHttpUrl(updateUrlOrPath)) {
                     log.Info("Downloading RELEASES file from {0}", updateUrlOrPath);
-                    releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress);
+                    releaseFile = urlDownloader.DownloadUrl(String.Format("{0}/{1}", updateUrlOrPath, "RELEASES"), progress)
+                        .Catch<string, TimeoutException>(ex => {
+                            log.Info("Download timed out (returning blank release list)");
+                            return Observable.Return(String.Empty);
+                        })
+                        .Catch<string, WebException>(ex => {
+                            log.InfoException("Download resulted in WebException (returning blank release list)", ex);
+                            return Observable.Return(String.Empty);
+                        });
                 } else {
                     log.Info("Reading RELEASES file from {0}", updateUrlOrPath);
 
@@ -144,9 +153,12 @@ namespace Squirrel.Client
                 return Observable.Throw<UpdateInfo>(ex);
             }
 
+            // Return null if no updates found
             var ret = releaseFile
                 .Select(ReleaseEntry.ParseReleaseFile)
-                .SelectMany(releases => determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates))
+                .SelectMany(releases =>
+                    releases.Any() ? determineUpdateInfo(localReleases, releases, ignoreDeltaUpdates)
+                        : Observable.Return<UpdateInfo>(null))
                 .PublishLast();
 
             ret.Connect();

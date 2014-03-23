@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using Moq;
@@ -12,6 +15,19 @@ namespace Squirrel.Tests.Client
 {
     public class UpdateManagerTests
     {
+        public class TimingOutUrlDownloader : IUrlDownloader
+        {
+            public IObservable<string> DownloadUrl(string url, IObserver<int> progress = null)
+            {
+                return Observable.Start<string>(new Func<string>(() => { throw new TimeoutException(); }));
+            }
+
+            public IObservable<Unit> QueueBackgroundDownloads(IEnumerable<string> urls, IEnumerable<string> localPaths, IObserver<int> progress = null)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public class UpdateLocalReleasesTests
         {
             [Fact]
@@ -210,6 +226,42 @@ namespace Squirrel.Tests.Client
                             () => fixture.CheckForUpdate().Wait());
                     }
                 }
+            }
+
+            [Fact]
+            public void WhenReleasesFileIsBlankReturnNull()
+            {
+                string tempDir;
+                using (Utility.WithTempDirectory(out tempDir)) {
+                    var fixture = new UpdateManager(tempDir, "MyAppName", FrameworkVersion.Net40);
+                    File.WriteAllText(Path.Combine(tempDir, "RELEASES"), "");
+
+                    using (fixture) {
+                        Assert.Null(fixture.CheckForUpdate().Wait());
+                    }
+                }
+            }
+
+            [Fact]
+            public void WhenUrlTimesOutReturnNull()
+            {
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net45, null, null, new TimingOutUrlDownloader());
+
+                var updateInfo = fixture.CheckForUpdate().Wait();
+
+                Assert.Null(updateInfo);
+            }
+
+            [Fact]
+            public void WhenUrlResultsInWebExceptionReturnNull()
+            {
+                // This should result in a WebException (which gets caught) unless you can actually access http://lol
+
+                var fixture = new UpdateManager("http://lol", "theApp", FrameworkVersion.Net45);
+
+                var updateInfo = fixture.CheckForUpdate().Wait();
+
+                Assert.Null(updateInfo);
             }
         }
     }

@@ -182,6 +182,13 @@ namespace Squirrel.Tests.Core
             Assert.Equal(false, releases[4].IsDelta);
         }
 
+        [Fact]
+        public void ParseReleaseFileShouldReturnNothingForBlankFiles()
+        {
+            Assert.True(ReleaseEntry.ParseReleaseFile("").Count() == 0);
+            Assert.True(ReleaseEntry.ParseReleaseFile(null).Count() == 0);
+        }
+
         static string MockReleaseEntry(string name)
         {
             return string.Format("94689fede03fed7ab59c24337673a27837f0c3ec  {0}  1004502", name);

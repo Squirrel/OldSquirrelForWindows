@@ -98,7 +98,9 @@ namespace Squirrel.Core
 
         public static IEnumerable<ReleaseEntry> ParseReleaseFile(string fileContents)
         {
-            Contract.Requires(!String.IsNullOrEmpty(fileContents));
+            if (String.IsNullOrEmpty(fileContents)) {
+                return new ReleaseEntry[0];
+            }
 
             var ret = fileContents.Split('\n')
                 .Where(x => !String.IsNullOrWhiteSpace(x))
