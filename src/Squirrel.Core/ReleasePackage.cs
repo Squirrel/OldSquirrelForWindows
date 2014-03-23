@@ -114,7 +114,7 @@ namespace Squirrel.Core
             // dependent packages into the a temporary directory
             var dependencies = findAllDependentPackages(
                 package,
-                packagesRootDir,
+                new LocalPackageRepository(packagesRootDir),
                 frameworkName: targetFramework);
 
             string tempPath = null;
@@ -149,7 +149,7 @@ namespace Squirrel.Core
             }
         }
 
-        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath, FrameworkName framework = null)
+        void extractDependentPackages(IEnumerable<IPackage> dependencies, DirectoryInfo tempPath, FrameworkName framework)
         {
             dependencies.ForEach(pkg => {
                 this.Log().Info("Scanning {0}", pkg.Id);
@@ -157,18 +157,10 @@ namespace Squirrel.Core
                 pkg.GetLibFiles().ForEach(file => {
                     var outPath = new FileInfo(Path.Combine(tempPath.FullName, file.Path));
 
-                    if(isNonDesktopAssembly(file.Path)) {
-                        this.Log().Info("Ignoring {0} as the platform is not acceptable", outPath);
+                    if (!VersionUtility.IsCompatible(framework , new[] { file.TargetFramework }))
+                    {
+                        this.Log().Info("Ignoring {0} as the target framework is not compatible", outPath);
                         return;
-                    }
-
-                    if (framework != null) {
-                        if (framework == FrameworkTargetVersion.Net40
-                            && file.TargetFramework == FrameworkTargetVersion.Net45)
-                        {
-                                this.Log().Info("Ignoring {0} as we do not want to ship net45 assemblies for our net40 app", outPath);
-                                return;
-                        }
                     }
 
                     Directory.CreateDirectory(outPath.Directory.FullName);
@@ -188,18 +180,6 @@ namespace Squirrel.Core
                 .Select(x => new FileInfo(x.FullName.ToLowerInvariant().Replace(".dll", ".xml")))
                 .Where(x => x.Exists)
                 .ForEach(x => x.Delete());
-        }
-
-        bool isNonDesktopAssembly(string path)
-        {
-            // NB: Nuke Silverlight, WinRT, WindowsPhone and Xamarin assemblies. 
-            // We can't tell as easily if other profiles can be removed because 
-            // you can load net20 DLLs inside .NET 4.0 apps
-            var bannedFrameworks = new[] {"sl", "winrt", "netcore", "win8", "windows8", "MonoAndroid", "MonoTouch", "MonoMac", "wp", };
-
-            string frameworkPath = path.Substring(4);
-
-            return bannedFrameworks.Any(x => frameworkPath.StartsWith(x, StringComparison.InvariantCultureIgnoreCase));
         }
 
         void renderReleaseNotesMarkdown(string specPath, Func<string, string> releaseNotesProcessor)
@@ -243,23 +223,23 @@ namespace Squirrel.Core
 
         IEnumerable<IPackage> findAllDependentPackages(
             IPackage package = null,
-            string packagesRootDir = null,
+            IPackageRepository packageRepository = null,
             HashSet<string> packageCache = null,
             FrameworkName frameworkName = null)
         {
             package = package ?? new ZipPackage(InputPackageFile);
             packageCache = packageCache ?? new HashSet<string>();
-
+            
             var deps = package.DependencySets
                 .Where(x => x.TargetFramework == null
                             || x.TargetFramework == frameworkName)
                 .SelectMany(x => x.Dependencies);
 
             return deps.SelectMany(dependency => {
-                var ret = findPackageFromName(dependency.Id, dependency.VersionSpec, packagesRootDir);
+                var ret = matchPackage(packageRepository, dependency.Id, dependency.VersionSpec);
 
                 if (ret == null) {
-                    var message = String.Format("Couldn't find file for package in {1}: {0}", dependency.Id, packagesRootDir);
+                    var message = String.Format("Couldn't find file for package in {1}: {0}", dependency.Id, packageRepository.Source);
                     this.Log().Error(message);
                     throw new Exception(message);
                 }
@@ -270,34 +250,15 @@ namespace Squirrel.Core
 
                 packageCache.Add(ret.GetFullName());
 
-                return findAllDependentPackages(ret, packagesRootDir, packageCache, frameworkName).StartWith(ret).Distinct(y => y.GetFullName());
+                return findAllDependentPackages(ret, packageRepository, packageCache, frameworkName).StartWith(ret).Distinct(y => y.GetFullName());
             }).ToArray();
         }
 
-        IPackage findPackageFromName(
-            string id,
-            IVersionSpec versionSpec,
-            string packagesRootDir = null,
-            IQueryable<IPackage> machineCache = null)
+        IPackage matchPackage(IPackageRepository packageRepository, string id, IVersionSpec version)
         {
-            machineCache = machineCache ?? Enumerable.Empty<IPackage>().AsQueryable();
-
-            if (packagesRootDir != null && localPackageCache == null) {
-                localPackageCache = Utility.GetAllFilePathsRecursively(packagesRootDir)
-                    .Where(PackageHelper.IsPackageFile)
-                    .Select(x => new ZipPackage(x))
-                    .ToArray();
-            }
-
-            return findPackageFromNameInList(id, versionSpec, localPackageCache ?? Enumerable.Empty<IPackage>()) ?? 
-                findPackageFromNameInList(id, versionSpec, machineCache);
+            return packageRepository.FindPackagesById(id).FirstOrDefault(x => VersionComparer.Matches(version, x.Version));
         }
 
-        static IPackage findPackageFromNameInList(string id, IVersionSpec versionSpec, IEnumerable<IPackage> packageList)
-        {
-            return packageList.Where(x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase)).ToArray()
-                .FirstOrDefault(x => VersionComparer.Matches(versionSpec, x.Version));
-        }
 
         static internal void addDeltaFilesToContentTypes(string rootDirectory)
         {

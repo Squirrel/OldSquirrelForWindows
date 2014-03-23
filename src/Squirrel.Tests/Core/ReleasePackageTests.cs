@@ -60,7 +60,7 @@ namespace Squirrel.Tests.Core
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
             var fixture = ExposedObject.From(new ReleasePackage(inputPackage));
-            IPackage result = fixture.findPackageFromName("xunit", VersionUtility.ParseVersionSpec("[1.0,2.0]"), sourceDir, null);
+            IPackage result = fixture.matchPackage(new LocalPackageRepository(sourceDir), "xunit", VersionUtility.ParseVersionSpec("[1.0,2.0]"));
 
             result.Id.ShouldEqual("xunit");
             result.Version.Version.Major.ShouldEqual(1);
@@ -75,7 +75,7 @@ namespace Squirrel.Tests.Core
             var sourceDir = IntegrationTestHelper.GetPath("..", "packages");
             (new DirectoryInfo(sourceDir)).Exists.ShouldBeTrue();
 
-            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, sourceDir, null, null);
+            IEnumerable<IPackage> results = fixture.findAllDependentPackages(null, new LocalPackageRepository(sourceDir), null, null);
             results.Count().ShouldBeGreaterThan(0);
         }
 
@@ -194,8 +194,7 @@ namespace Squirrel.Tests.Core
                 var fileName = "Caliburn.Micro.dll";
                 var dependency = zipPackage.GetLibFiles()
                     .Where(f => f.Path.EndsWith(fileName))
-                    .Single(f => f.TargetFramework 
-                        == new FrameworkName(".NETFramework,Version=v4.0"));
+                    .Single(f => f.TargetFramework == FrameworkTargetVersion.Net40);
 
                 outputFile = new FileInfo(Path.Combine(sourceDir, fileName)).FullName;
 
@@ -345,8 +344,7 @@ namespace Squirrel.Tests.Core
 
                 var dependency = zipPackage.GetLibFiles()
                     .Where(f => f.Path.EndsWith("Caliburn.Micro.dll"))
-                    .FirstOrDefault(f => f.TargetFramework
-                        == new FrameworkName(".NETFramework,Version=v4.5"));
+                    .FirstOrDefault(f => f.TargetFramework == FrameworkTargetVersion.Net45);
 
                 Assert.NotNull(dependency);
             }
